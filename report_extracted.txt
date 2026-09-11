@@ -1,0 +1,519 @@
+Theme  ·  Renewable Energy Intelligence
+Ideation Report
+AI-Powered Renewable
+Generation Forecasting Platform
+Probabilistic 24–72 hour forecasting for solar and wind assets, with deviation risk priced in rupees and grid actions recommended against the full forecast distribution.
+Team Name
+«enter team name»
+Team Members
+«member 1 · member 2 · member 3 · member 4»
+Institution
+«enter institution»
+Problem Statement
+AI-Powered Renewable Generation Forecasting Platform
+Submission Phase
+Ideation — problem understanding, approach and solution vision
+Date
+September 2026
+THE SINGLE SENTENCE THAT DEFINES THIS PROJECT
+The proposed platform does not stop at predicting renewable generation. It propagates forecast uncertainty into operational and financial decision-making, and recommends the action that minimises expected grid imbalance and its associated cost.
+Contents
+#
+Section
+What it covers
+1
+Executive Summary
+The problem, the insight, and what we are building
+2
+Problem Understanding
+The stated requirement and the structural difficulty beneath it
+3
+The Gap We Identified
+Why a point forecast does not answer the operator's question
+4
+Proposed Solution
+Solution statement, design principles and four core innovations
+5
+System Architecture
+The six-layer platform and how data becomes a decision
+6
+Forecasting Methodology
+Physics-informed hybrid modelling and probabilistic output
+7
+Functional Scope and Users
+Actors, use cases and role-based value
+8
+Operational Workflow
+The forecast-to-action cycle, including failure branches
+9
+Decision Intelligence and Economics
+Turning a distribution into a priced, optimised action
+10
+Key Features
+Ten headline capabilities and the advanced layer behind them
+11
+Technology and Implementation Plan
+Stack, cloud deployment and delivery pipeline
+12
+Evaluation and Validation Plan
+How we will know the system actually works
+13
+Alignment with the Problem Statement
+Requirement-by-requirement traceability
+14
+Expected Impact
+Operational, environmental and commercial outcomes
+15
+Scope, Assumptions and Known Limitations
+What we claim, and what we deliberately do not
+16
+Implementation Roadmap
+Phased delivery plan
+17
+Conclusion
+Why this approach is the right answer to the problem
+Figures
+Figure 1
+End-to-End System Architecture and Decision Flow
+Figure 2
+Physics-Informed Probabilistic Forecasting Pipeline
+Figure 3
+Use Case Diagram — Actors and System Boundary
+Figure 4
+Activity Diagram — Daily Forecast-to-Action Operating Cycle
+Figure 5
+From Forecast Uncertainty to a Priced, Optimised Grid Action
+Figure 6
+Cloud Deployment Architecture
+1.  Executive Summary
+Solar and wind generation is decided by the weather, not by the operator. Output moves with cloud cover, wind speed, temperature, time of day and season, and it does so on a timescale much shorter than the planning decisions that depend on it. A grid operator has to commit to a schedule before knowing what the resource will actually deliver, and every megawatt of mismatch between that commitment and reality has to be absorbed somewhere — by backup generation, by storage, by curtailment, or by a settlement charge.
+The problem statement asks for a platform that ingests weather data, historical generation records and site-level parameters, forecasts solar and wind output over the next 24 to 72 hours, flags periods of expected over- and under-generation, and recommends grid actions such as curtailment, storage dispatch and backup activation. Our reading of that requirement is that the forecast is the input to the deliverable, not the deliverable itself. The deliverable is the decision.
+We therefore propose a platform built around a single end-to-end chain: forecast, quantify the uncertainty in that forecast, detect where the forecast disagrees with the declared schedule, convert that disagreement into a rupee figure under the applicable deviation settlement rules, optimise the schedule and storage action that minimises that figure, and explain the result with both statistical attribution and the regulatory clause it rests on.
+WHAT DISTINGUISHES THIS SUBMISSION
+We produce a distribution, not a number. Each 15-minute block is forecast as P10, P50 and P90 rather than a single expected value, because an operator planning reserve needs to know how wrong the forecast could plausibly be.
+We price the uncertainty. Forecast spread is carried forward into a deterministic deviation-settlement engine so that risk is expressed in rupees, not in megawatt-error.
+We optimise the action, not just report the forecast. A mixed-integer optimiser selects the schedule and battery dispatch with the lowest expected settlement cost across the forecast distribution.
+We keep the language model out of the arithmetic. Every generation, deviation, cost and optimisation value is computed by deterministic modules; retrieval and generation are confined to explanation.
+2.  Problem Understanding
+2.1  The requirement as stated
+Reduced to its essentials, the problem statement asks for five capabilities. The platform must ingest weather data, historical generation records and site-level parameters. It must forecast solar and wind generation across a 24 to 72 hour horizon. It must identify periods of expected over-generation and under-generation. It must recommend grid actions, with curtailment, storage dispatch and backup activation given as examples. And it must serve four distinct users — grid operators, utility companies, renewable plant owners and energy traders — whose questions differ even when the underlying forecast is the same.
+The suggested technologies — time-series forecasting libraries, weather and satellite APIs, real-time dashboards and cloud data pipelines — are offered as options rather than constraints. We treat them that way: we adopt the architecture they imply, and we substitute specific models where we can justify the substitution empirically.
+2.2  The structural difficulty beneath the requirement
+The difficulty is not that renewable generation is hard to predict in the abstract. It is that the consequences of a prediction error are asymmetric, time-resolved and financially settled.
+Dimension of difficulty
+Why it complicates the problem
+Commitment precedes information
+Schedules must be declared before the weather is known. The forecast is not an observation of the future; it is a commitment made under uncertainty.
+Errors are settled, not absorbed
+In the Indian context, mismatch between scheduled and actual injection is handled through a deviation settlement mechanism. A forecast error is therefore a financial event, not merely a technical one.
+Consequences are asymmetric
+Over-generation and under-generation call for entirely different responses — charging or curtailment in one case, discharge or reserve in the other — and they do not carry symmetric costs.
+Resolution is fine and horizon is long
+Operational scheduling works at 15-minute resolution, so a 72-hour horizon is 288 separate decisions, each with its own uncertainty.
+Uncertainty is heteroscedastic
+Forecast error is not constant. It grows with horizon, spikes in unsettled weather, and behaves differently for solar ramps than for wind lulls. A single average error figure hides exactly the periods that matter.
+Users ask different questions
+An operator asks what reserve to hold. A plant owner asks whether the asset is underperforming. A trader asks what the exposure is worth. One forecast has to support all three.
+3.  The Gap We Identified
+Most renewable forecasting work — including most hackathon responses to problems of this shape — terminates at a point forecast. A model is trained, an error metric is reported, a chart is drawn, and the output is a line on a graph. That line is genuinely useful, but it does not answer the question the user actually has to act on.
+What the operator has to decide
+What a point forecast tells them
+How much reserve should I hold tomorrow evening?
+Nothing. A single expected value contains no information about downside risk.
+Which of several defensible schedules should I declare?
+Nothing. Every schedule near the forecast looks equally reasonable.
+What will it cost me if this forecast is wrong?
+Nothing. Megawatt error is not the unit the decision is made in.
+Should I charge the battery now or hold capacity for later?
+Nothing directly. The trade-off depends on the spread of outcomes, not the mean.
+Can I justify this decision to a regulator or a board?
+Partially. The number exists, but not the reasoning or the rule behind it.
+OUR DESIGN INSIGHT
+The distance between a good forecast and a good decision is uncertainty, priced. A platform that reports P50 alone has done the modelling work and stopped one step short of the value. Our system treats the forecast distribution as the starting point of the product rather than its conclusion.
+4.  Proposed Solution
+4.1  Solution statement
+We propose an AI-powered renewable generation forecasting and decision-support platform that combines weather forecasts, historical generation data, physics-based generation modelling, machine learning, probabilistic forecasting and mathematical optimisation.
+The platform collects weather forecasts, historical generation observations and plant and site parameters. A data-quality and feature-engineering layer converts these into model-ready features. A forecasting layer combines a physical generation model with machine-learning models — LightGBM under a quantile objective and the Chronos-2 time-series foundation model — while retaining a persistence baseline as the reference against which any claim of skill must be measured.
+Instead of a single point forecast, the system produces a calibrated probabilistic forecast represented by multiple quantiles, reported operationally as P10, P50 and P90 for each 15-minute block. This distribution is passed to a decision engine that compares it against the declared schedule, computes the expected deviation exposure under the applicable settlement rules, and searches for the schedule and storage dispatch that minimise that exposure. Curtailment advisories, reserve requirements and portfolio pooling scenarios are evaluated in the same framework.
+Results are presented through an interactive dashboard showing forecast bands, risk, recommended actions and expected financial impact. A retrieval-augmented regulatory assistant explains the regulatory basis of the computed result using the relevant CERC and IEGC material.
+4.2  Design principles
+Principle
+How it shapes the build
+Decision-first
+Every component is justified by a decision it improves. Features that do not change an action are classified as secondary.
+Uncertainty is first-class
+Quantiles are produced by the model itself, not derived post hoc from a residual assumption, and they propagate through every downstream layer.
+Money is computed, never generated
+All deviation, cost and optimisation values come from deterministic code. The language model never produces a number.
+Physics before parameters
+A physical estimate of expected generation is computed first and supplied to the learner as a feature, so the model corrects a grounded prior rather than learning the sun from scratch.
+Honest claims only
+Anything not implemented is labelled as design or future work. Data limitations are stated in the report rather than discovered in the demo.
+4.3  Four core innovations
+The project is organised around four technical contributions. Everything else in the system exists to support one of them.
+#
+Innovation
+What changes because of it
+1
+Probabilistic renewable forecasting
+The output is a distribution per block rather than a value. Reserve planning, storage sizing and risk management become possible because the plausible range is explicit.
+2
+Forecast-to-settlement conversion
+Uncertainty is expressed as expected deviation exposure in rupees under the applicable regulatory logic, making the forecast commercially legible.
+3
+Decision optimisation under uncertainty
+Given the forecast distribution, an optimiser returns the schedule and battery action with the lowest expected cost, rather than defaulting to the central forecast.
+4
+Explainable regulatory intelligence
+Each recommendation is accompanied by statistical attribution and the retrieved regulatory basis, so the decision can be audited and defended.
+5.  System Architecture
+The platform is organised as six layers. Data moves downward through them without a cycle: each layer consumes the output of the one above it and produces a strictly more decision-ready artefact. Figure 1 shows the complete flow.
+Figure 1. End-to-End System Architecture and Decision Flow
+The chain reads top to bottom: raw inputs become features, features become a calibrated distribution, the distribution becomes a priced imbalance, and the priced imbalance becomes a recommended action with an explanation attached.
+5.1  Layer responsibilities
+Layer
+Responsibility
+1 · Data ingestion
+Pulls weather forecasts from Open-Meteo, historical generation records, plant and site parameters, and the regulatory corpus used later for explanation. Each source is versioned on retrieval.
+2 · Data quality and feature engineering
+Normalises timestamps and units, treats gaps and outliers, resamples to the 15-minute modelling interval, and constructs solar-geometry, wind, lag and calendar features under strict time-ordered splits.
+3 · Hybrid forecasting engine
+Runs the physical model, the learned models and the persistence baseline, then selects among them by measured skill on rolling-origin backtests and calibrates the resulting quantiles.
+4 · Decision intelligence
+Compares the forecast band against the declared schedule, flags over- and under-generation blocks, computes expected deviation exposure, and solves for the schedule and storage dispatch that minimise it.
+5 · Recommended actions
+Emits a concrete action set for the operating cycle: revised schedule, battery dispatch profile, curtailment advisory where surplus is unavoidable, and a reserve or backup flag.
+6 · Delivery, trust and explanation
+Serves the React dashboard, the explainability and calibration views, and the retrieval-grounded regulatory copilot.
+ARCHITECTURAL BOUNDARY
+The boundary between layers 4 and 6 is deliberate and is the most important design decision in the system. Everything numerical happens in layer 4 through deterministic computation. Layer 6 may retrieve, summarise and explain, but it never originates a value. This removes the most common failure mode in LLM-assisted analytics, which is a confidently stated figure that no calculation produced.
+6.  Forecasting Methodology
+The forecasting engine is physics-informed rather than purely statistical. A deterministic physical model supplies an estimate of expected generation from the weather forecast and site parameters; the machine-learning layer then learns the correction between that estimate and observed output. This matters because the physical model already encodes the parts of the relationship that are not worth learning from data — solar geometry, clear-sky irradiance, the shape of a turbine power curve — leaving the learner free to capture soiling, shading, local micro-climate and systematic instrument bias.
+Figure 2. Physics-Informed Probabilistic Forecasting Pipeline
+6.1  Methodology, step by step
+#
+Stage
+What happens
+1
+Data acquisition
+Weather forecasts and history, historical generation, site metadata, plant capacity and technical parameters for both solar and wind assets.
+2
+Data processing
+Timestamp and timezone normalisation, unit harmonisation, missing-value treatment, resampling to the modelling interval, quality screening and leakage prevention.
+3
+Feature engineering
+Weather features, solar position and clear-sky index, hub-height wind and air density, temporal and calendar features, generation lags and rolling statistics, site-specific descriptors.
+4
+Physics-based modelling
+Clear-sky irradiance to plane-of-array conversion, cell-temperature derating, turbine power-curve evaluation. The resulting expected-generation estimate is passed forward as a feature.
+5
+Machine-learning forecasting
+LightGBM with a quantile objective and Chronos-2 are trained and evaluated against a persistence baseline across horizon bands.
+6
+Probabilistic forecasting
+Quantiles across the P05 to P95 range are produced, sorted to prevent crossing, and reported operationally as P10, P50 and P90.
+7
+Forecast evaluation
+MAE, RMSE, pinball loss, CRPS, prediction-interval coverage and skill score against persistence, computed per horizon rather than pooled.
+8
+Calibration
+Reliability diagrams and coverage checks determine whether the stated intervals are honest; miscalibrated quantiles are corrected before release.
+9
+Deviation and risk calculation
+The forecast band is compared against the declared schedule and the expected consequence of deviation is computed under the applicable settlement logic.
+10
+Schedule optimisation
+Candidate schedules are evaluated against the full distribution and the one minimising expected deviation cost is selected.
+11
+Storage optimisation
+Battery charge, hold and discharge decisions are solved subject to state-of-charge, power and energy constraints.
+12
+Operational recommendation
+Storage dispatch, curtailment advisory and reserve or backup flags are emitted for the operating cycle.
+13
+Explainability
+Feature attribution, uncertainty and calibration status, and the reason a specific action was recommended.
+14
+Delivery and regulatory explanation
+Dashboard publication, and retrieval of the regulatory clauses that govern the computed result.
+6.2  Why these models
+The problem statement suggests Prophet, LSTM and XGBoost. These are listed as technologies that may be used rather than as requirements, and our selection differs on deliberate grounds. LightGBM is chosen because it supports a quantile objective directly, which means the probabilistic output is produced by the model rather than assumed afterwards, and because gradient-boosted trees handle the tabular, feature-rich structure of this problem efficiently. Chronos-2 is included because a pretrained time-series foundation model gives a strong result with limited site-specific history, which is the realistic condition for a newly commissioned plant. Persistence is retained not because it is competitive but because it defines the floor: a model that cannot beat persistence has demonstrated nothing.
+The selection between these is empirical. Rolling-origin backtesting determines the champion per site and per horizon band, and the report of that comparison is part of the deliverable rather than a detail hidden inside the code.
+7.  Functional Scope and Users
+Four operational roles and three supporting data services define the system boundary. The use cases below are the ones the platform is accountable for; anything outside this boundary is explicitly out of scope.
+Figure 3. Use Case Diagram — Actors and System Boundary
+7.1  Role-based value
+User
+Primary question
+What the platform gives them
+Grid operator
+What will the resource deliver, and how wrong could that be?
+Forecast bands per 15-minute block, flagged over- and under-generation periods, and reserve requirement indications.
+Utility company
+How do I plan capacity and backup around this?
+Horizon-wide risk profile, expected imbalance volumes and the schedule that minimises expected exposure.
+Renewable plant owner
+Is my asset performing, and what should my storage do?
+Expected-versus-actual performance monitoring, anomaly flags, and an optimised battery dispatch profile.
+Energy trader
+What is my imbalance exposure worth?
+Forecast-driven deviation exposure estimates and what-if evaluation of alternative schedules and pooling arrangements.
+8.  Operational Workflow
+The platform runs as a scheduled cycle rather than as an on-demand tool, because scheduling decisions are themselves periodic. Figure 4 shows the full cycle including the branches that matter most in practice: what the system does when input data is degraded, and what it does on a day when no action is warranted.
+Figure 4. Activity Diagram — Daily Forecast-to-Action Operating Cycle
+The two branch paths on the right are deliberate. A system that only describes its happy path has not been designed for operation.
+8.1  Notes on the branches
+Degraded input data. If quality checks fail, the system does not silently produce a confident forecast from bad inputs. It falls back to persistence and marks the output as reduced-confidence, so the operator knows the difference between a forecast and a guess.
+No-action days. If the forecast band and the declared schedule agree within tolerance, the schedule is published unchanged and logged. Recommending an intervention every cycle would train users to ignore the system.
+Parallel evaluation. Deviation exposure and storage availability are independent computations and are evaluated concurrently before the optimiser runs.
+Explanation last. The explanation layer is invoked only after the numbers exist. It describes a decision that has already been computed; it does not participate in making it.
+9.  Decision Intelligence and Economics
+This section describes the step that separates the platform from a forecasting notebook. Figure 5 traces a single operating cycle from the probabilistic forecast through to the emitted action set.
+Figure 5. From Forecast Uncertainty to a Priced, Optimised Grid Action
+The optimisation panel is illustrative of the mechanism. Actual values are computed per site and per block at run time.
+9.1  Over- and under-generation
+Over-generation is the condition where expected generation exceeds the declared schedule. It creates surplus energy and calls for battery charging, schedule revision, or — where neither is available — curtailment. Under-generation is the reverse: expected generation falls short of schedule, creating a deviation that calls for battery discharge, reserve availability or backup consideration. The platform detects both against the forecast band rather than against the central forecast alone, so a block where the schedule sits inside the band is treated differently from one where it sits outside it.
+9.2  Deviation settlement as the unit of risk
+Because the problem is positioned within the Indian electricity ecosystem, deviation from schedule is not merely an operational inconvenience — it is settled under the deviation settlement mechanism framework maintained by the Central Electricity Regulatory Commission, alongside the specific framework for forecasting, scheduling and imbalance handling of renewable generation. Our system implements this as a deterministic computation layer: block-wise deviation, the applicable charge under the notified structure, and the probability-weighted expectation across the forecast distribution.
+A WORDING PRECISION WE MAINTAIN THROUGHOUT
+The deviation settlement engine estimates the financial consequence of departing from the scheduled generation under the applicable regulatory rules. It is not an electricity price model, and we do not describe it as one.
+Similarly, the platform identifies periods where reserve or backup capacity may be required and flags them. It does not activate backup generation. The system is decision support, not autonomous grid control, and the distinction is maintained in the interface as well as in this document.
+9.3  Optimisation
+With deviation priced, schedule selection becomes an optimisation problem rather than a judgement call. The optimiser evaluates candidate schedules against the full forecast distribution and returns the one with the lowest expected settlement cost, jointly with a battery dispatch profile subject to state-of-charge, power and energy constraints. The reported benefit is the difference between the expected cost of the naive central-forecast schedule and the expected cost of the optimised schedule — a quantity the user can audit rather than take on trust.
+9.4  Portfolio pooling
+Aggregating multiple plants at a pooling level reduces net forecast error, because independent errors across sites partially cancel. This is recognised in the regulatory treatment of aggregated wind and solar projects, and it is a genuine operational lever rather than a hypothetical one. The platform therefore supports portfolio-aware forecasting and scheduling: pooled forecast, pooled deviation, and the resulting change in expected exposure compared with settling each plant individually.
+10.  Key Features
+Ten headline capabilities define the product. They are ordered along the decision chain rather than by technical sophistication.
+#
+Feature
+Description
+1
+24–72 hour generation forecasting
+Solar and wind output forecast across 96 to 288 blocks of 15 minutes, for individual sites and for portfolios.
+2
+Physics-informed hybrid forecasting
+A deterministic physical estimate is computed first and supplied to the learner, which models the residual rather than the whole relationship.
+3
+Probabilistic P10 / P50 / P90 forecasts
+Calibrated quantiles per block, produced by the model's own quantile objective and validated by coverage testing.
+4
+Over- and under-generation detection
+Block-level identification of surplus and deficit against the declared schedule, ranked by severity and confidence.
+5
+Deviation and imbalance risk quantification
+Expected settlement exposure computed deterministically under the applicable regulatory structure.
+6
+Optimal schedule recommendation
+The declared schedule that minimises expected deviation cost across the forecast distribution.
+7
+Battery storage dispatch optimisation
+Charge, hold and discharge decisions solved as a constrained optimisation over the forecast horizon.
+8
+Curtailment and reserve recommendations
+Curtailment advised only where surplus cannot be absorbed; reserve and backup requirements flagged rather than actuated.
+9
+Explainable AI and forecast calibration
+Feature attribution, reliability diagrams, coverage statistics and explicit confidence indicators surfaced in the interface.
+10
+Interactive what-if and decision dashboard
+Role-based views with scenario simulation over schedules, storage configuration and pooling arrangements.
+10.1  Advanced capabilities and planned extensions
+The following capabilities are part of the platform vision and are architected for, but are presented here as secondary rather than headline. Several depend on data that the core problem statement does not supply, and we prefer to state that plainly.
+Capability
+Status and dependency
+Physics-based site performance monitoring
+Expected-versus-actual comparison for anomaly and underperformance detection. We describe this as a digital-twin-inspired monitoring layer rather than a digital twin, since we do not model equipment state, sensor state or plant topology.
+Net-load forecasting
+Architected for, but requires demand and load data that the stated problem does not provide. Presented as an extension, not a current capability.
+Avoided fossil generation and emissions estimation
+Framed as potential fossil-generation displacement rather than real-time marginal grid emissions, which would require validated grid-mix and marginal-emission data.
+Commercial imbalance exposure for traders
+Forecast-driven exposure estimation. Without real-time market price feeds we do not describe this as a trading engine.
+Portfolio pooling simulator
+Implemented as a scheduling and aggregation feature; extension to multi-party settlement scenarios is planned.
+Advanced physical effects
+Bifacial and albedo modelling, wind wake effects and cross-site transfer learning are design-level work planned beyond the prototype.
+11.  Technology and Implementation Plan
+11.1  Technology stack
+Area
+Choice
+Reason
+Weather data
+Open-Meteo
+Provides the variables that actually drive generation — GHI, DNI, DHI, GTI, wind speed and direction, temperature, humidity, precipitation and sunshine duration — without a commercial licence barrier for a prototype.
+Generation data
+Historical Indian generation records
+Real inverter-level output used to validate the physical and learned models.
+Physical modelling
+pvlib, turbine power-curve models
+Established, auditable implementations of solar position, irradiance transposition and wind conversion.
+Machine learning
+LightGBM, Chronos-2, NumPy, pandas
+Native quantile support plus a pretrained time-series model for limited-history sites.
+Optimisation
+PuLP with the CBC solver
+Open-source mixed-integer programming sufficient for schedule and storage dispatch at this scale.
+Backend
+FastAPI, Python, Docker
+Typed API surface, straightforward containerisation, same language as the modelling stack.
+Frontend
+React with interactive charting and maps
+Forecast bands, risk heatmaps and scenario controls in a single role-aware interface.
+Database
+PostgreSQL with pgvector
+One store for operational records and for the regulatory embedding index.
+Cloud
+EC2, S3, CloudFront, ALB, RDS, ECR, EventBridge, CloudWatch, SSM Parameter Store
+Scheduled, containerised, observable deployment with configuration and secrets held outside the image.
+Retrieval and explanation
+bge-m3, bge-reranker, LangGraph, LiteLLM
+Retrieval-grounded explanation over the regulatory corpus, with a provider-agnostic gateway.
+11.2  Deployment architecture
+Figure 6. Cloud Deployment Architecture
+The React build is served as static assets from S3 through CloudFront. Application traffic reaches containerised FastAPI and worker services on EC2 through an application load balancer. Forecasts, schedules, computed costs and the regulatory vector index live in RDS; model artefacts, raw source pulls and versioned forecast archives live in S3. EventBridge triggers the forecasting cycle on a fixed cadence, so the platform produces a fresh forecast and action set without user intervention. CloudWatch provides logging and alarms, and configuration and credentials are held in SSM Parameter Store rather than in the container image.
+12.  Evaluation and Validation Plan
+A forecasting platform that reports only its own error is marking its own work. We therefore evaluate at three levels: the forecast, the uncertainty, and the decision.
+Level
+Metric
+What it establishes
+Point accuracy
+MAE, RMSE, normalised by capacity
+How close the central forecast is, reported per horizon band rather than pooled.
+Point accuracy
+Skill score against persistence
+Whether the model has earned its complexity. A model that does not beat persistence is not promoted.
+Uncertainty quality
+Pinball loss
+Whether individual quantiles are well placed, not just the median.
+Uncertainty quality
+CRPS
+Whether the full predicted distribution is sharp and accurate simultaneously.
+Uncertainty quality
+Prediction interval coverage (PICP)
+Whether a stated 80 percent interval actually contains the outcome about 80 percent of the time.
+Uncertainty quality
+Reliability diagram
+Whether the stated confidence is honest across the probability range, not only on average.
+Decision quality
+Expected deviation cost, baseline versus optimised
+Whether carrying uncertainty into the decision layer actually reduces exposure.
+Decision quality
+Backtested action replay
+Whether the recommended actions would have improved outcomes on historical periods.
+VALIDATION DISCIPLINE
+All validation uses rolling-origin, time-ordered splits. No future information enters a training fold, and horizon-wise errors are reported separately because a 6-hour forecast and a 66-hour forecast are different problems.
+Where the physical simulation of demonstration-plant generation is used, it is driven by real weather data and is validated against the available real Indian inverter-generation record. We do not present simulated generation as long-term real operational data.
+13.  Alignment with the Problem Statement
+The following matrix maps each requirement in the published problem statement to the component that satisfies it.
+Requirement
+Component in our solution
+Status
+Weather data ingestion
+Open-Meteo integration with versioned retrieval
+Core
+Historical generation ingestion
+Indian generation dataset and historical record pipeline
+Core
+Site-level parameters
+Plant and site metadata model
+Core
+24–72 hour forecasting
+96 to 288 blocks of 15 minutes
+Core
+Solar forecasting
+pvlib physical model plus learned correction
+Core
+Wind forecasting
+Turbine power curve plus learned correction
+Core
+Over-generation detection
+Probabilistic forecast against declared schedule
+Core
+Under-generation detection
+Probabilistic forecast against declared schedule
+Core
+Curtailment recommendation
+Decision engine and optimiser
+Core
+Storage dispatch recommendation
+PuLP / CBC battery optimisation
+Core
+Backup activation
+Reserve and backup requirement flag
+Core — as recommendation, not actuation
+Improved grid stability
+Forward-looking imbalance detection and action set
+Core
+Financial planning support
+Expected deviation exposure in rupees
+Core differentiator
+Real-time dashboard
+React decision dashboard with role-based views
+Core
+Cloud data pipeline
+Scheduled AWS pipeline
+Core
+Time-series forecasting
+LightGBM quantile, Chronos-2, persistence baseline
+Core — models selected empirically
+14.  Expected Impact
+Outcome
+Mechanism
+Reduced energy wastage
+Surplus periods are identified in advance, so absorption through storage or schedule revision is planned rather than curtailment being applied reactively.
+Reduced fossil-backup reliance
+Under-generation is anticipated across the horizon, allowing reserve to be arranged deliberately instead of dispatched at short notice.
+Improved grid stability
+Imbalance is detected and quantified before the operating window, converting a real-time correction problem into a planning problem.
+Better financial planning
+Deviation exposure is expressed in rupees, so producers and traders can evaluate schedules on a commercial basis rather than a technical one.
+Auditable decisions
+Every recommendation carries its statistical attribution and the regulatory basis it rests on, which matters in a settlement-driven environment.
+Portfolio-level efficiency
+Pooling reduces aggregate forecast error, and the platform makes the resulting change in exposure explicit.
+15.  Scope, Assumptions and Known Limitations
+We state these explicitly because a system that is honest about its boundaries is more useful than one that is not, and because every limitation below has a defined path forward.
+Item
+Statement
+Weather data resolution
+The forecasting engine operates on 15-minute generation intervals. Native 15-minute weather data is not available for every variable in every region; where it is unavailable for the target region, hourly forecasts are explicitly interpolated or resampled to the modelling interval and the assumption is recorded with the forecast.
+Validation dataset size
+The current prototype is validated against a limited real Indian generation record. We do not claim multi-season validation from it. Broader multi-season and multi-site validation is planned and is stated as future work rather than implied as complete.
+Simulated generation
+Demonstration-plant generation is physics-simulated from real weather and validated against the available real inverter-generation data. It is not presented as long-term real operational plant data.
+Backup activation
+The platform flags periods where reserve or backup capacity may be required. It does not control generation assets. Any claim of automated backup activation would be an overclaim and is not made.
+Net-load forecasting
+Net load requires demand data that the problem statement does not supply. The architecture supports the extension; the capability is not claimed as present.
+Marginal emissions
+True marginal grid emissions require grid-mix and marginal-emission data. We report potential fossil-generation displacement instead, which is defensible from the data we hold.
+Trading functionality
+Without real-time market price feeds, the trader-facing capability is imbalance exposure estimation rather than a trading engine.
+Digital twin terminology
+We describe a physics-based site performance model and a digital-twin-inspired monitoring layer. We do not model equipment states, sensor states or plant topology, so we do not use the unqualified term.
+Regulatory currency
+Deviation settlement regulation is amended periodically. The settlement logic is implemented as a configurable rule layer so that amendments can be applied without retraining or redeploying the forecasting models.
+16.  Implementation Roadmap
+Phase
+Focus
+Deliverables
+Phase 1
+Data and baseline
+Ingestion pipeline for weather, generation and site parameters; quality layer; 15-minute alignment; persistence baseline with horizon-wise error reporting.
+Phase 2
+Forecasting engine
+Physical model integration; LightGBM quantile and Chronos-2 training; rolling-origin backtesting harness; calibrated P10 / P50 / P90 output.
+Phase 3
+Decision layer
+Over- and under-generation detection; deterministic deviation settlement engine; schedule and battery optimisation with PuLP / CBC.
+Phase 4
+Interface and explanation
+React dashboard with role-based views, what-if simulation, SHAP attribution, calibration views, and the retrieval-grounded regulatory copilot.
+Phase 5
+Deployment and hardening
+Containerised AWS deployment, EventBridge scheduling, observability, CI/CD, and the validation report covering all three evaluation levels.
+17.  Conclusion
+The problem statement asks for a platform that forecasts renewable generation and recommends grid actions. Our interpretation is that the second half of that sentence is where the value sits, and that it can only be served properly if the first half produces a distribution rather than a number.
+Our architecture therefore reads as a single chain: forecast, quantify uncertainty, detect over- and under-generation, price the resulting deviation risk, optimise the schedule and storage response, recommend a concrete action, and explain both the statistics and the regulation behind it. Every feature in the system attaches to one of those links. Nothing in it exists because it was technically interesting.
+We have also been deliberate about what we do not claim. The system recommends rather than actuates. It reports potential fossil displacement rather than marginal emissions. It estimates imbalance exposure rather than trading outcomes. Its validation dataset is limited and we say so. We believe a solution that is precise about its boundaries is more credible than one that is expansive about its capabilities, and that this precision is itself part of what makes the design fit for an environment where decisions are financially settled and regulatorily reviewed.
+The proposed platform does not stop at predicting renewable generation. It propagates forecast uncertainty into operational and financial decision-making to recommend the action that minimises expected grid imbalance and associated cost.

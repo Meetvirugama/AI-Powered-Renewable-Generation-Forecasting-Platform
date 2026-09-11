@@ -1,0 +1,70 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+venv/
+.venv/
+env/
+.env
+*.env
+
+# Data & Models (too large for git — use S3)
+data/raw/
+data/processed/
+models/*.pkl
+models/*.pt
+models/*.bin
+*.parquet
+*.csv
+*.arrow
+.cache/
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+.docker/
+
+# AWS / Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+!*.tfvars.example
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Secrets — NEVER commit these
+.env
+.env.local
+.env.production
+secrets.yaml
