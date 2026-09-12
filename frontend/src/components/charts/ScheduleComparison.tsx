@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import Chart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { baseOptions, TOKENS } from "../../lib/apexTheme";
-import { inr, inrCompact } from "../../lib/format";
+import { inr, inrCompact, inrSaved } from "../../lib/format";
 
 interface Props {
   naiveTotalInr: number;
@@ -67,15 +67,15 @@ export default function ScheduleComparison({
   return (
     <div className="flex flex-col gap-3">
       <Chart options={options} series={series} type="bar" height={220} />
-      <div className="rounded-control bg-surface-2 px-4 py-3">
+      <div className="rounded-[var(--radius-control)] bg-surface-2 px-4 py-3">
         <div className="text-[11px] font-medium uppercase tracking-wider text-text-muted">
           Saved by optimising
         </div>
         <div
-          className="mt-1 text-2xl font-semibold tracking-tight text-accent"
+          className="mt-1 font-mono text-2xl font-semibold tracking-tight text-accent"
           style={{ fontVariantNumeric: "tabular-nums" }}
         >
-          −{inr(savingsInr)}
+          {inrSaved(savingsInr)}
         </div>
         <div className="mt-0.5 text-xs text-text-muted">
           {savingsPct.toFixed(1)}% below naive P50 submission
