@@ -94,11 +94,33 @@ app.include_router(pipeline.router)
 
 @app.get("/health")
 def health_check():
-    return {
+    """Liveness, plus which engine backs each capability.
+
+    `engines` is here so that "are these numbers real?" is answerable from the
+    API itself. A mock forecast is priced by the real DSM engine into
+    real-looking rupee figures, and nothing downstream distinguishes them, so
+    the distinction has to be published at the source.
+    """
+    from backend.modules.factory import active_engines
+
+    engines = active_engines()
+    report = {
         "status": "healthy",
         "version": "1.0.0",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "engines": engines,
+        "serving_synthetic_data": sorted(k for k, v in engines.items() if v != "production"),
     }
+
+    if engines["forecast"] == "production":
+        try:
+            from backend.modules.forecast.lgbm_model import LGBMForecastEngine
+
+            report["forecast_models"] = LGBMForecastEngine().health()
+        except Exception as exc:  # noqa: BLE001 - a health check never 500s
+            report["forecast_models"] = {"status": "error", "error": str(exc)}
+
+    return report
 
 @app.get("/")
 def root():

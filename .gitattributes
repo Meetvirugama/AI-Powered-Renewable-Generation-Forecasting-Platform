@@ -1,0 +1,45 @@
+# Line-ending policy.
+#
+# Why this file exists: `core.autocrlf=true` is the Git for Windows default, and
+# without these rules it rewrites LF -> CRLF on checkout for anything it decides
+# is "text". A LightGBM .txt model is text by that heuristic and binary in
+# practice -- its parser is strict about line structure, and a stray CR makes it
+# fail with "Model format error, expect a tree here" and then abort the process.
+#
+# That is not hypothetical: all 12 models in prediction_bundle/models/ were
+# unloadable on a Windows checkout while being perfectly clean in the Git blob,
+# so the corruption was invisible to anyone inspecting the repository and fatal
+# to anyone actually running it. A Docker image built from a Windows checkout
+# inherits the corrupted files too.
+
+# Normalise text in the repo, and let Git decide checkout endings for the rest.
+* text=auto
+
+# Model artefacts: never touch these bytes.
+*.txt binary
+prediction_bundle/models/*.txt binary
+
+# Data and archives.
+*.csv binary
+*.csv.gz binary
+*.gz binary
+*.parquet binary
+*.xlsx binary
+*.pkl binary
+*.pt binary
+*.bin binary
+*.pdf binary
+
+# Shell scripts must keep LF or they break when run in a Linux container --
+# `/bin/bash^M: bad interpreter`.
+*.sh text eol=lf
+infra/docker/*.sh text eol=lf
+infra/aws/*.sh text eol=lf
+
+# Files whose format depends on exact bytes.
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Notebooks are JSON; keep them diffable but stable.
+*.ipynb text eol=lf

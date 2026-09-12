@@ -36,35 +36,69 @@ class RAGCopilotProtocol(Protocol):
     ) -> dict:
         ...
 
+class ProductionEngineUnavailable(RuntimeError):
+    """An engine was explicitly set to `production` but could not be built.
+
+    This is deliberately fatal. Falling back to a mock here is the most
+    dangerous failure mode in this codebase: the mock forecast engine emits a
+    plausible seeded sine wave, the DSM engine prices it into real-looking rupee
+    figures, and the dashboard renders them with no indication that the entire
+    chain rests on synthetic input. A warning in a log nobody reads during
+    judging is not a control.
+
+    Operators who want a mock say so, by setting the variable to `mock`.
+    """
+
+
+def _resolve(kind: str, env_var: str, default_factory, loader):
+    """Build the configured implementation, refusing to silently downgrade."""
+    requested = os.getenv(env_var, 'mock').lower()
+    if requested != 'production':
+        return default_factory()
+    try:
+        return loader()
+    except Exception as exc:  # noqa: BLE001 - surface every construction failure
+        raise ProductionEngineUnavailable(
+            f'{env_var}=production but the production {kind} could not be loaded: '
+            f'{type(exc).__name__}: {exc}. '
+            f'Set {env_var}=mock to run without it, rather than serving synthetic '
+            f'data as if it were real.'
+        ) from exc
+
+
+def active_engines() -> dict:
+    """Which implementation each engine is configured to use.
+
+    Surfaced by /health so that "this dashboard is showing synthetic numbers" is
+    answerable without reading server logs.
+    """
+    return {
+        'forecast': os.getenv('FORECAST_ENGINE_TYPE', 'mock').lower(),
+        'optimizer': os.getenv('OPTIMIZER_TYPE', 'mock').lower(),
+        'rag_copilot': os.getenv('RAG_COPILOT_TYPE', 'mock').lower(),
+    }
+
+
 def get_forecast_engine() -> ForecastEngineProtocol:
-    engine_type = os.getenv('FORECAST_ENGINE_TYPE', 'mock').lower()
-    if engine_type == 'production':
-        try:
-            from backend.modules.forecast.lgbm_model import LGBMForecastEngine
-            return LGBMForecastEngine()
-        except ImportError:
-            logger.warning('Production forecast engine not found, falling back to MockForecastEngine.')
-    return MockForecastEngine()
+    def _production():
+        from backend.modules.forecast.lgbm_model import LGBMForecastEngine
+        return LGBMForecastEngine()
+
+    return _resolve('forecast engine', 'FORECAST_ENGINE_TYPE', MockForecastEngine, _production)
 
 def get_schedule_optimizer() -> ScheduleOptimizerProtocol:
-    opt_type = os.getenv('OPTIMIZER_TYPE', 'mock').lower()
-    if opt_type == 'production':
-        try:
-            from backend.modules.optimize.schedule_optimizer import ProductionScheduleOptimizer
-            return ProductionScheduleOptimizer()
-        except ImportError:
-            logger.warning('Production optimizer not found, falling back to MockScheduleOptimizer.')
-    return MockScheduleOptimizer()
+    def _production():
+        from backend.modules.optimize.schedule_optimizer import ProductionScheduleOptimizer
+        return ProductionScheduleOptimizer()
+
+    return _resolve('optimizer', 'OPTIMIZER_TYPE', MockScheduleOptimizer, _production)
 
 @lru_cache(maxsize=1)
 def get_rag_copilot() -> RAGCopilotProtocol:
     """Cached: the production copilot loads a large embedding model at
     construction, so it must be built once per process, not once per request."""
-    rag_type = os.getenv('RAG_COPILOT_TYPE', 'mock').lower()
-    if rag_type == 'production':
-        try:
-            from backend.modules.rag.copilot import RAGCopilot
-            return RAGCopilot()
-        except ImportError:
-            logger.warning('Production RAG copilot not found, falling back to MockRAGCopilot.')
-    return MockRAGCopilot()
+    def _production():
+        from backend.modules.rag.copilot import RAGCopilot
+        return RAGCopilot()
+
+    return _resolve('RAG copilot', 'RAG_COPILOT_TYPE', MockRAGCopilot, _production)
