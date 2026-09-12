@@ -82,7 +82,6 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
           <TileLayer
             url={DARK_TILE_URL}
             attribution={DARK_TILE_ATTRIBUTION}
-            bounds={GUJARAT_BOUNDS}
           />
           {plants.map((plant) => {
             const isSelected = plant.id === selectedPlantId;
@@ -98,7 +97,13 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
                   weight: isSelected ? 3 : 1.5,
                 }}
                 eventHandlers={{
-                  click: () => onSelectPlant?.(plant.id),
+                  click: (e) => {
+                    // Stop Leaflet from propagating the click to the map,
+                    // which can cause unwanted side effects.
+                    e.originalEvent.stopPropagation();
+                    e.originalEvent.preventDefault();
+                    onSelectPlant?.(plant.id);
+                  },
                 }}
               >
                 <Popup>
