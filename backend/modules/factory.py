@@ -1,5 +1,6 @@
 import os
 import logging
+from functools import lru_cache
 from typing import Protocol, Optional, Any, List, Dict
 
 from backend.core.config import get_settings
@@ -31,6 +32,7 @@ class RAGCopilotProtocol(Protocol):
         question: str,
         plant_id: Optional[str] = None,
         block_no: Optional[int] = None,
+        rule_year: Optional[int] = None,
         context: Optional[dict] = None
     ) -> dict:
         ...
@@ -55,7 +57,10 @@ def get_schedule_optimizer() -> ScheduleOptimizerProtocol:
             logger.warning('Production optimizer not found, falling back to MockScheduleOptimizer.')
     return MockScheduleOptimizer()
 
+@lru_cache(maxsize=1)
 def get_rag_copilot() -> RAGCopilotProtocol:
+    """Cached: the production copilot loads a large embedding model at
+    construction, so it must be built once per process, not once per request."""
     rag_type = os.getenv('RAG_COPILOT_TYPE', 'mock').lower()
     if rag_type == 'production':
         try:

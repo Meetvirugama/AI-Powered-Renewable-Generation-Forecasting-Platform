@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     s3_bucket_models: str = "default-models-bucket"
     app_env: str = "development"
     log_level: str = "INFO"
+    # Comma-separated browser origins allowed to call this API.
+    # Local dev default; the deployed CloudFront domain is added via .env.
+    cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
     model_config = SettingsConfigDict(env_file=str(PROJECT_ROOT / ".env"), extra="ignore")
 
@@ -23,6 +26,14 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Returns cached application settings loaded from environment/.env."""
     return Settings()
+
+
+def get_cors_origins() -> list[str]:
+    """Parse CORS_ORIGINS into a list. '*' allows any origin (local dev only)."""
+    raw = get_settings().cors_origins.strip()
+    if raw == "*":
+        return ["*"]
+    return [o.strip() for o in raw.split(",") if o.strip()]
 
 def load_yaml(path: str) -> dict:
     """Loads a YAML file given a path relative to the project root and returns its dictionary representation."""

@@ -1,4 +1,5 @@
 from sqlalchemy import String, Float, Integer, Boolean, Text, DateTime, Date, ForeignKey, Index, JSON, BigInteger
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from datetime import datetime, date
@@ -7,6 +8,12 @@ import uuid
 
 class Base(DeclarativeBase):
     pass
+
+
+# bge-m3 produces 1024-dim dense vectors. Postgres gets a real pgvector column;
+# SQLite (used by the test suite) falls back to TEXT so create_all() still works.
+EMBEDDING_DIM = 1024
+EmbeddingType = Vector(EMBEDDING_DIM).with_variant(Text(), "sqlite")
 
 
 class Plant(Base):
@@ -138,6 +145,22 @@ class RegulationChunk(Base):
     source_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     effective_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     chunk_text: Mapped[str] = mapped_column(Text)
+
+    # Deterministic id from (doc, clause, page, chunk_index) so re-running the
+    # offline ingest is idempotent instead of duplicating the corpus.
+    chunk_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    embedding: Mapped[Optional[Any]] = mapped_column(EmbeddingType, nullable=True)
+    # Which model produced `embedding`. Query-time embeddings MUST come from the
+    # same model; a mismatch returns plausible-looking but meaningless neighbours.
+    embed_model: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    __table_args__ = (
+        # Unique INDEX rather than a unique CONSTRAINT: SQLite (test suite)
+        # cannot ALTER a constraint into an existing table, and a unique index
+        # enforces exactly the same thing on both backends.
+        Index('uq_regulation_chunks_chunk_id', 'chunk_id', unique=True),
+        Index('ix_regulation_chunks_doc', 'doc_name'),
+    )
 
 
 class BacktestMetric(Base):

@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 class MockRAGCopilot:
     """Mock RAG Copilot returning structured explanations."""
     
-    def query(self, question: str, plant_id: Optional[str] = None, block_no: Optional[int] = None, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def query(self, question: str, plant_id: Optional[str] = None, block_no: Optional[int] = None, rule_year: Optional[int] = None, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         q_lower = question.lower()
         
         if 'penalty' in q_lower or 'penalised' in q_lower:
@@ -27,8 +27,24 @@ class MockRAGCopilot:
                 {'clause': 'General Guidelines', 'page': 1, 'doc': 'CERC_DSM_Regulations_2024.pdf', 'url': ''}
             ]
             
+        # Honour the regulation-year slider so the mock never cites an
+        # amendment that post-dates the year the user selected.
+        if rule_year is not None and rule_year < 2026:
+            citations = [
+                {**c, 'doc': 'CERC_DSM_Regulations_2024.pdf'}
+                for c in citations
+                if '2026' not in c['doc']
+            ] or [{'clause': 'General Guidelines', 'page': 1,
+                   'doc': 'CERC_DSM_Regulations_2024.pdf', 'url': ''}]
+
         return {
             'answer': answer,
             'citations': citations,
-            'engine_values': context or {'penalty_inr': 0.0, 'deviation_pct': 0.0}
+            'engine_values': context or {'penalty_inr': 0.0, 'deviation_pct': 0.0},
+            'meta': {
+                'llm_model': 'mock',
+                'cached': False,
+                'retrieved_chunks': len(citations),
+                'guardrail': 'pass',
+            },
         }

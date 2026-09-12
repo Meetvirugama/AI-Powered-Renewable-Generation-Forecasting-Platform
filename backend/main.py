@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import logging
 
+from backend.core.config import get_cors_origins
 from backend.db.session import init_db, SessionLocal
 from backend.db.models import Base
 from backend.db.seed import seed_plants
@@ -30,10 +31,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+_cors_origins = get_cors_origins()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    # A wildcard origin and credentials cannot be combined by the browser, so
+    # credentials are only enabled when the origins are explicitly listed.
+    allow_credentials=_cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
