@@ -112,3 +112,34 @@ def test_rag_copilot_default_is_mock(monkeypatch):
 
     assert isinstance(get_rag_copilot(), MockRAGCopilot)
     get_rag_copilot.cache_clear()
+
+
+# ------------------------------------------------- deployment-shaped env values
+def test_inline_comment_in_env_does_not_silently_downgrade(monkeypatch):
+    """systemd's EnvironmentFile= keeps inline comments; python-dotenv strips them.
+
+    The same .env line therefore reads as `production` locally and
+    `production   # mock | production` under systemd. Unnormalised, that matches
+    no branch and quietly serves the mock -- the exact failure this module
+    exists to prevent. Observed live on the Azure deployment.
+    """
+    monkeypatch.setenv("OPTIMIZER_TYPE", "production          # mock | production")
+    from backend.modules.optimize.schedule_optimizer import ProductionScheduleOptimizer
+
+    assert isinstance(get_schedule_optimizer(), ProductionScheduleOptimizer)
+
+
+def test_active_engines_reports_the_normalised_value(monkeypatch):
+    monkeypatch.setenv("FORECAST_ENGINE_TYPE", "mock          # mock | production")
+    monkeypatch.setenv("OPTIMIZER_TYPE", "production   # comment")
+    monkeypatch.setenv("RAG_COPILOT_TYPE", "mock")
+    assert active_engines() == {
+        "forecast": "mock",
+        "optimizer": "production",
+        "rag_copilot": "mock",
+    }
+
+
+def test_blank_env_value_falls_back_to_mock(monkeypatch):
+    monkeypatch.setenv("OPTIMIZER_TYPE", "   # only a comment")
+    assert isinstance(get_schedule_optimizer(), MockScheduleOptimizer)

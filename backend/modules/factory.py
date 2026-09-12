@@ -50,9 +50,24 @@ class ProductionEngineUnavailable(RuntimeError):
     """
 
 
+def _engine_mode(env_var: str) -> str:
+    """Read an engine-selection variable, tolerating an inline comment.
+
+    python-dotenv strips `KEY=value  # comment` when the app loads .env itself,
+    but systemd's EnvironmentFile= does not -- it passes the comment through as
+    part of the value. The same .env file therefore yields `production` locally
+    and `production          # mock | production` under systemd, which matches
+    no branch and silently falls back to the mock. That is precisely the failure
+    this module exists to prevent, so the value is normalised here rather than
+    relying on every deployment to keep .env comment-free.
+    """
+    raw = os.getenv(env_var, 'mock')
+    return raw.split('#', 1)[0].strip().lower() or 'mock'
+
+
 def _resolve(kind: str, env_var: str, default_factory, loader):
     """Build the configured implementation, refusing to silently downgrade."""
-    requested = os.getenv(env_var, 'mock').lower()
+    requested = _engine_mode(env_var)
     if requested != 'production':
         return default_factory()
     try:
@@ -73,9 +88,9 @@ def active_engines() -> dict:
     answerable without reading server logs.
     """
     return {
-        'forecast': os.getenv('FORECAST_ENGINE_TYPE', 'mock').lower(),
-        'optimizer': os.getenv('OPTIMIZER_TYPE', 'mock').lower(),
-        'rag_copilot': os.getenv('RAG_COPILOT_TYPE', 'mock').lower(),
+        'forecast': _engine_mode('FORECAST_ENGINE_TYPE'),
+        'optimizer': _engine_mode('OPTIMIZER_TYPE'),
+        'rag_copilot': _engine_mode('RAG_COPILOT_TYPE'),
     }
 
 
