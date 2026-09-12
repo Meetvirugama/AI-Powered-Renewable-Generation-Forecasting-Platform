@@ -1,116 +1,55 @@
-import { useMemo } from "react";
 import { useDashboardContext } from "../context/DashboardContext";
 import { useDashboard } from "../hooks/useDashboard";
 import { useOptimize } from "../hooks/useOptimize";
-import { useDSM } from "../hooks/useDSM";
+import { useDsmForPlant } from "../hooks/useDsmForPlant";
+import { useSelectedPlant } from "../hooks/useSelectedPlant";
 import StatTile from "../components/tiles/StatTile";
 import BriefingCard from "../components/tiles/BriefingCard";
 import PlantMap from "../components/map/PlantMap";
-import { inr, inrCompact, blockToIST } from "../lib/format";
-
-function Panel({
-  title,
-  sub,
-  children,
-  className = "",
-}: {
-  title: string;
-  sub?: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      className={`min-w-0 rounded-[var(--radius-card)] border border-border bg-surface p-5 ${className}`}
-    >
-      <header className="mb-4">
-        <h2 className="text-[15px] font-semibold tracking-tight text-text">{title}</h2>
-        {sub && <p className="mt-0.5 text-xs text-text-muted">{sub}</p>}
-      </header>
-      {children}
-    </section>
-  );
-}
-
-function Skeleton({ h }: { h: number }) {
-  return (
-    <div
-      className="animate-pulse rounded-[var(--radius-card)] border border-border bg-surface"
-      style={{ height: h }}
-    />
-  );
-}
+import Panel from "../components/common/Panel";
+import { Skeleton, ErrorState } from "../components/common/States";
+import { inr, inrCompact, inrSaved, blockToIST, todayIST, getToleranceBand } from "../lib/format";
 
 export default function Overview() {
   const { plantId, setPlantId, ruleYear } = useDashboardContext();
 
-  const { data, loading, error } = useDashboard(plantId);
+  const { data, loading, error, refetch } = useDashboard(plantId);
+  const plant = useSelectedPlant(plantId);
+  const date = data?.date ?? todayIST();
 
-  const { data: opt } = useOptimize({
-    plant_id: plantId,
-    date: data?.date ?? new Date().toISOString().slice(0, 10),
-    rule_year: ruleYear,
-  });
-
-  const dsmSchedule = useMemo(() => {
-    if (opt?.optimised_schedule) return opt.optimised_schedule;
-    if (data?.dsm_summary?.blocks) return data.dsm_summary.blocks.map((b) => b.schedule_mw);
-    return [];
-  }, [opt, data]);
-
-  const { data: dsmOverride } = useDSM({
-    plant_id: plantId,
-    date: data?.date ?? new Date().toISOString().slice(0, 10),
-    schedule_mw: dsmSchedule,
-    rule_year: ruleYear,
-  });
-
-  const dsm = dsmOverride ?? data?.dsm_summary;
+  const { data: opt } = useOptimize({ plant_id: plantId, date, rule_year: ruleYear });
+  const { dsm } = useDsmForPlant(plantId, ruleYear, date, data, opt);
 
   if (loading && !data) {
     return (
       <div className="grid gap-[var(--gap-section)]">
         <Skeleton h={120} />
-        <Skeleton h={400} />
+        <Skeleton h={360} />
       </div>
     );
   }
 
-  if (error && !data) {
-    return (
-      <div className="rounded-[var(--radius-card)] border border-border bg-surface p-6">
-        <h2 className="text-[15px] font-semibold text-text">Cannot reach the API</h2>
-        <p className="mt-1 text-sm text-text-muted">
-          The backend at {import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"} did
-          not respond. Set <code>VITE_USE_MOCKS=true</code> to work offline.
-        </p>
-      </div>
-    );
-  }
-
+  if (error && !data) return <ErrorState onRetry={refetch} />;
   if (!data) return null;
 
   const dsmBlocks = dsm?.blocks ?? [];
   const worst = dsmBlocks.length
-    ? dsmBlocks.reduce((a, b) =>
-        b.expected_penalty_inr > a.expected_penalty_inr ? b : a,
-      dsmBlocks[0])
+    ? dsmBlocks.reduce((a, b) => (b.expected_penalty_inr > a.expected_penalty_inr ? b : a), dsmBlocks[0])
     : null;
-  const band = 0.1;
-  const overBand = dsmBlocks.filter(
-    (b) => Math.abs(b.deviation_pct_at_p50) > band * 100,
-  ).length;
+  // Solar and wind carry different CERC tolerance bands (10% vs 15%) — never hardcode
+  // one and label it generically.
+  const band = getToleranceBand(plant?.type);
+  const overBand = dsmBlocks.filter((b) => Math.abs(b.deviation_pct_at_p50) > band.fraction * 100).length;
 
   return (
     <div className="grid gap-[var(--gap-section)]">
-      <header className="flex flex-wrap items-end justify-between gap-3 mb-2">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[30px] font-semibold leading-tight tracking-[-0.03em] text-text">
+          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-text">
             {data.plant_name}
           </h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {data.date} · {data.avc_mw} MW available capacity · CERC{" "}
-            {dsm?.rule_version ?? "—"} · X = {dsm?.x_value?.toFixed(2) ?? "—"}
+          <p className="mt-1 font-mono text-[13px] text-text-muted">
+            {data.date} · {data.avc_mw} MW AVC · CERC {dsm?.rule_version ?? "—"} · X={dsm?.x_value?.toFixed(2) ?? "—"}
           </p>
         </div>
       </header>
@@ -123,7 +62,7 @@ export default function Overview() {
         />
         <StatTile
           label="Saved by optimising"
-          value={opt ? `−${inr(opt.savings_inr)}` : "—"}
+          value={opt ? inrSaved(opt.savings_inr) : "—"}
           sub={opt ? `${opt.savings_pct.toFixed(1)}% below naive` : undefined}
           tone="good"
         />
@@ -132,16 +71,15 @@ export default function Overview() {
           value={inr(worst?.expected_penalty_inr ?? 0)}
           sub={worst ? `Block ${worst.block_no} · ${blockToIST(worst.block_no)} IST` : undefined}
         />
-        <StatTile
-          label="Blocks over band"
-          value={`${overBand} / 96`}
-          sub="Solar band ±10%"
-        />
+        <StatTile label="Blocks over band" value={`${overBand} / 96`} sub={band.label} />
       </div>
 
       <BriefingCard briefing={data.briefing} />
 
-      <Panel title="Plant locations" sub="Gujarat renewable portfolio. Click a pin to select.">
+      <Panel
+        title="Plant locations"
+        sub="Gujarat renewable portfolio. Click a pin to select."
+      >
         <PlantMap selectedPlantId={plantId} onSelectPlant={setPlantId} />
       </Panel>
     </div>

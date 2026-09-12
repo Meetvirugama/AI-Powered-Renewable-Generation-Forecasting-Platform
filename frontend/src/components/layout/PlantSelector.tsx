@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Plant } from "../../types/api";
 import { usePlants } from "../../hooks/usePlants";
+import { plantTypeLabel } from "../../lib/format";
 
 /**
  * Plant picker.
@@ -25,10 +26,8 @@ interface Props {
 // is reached by typing, which is faster than scrolling a hundred rows anyway.
 const MAX_VISIBLE = 40;
 
-const typeLabel = (type: Plant["type"]) => (type === "solar" ? "Solar" : "Wind");
-
 export default function PlantSelector({ value, onChange }: Props) {
-  const { data, loading } = usePlants();
+  const { data, loading, error, refetch } = usePlants();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -48,7 +47,9 @@ export default function PlantSelector({ value, onChange }: Props) {
     const ordered = [...plants].sort((a, b) => b.avc_mw - a.avc_mw);
     if (!needle) return ordered;
     return ordered.filter((p) =>
-      `${p.name} ${typeLabel(p.type)} ${p.avc_mw}`.toLowerCase().includes(needle),
+      `${p.name} ${plantTypeLabel(p.type)} ${p.avc_mw}`
+        .toLowerCase()
+        .includes(needle),
     );
   }, [plants, query]);
 
@@ -93,9 +94,24 @@ export default function PlantSelector({ value, onChange }: Props) {
     onChange(largest.id);
   }, [plants, value, onChange]);
 
-  if (loading || !data) {
+  if (loading && !data) {
     return (
       <div className="h-10 w-56 animate-pulse rounded-[var(--radius-control)] bg-surface-2" />
+    );
+  }
+
+  // Previously this case fell through the loading guard forever — usePlants sets
+  // loading=false with data=null on failure, and nothing here checked `error`, so
+  // the selector hung in its skeleton indefinitely while PlantMap on the same route
+  // correctly showed a failure message.
+  if (error && !data) {
+    return (
+      <button
+        onClick={() => refetch()}
+        className="flex h-10 items-center gap-2 rounded-[var(--radius-control)] border border-dev-over px-3 text-[13px] text-dev-over"
+      >
+        Plants unavailable — retry
+      </button>
     );
   }
 
@@ -129,8 +145,8 @@ export default function PlantSelector({ value, onChange }: Props) {
         <span className="truncate">
           {selected ? selected.name : "Select a plant"}
           {selected && (
-            <span className="ml-1 opacity-70">
-              · {typeLabel(selected.type)} · {selected.avc_mw} MW
+            <span className="ml-1 font-mono opacity-70">
+              · {plantTypeLabel(selected.type)} · {selected.avc_mw}MW
             </span>
           )}
         </span>
@@ -171,6 +187,7 @@ export default function PlantSelector({ value, onChange }: Props) {
                         : "text-text hover:bg-surface-2"
                     }`}
                   >
+                    {/* Colour dot — always paired with a text label */}
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${
                         isActive
@@ -182,11 +199,11 @@ export default function PlantSelector({ value, onChange }: Props) {
                     />
                     <span className="truncate">{plant.name}</span>
                     <span
-                      className={`ml-auto shrink-0 tabular-nums ${
+                      className={`ml-auto shrink-0 font-mono tabular-nums ${
                         isActive ? "text-on-accent/80" : "text-text-muted"
                       }`}
                     >
-                      {plant.avc_mw} MW
+                      {plant.avc_mw}MW
                     </span>
                   </button>
                 </li>

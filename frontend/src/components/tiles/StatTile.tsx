@@ -1,4 +1,5 @@
 import React from "react";
+import Panel from "../common/Panel";
 
 interface StatTileProps {
   label: string;
@@ -8,29 +9,22 @@ interface StatTileProps {
   tone?: "default" | "good";
 }
 
-const StatTile: React.FC<StatTileProps> = ({
-  label,
-  value,
-  sub,
-  tone = "default",
-}) => {
+const StatTile: React.FC<StatTileProps> = ({ label, value, sub, tone = "default" }) => {
   return (
-    <div className="rounded-[var(--radius-card)] border border-border bg-surface p-[var(--pad-card)] flex flex-col gap-1">
-      <span className="text-[11px] font-medium uppercase tracking-[0.06em] leading-[1.3] text-text-muted">
+    <Panel className="flex flex-col gap-1">
+      <span className="text-[10px] font-medium uppercase tracking-[0.08em] leading-[1.3] text-text-muted">
         {label}
       </span>
       <span
-        className={`text-[28px] font-semibold leading-[1.1] tracking-[-0.02em] ${
+        className={`font-mono text-[26px] font-semibold leading-[1.1] tracking-[-0.01em] ${
           tone === "good" ? "text-accent" : "text-text"
         }`}
         style={{ fontVariantNumeric: "tabular-nums" }}
       >
         {value}
       </span>
-      {sub && (
-        <span className="text-[12px] leading-[1.4] text-text-muted">{sub}</span>
-      )}
-    </div>
+      {sub && <span className="text-[12px] leading-[1.4] text-text-muted">{sub}</span>}
+    </Panel>
   );
 };
 

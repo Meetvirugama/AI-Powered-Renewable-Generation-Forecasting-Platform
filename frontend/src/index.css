@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @import "tailwindcss";
 
@@ -16,13 +16,28 @@
   --color-dev-under: #6EA8FF; --color-dev-zero: #2A3330; --color-dev-over: #FF9F45;
   --color-solar: #F5B33C;     --color-wind: #5EC8C8;
 
-  --radius-card: 16px; --radius-control: 10px; --radius-chip: 8px;
-  --pad-card: 20px; --gap-grid: 12px; --gap-section: 24px;
+  /* HUD command-deck geometry — sharp corners; a bracket motif fights heavy rounding. */
+  --radius-card: 2px; --radius-control: 4px; --radius-chip: 3px;
+  --pad-card: 20px; --gap-grid: 12px; --gap-section: 20px;
   --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 @layer base {
+  :root {
+    /* Dark-only app: tell the browser so native scrollbars, date pickers and
+       autofill render dark instead of the platform's light default. */
+    color-scheme: dark;
+  }
   body {
     @apply bg-bg text-text font-sans antialiased;
   }
+}
+
+/* Faint oscilloscope grid, used behind chart panels only — never the whole page. */
+.hud-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-border) 40%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 40%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
 }

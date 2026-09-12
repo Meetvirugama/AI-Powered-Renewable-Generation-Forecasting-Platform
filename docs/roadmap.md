@@ -1,7 +1,7 @@
 # Roadmap — what is left, and the order to do it in
 
-**Audited against `main` @ PR #21 merged**, and against the running production API at
-`https://57.159.24.68.nip.io`. 290 tests passing, `ruff` clean, 0 CRLF-corrupted models.
+**Audited against `main` @ PR #25 merged**, and against the running production API at
+`https://57.159.24.68.nip.io`. 322 tests passing, `ruff` clean, 0 CRLF-corrupted models.
 
 Every claim below was verified against the tree or against the live system, not inferred from the
 plan. Percentages are scope-completion estimates, not confidence.
@@ -12,10 +12,10 @@ plan. Percentages are scope-completion estimates, not confidence.
 
 | Track | Owner | Built | Demo-ready | Change |
 |---|---|---|---|---|
-| Backend / API / data | Member 2 | **99%** | ✅ yes | ↑ B2 fixed |
-| Frontend | Member 3 | **85%** | ✅ yes | — |
-| Infra / RAG copilot | Member 4 | **95%** | ✅ yes | ↑ corpus loaded, deployed |
-| ML / forecasting | Member 1 | **80%** | ✅ yes | **↑ models retrained and serving** |
+| Backend / API / data | Gaurav Rathod | **99%** | ✅ yes | ↑ B2 fixed |
+| Frontend | Shane Christian | **85%** | ✅ yes | — |
+| Infra / RAG copilot | Madhav Thesiya | **95%** | ✅ yes | ↑ corpus loaded, deployed |
+| ML / forecasting | Meet Virugama | **80%** | ✅ yes | **↑ models retrained and serving** |
 
 **Overall: ~92% built, ~90% demo-ready.**
 
@@ -70,7 +70,7 @@ defects.
 
 ## Remaining work by owner
 
-### Member 3 — Frontend (~85%)
+### Shane Christian — Frontend (~85%)
 
 **Delivered:** all 8 planned components, 5 pages, 11 hooks, `api/client.ts`, layout shell,
 context, Tailwind, routing, ApexCharts, Leaflet. Deployed on Vercel, pointing at the Azure API.
@@ -86,7 +86,7 @@ context, Tailwind, routing, ApexCharts, Leaflet. Deployed on Vercel, pointing at
 > renders it today, so the inconsistency is harmless — but do not start rendering it without
 > normalising first.
 
-### Member 2 — Backend (~99%)
+### Gaurav Rathod — Backend (~99%)
 
 11 endpoints, 10 tables + migrations, ingestion wired, `/pipeline/run` async with 202, API-key
 auth enforced, zero TODO markers.
@@ -96,7 +96,7 @@ and the function carries the reasoning.
 
 **Remaining:** nothing demo-critical.
 
-### Member 4 — Infra + RAG (~95%)
+### Madhav Thesiya — Infra + RAG (~95%)
 
 Deployed and operational. Azure VM, systemd, Caddy, Let's Encrypt via `nip.io`, GitHub Actions
 CI/CD with host-key pinning, health gate and rollback.
@@ -115,7 +115,7 @@ CI/CD with host-key pinning, health gate and rollback.
 > BGE-M3 model on the demo box would chase a metric that is passing, and **cannot** fix the misses,
 > which are missing documents (R1). Revisit after the corpus gap closes, not before.
 
-### Member 1 — ML (~80%)
+### Meet Virugama — ML (~80%)
 
 **Delivered:** the DSM engine (X-trajectory by date, frequency bands, seller-side rules, YAML for
 2024/2026/2031), and — new — a retrained, calibrated, serving forecast.
