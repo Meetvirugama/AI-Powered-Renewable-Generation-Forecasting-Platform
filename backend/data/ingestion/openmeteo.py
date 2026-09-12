@@ -35,15 +35,33 @@ HOURLY_VARIABLES = [
     "precipitation",
 ]
 
-async def fetch_weather_forecast(lat: float, lon: float, forecast_days: int = 3) -> pd.DataFrame:
-    """
-    Fetch weather forecast from Open-Meteo API.
+async def fetch_weather_forecast(
+    lat: float, lon: float, forecast_days: int = 3, past_days: int = 1
+) -> pd.DataFrame:
+    """Fetch weather forecast from Open-Meteo API.
+
+    `past_days` defaults to 1 and is not really optional. A settlement day runs
+    00:00-23:45 IST, so its first 22 blocks fall on the *previous* UTC day, from
+    18:30Z onward. Open-Meteo's forecast window opens at 00:00 UTC today, so a
+    request for today returned nothing for those blocks.
+
+    That failed quietly rather than loudly: 22 of 96 blocks arrived with no
+    weather, the frame sat at 80.7% populated -- above the engine's 75% floor --
+    and 00:00-05:30 IST was predicted from clock features alone. The visible
+    symptom was a solar plant showing a non-zero P90 at midnight, because the
+    night-time clamp keys on measured irradiance and there was none to read.
+
+    A day-ahead request never hit this, which is why it survived testing:
+    tomorrow's 00:00 IST is today's 18:30Z, comfortably inside the window. Only
+    a request for *today* is affected -- which is what every dashboard load does
+    by default.
     """
     params = {
         "latitude": lat,
         "longitude": lon,
         "hourly": ",".join(HOURLY_VARIABLES),
         "forecast_days": forecast_days,
+        "past_days": past_days,
         "timezone": "UTC"
     }
     

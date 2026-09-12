@@ -222,3 +222,77 @@ def test_the_ingester_requests_every_feature_the_models_use():
 
     missing = set(feature_builder.WEATHER_FEATURES) - set(HOURLY_VARIABLES)
     assert missing == set(), f"not requested from Open-Meteo: {sorted(missing)}"
+
+# ----------------------------------------------------- the IST/UTC day boundary
+def test_a_settlement_day_starts_before_the_utc_day_it_is_named_after():
+    """The arithmetic behind the past_days requirement.
+
+    Block 1 of any IST day is 18:30Z on the *previous* UTC day. A weather window
+    that opens at 00:00 UTC therefore misses the first 22 blocks of the day it
+    was asked about.
+    """
+    from datetime import timezone
+
+    date_str = _tomorrow()
+    stamps = feature_builder.block_timestamps(date_str, 96)
+    first_utc = stamps[0].astimezone(timezone.utc)
+
+    assert first_utc.strftime("%Y-%m-%d") < date_str
+    assert (first_utc.hour, first_utc.minute) == (18, 30)
+
+    utc_day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    before = [s for s in stamps if s.astimezone(timezone.utc) < utc_day_start]
+    assert len(before) == 22
+
+
+def test_the_open_meteo_request_reaches_back_a_day():
+    """Regression guard for a bug that only appeared on today's date.
+
+    Requesting `forecast_days=3` alone returned no weather for blocks 1-22 of a
+    same-day request. That did not fail loudly: the frame sat at 80.7% populated
+    -- above the engine's 75% floor -- so the engine served a forecast whose
+    first five and a half hours came from clock features alone. The visible
+    symptom was a solar plant with a non-zero P90 at midnight.
+
+    Day-ahead requests were unaffected, which is why every test missed it.
+    """
+    import inspect
+
+    from backend.data.ingestion.openmeteo import fetch_weather_forecast
+
+    default = inspect.signature(fetch_weather_forecast).parameters["past_days"].default
+    assert default >= 1, "a same-day request needs the previous UTC day"
+
+    source = inspect.getsource(fetch_weather_forecast)
+    assert '"past_days"' in source, "past_days must actually be sent to Open-Meteo"
+
+
+def test_every_block_of_a_day_gets_weather_when_the_window_reaches_back(monkeypatch):
+    """End to end over the seam: a response spanning the previous UTC day must
+    populate all 96 blocks, not 74."""
+    date_str = _tomorrow()
+    monkeypatch.setattr(
+        weather_provider, "_fetch", lambda lat, lon: _hourly_response(date_str, hours=96)
+    )
+    blocks = weather_for(PLANT, date_str)
+    assert len(blocks) == 96
+
+
+def test_a_window_that_starts_too_late_leaves_the_early_blocks_empty(monkeypatch):
+    """The failure this fix removes, pinned so it cannot come back silently.
+
+    A response that begins at 00:00 UTC on the target date -- the old
+    `forecast_days` behaviour -- cannot cover the 22 blocks that precede it.
+    """
+    from datetime import timezone
+
+    date_str = _tomorrow()
+    start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    stamps = [start + timedelta(hours=h) for h in range(72)]
+    data = {"timestamp": stamps}
+    for name in feature_builder.WEATHER_FEATURES:
+        data[name] = [float(h % 24) for h in range(72)]
+
+    monkeypatch.setattr(weather_provider, "_fetch", lambda lat, lon: pd.DataFrame(data))
+    blocks = weather_for(PLANT, date_str)
+    assert len(blocks) == 74, "22 blocks precede 00:00 UTC and cannot be covered"
