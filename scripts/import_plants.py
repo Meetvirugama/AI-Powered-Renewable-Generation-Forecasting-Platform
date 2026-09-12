@@ -95,6 +95,11 @@ def parse_args() -> argparse.Namespace:
         metavar="PLACE",
         help="drop plants outside this administrative boundary (a bbox is not a state)",
     )
+    p.add_argument(
+        "--name-unnamed",
+        action="store_true",
+        help="reverse-geocode plants OSM never named, so they read as places not coordinates",
+    )
     p.add_argument("--json", type=Path, default=None, help="also write the raw OSM response here")
     p.add_argument("--from-json", type=Path, default=None, help="read a saved response instead")
     p.add_argument(
@@ -392,6 +397,71 @@ def within_boundary(plants: list[dict], rings: list[list[tuple[float, float]]]) 
     return inside, outside
 
 
+# ---------------------------------------------------------------- naming gaps
+REVERSE = "https://nominatim.openstreetmap.org/reverse"
+
+
+def name_unnamed(plants: list[dict], pause: float = 1.1) -> int:
+    """Give the plants OSM never named a place instead of a coordinate.
+
+    16 of the 101 Gujarat plants carry no `name` tag, and the fallback label is
+    the raw position — "Solar plant near 22.57,72.16". One of those is 615 MW and
+    lands in the top five by capacity, so it is the first thing anyone sees.
+
+    This does not invent a plant name. It reverse-geocodes the position and
+    names the *place*: "Solar plant, Dholera, Ahmedabad". That is a fact about
+    where the plant is, which is all the coordinate was saying anyway, in a form
+    a human can read.
+
+    Nominatim's usage policy is one request per second, hence the pause. Failures
+    are left with the coordinate label rather than retried.
+    """
+    import httpx
+
+    renamed = 0
+    for plant in plants:
+        if not plant["name"].startswith(("Solar plant near", "Wind plant near")):
+            continue
+        try:
+            response = httpx.get(
+                REVERSE,
+                params={
+                    "lat": plant["lat"],
+                    "lon": plant["lon"],
+                    "format": "json",
+                    "zoom": 12,
+                },
+                headers={"User-Agent": "renewable-platform/1.0"},
+                timeout=30,
+            )
+            response.raise_for_status()
+            address = response.json().get("address", {})
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("reverse geocode failed for %s: %s", plant["id"], exc)
+            time.sleep(pause)
+            continue
+
+        locality = (
+            address.get("village")
+            or address.get("town")
+            or address.get("suburb")
+            or address.get("city")
+            or address.get("county")
+        )
+        district = address.get("state_district") or address.get("county")
+        parts = [p for p in (locality, district) if p and p != locality] or []
+        where = ", ".join([locality] + parts) if locality else district
+
+        if where:
+            plant["name"] = f"{plant['type'].title()} plant, {where}"[:120]
+            plant["metadata_json"]["name_source"] = "reverse-geocoded place, not a recorded plant name"
+            renamed += 1
+
+        time.sleep(pause)
+
+    return renamed
+
+
 def cluster_pools(plants: list[dict], grid_deg: float = 0.5) -> None:
     """Group plants onto a coarse lat/lon grid and call each cell a pool.
 
@@ -508,6 +578,9 @@ def main() -> int:
     plants.sort(key=lambda p: -p["avc_mw"])
     if args.limit:
         plants = plants[: args.limit]
+    if args.name_unnamed:
+        logger.info("reverse-geocoding plants with no recorded name (1 req/s)")
+        logger.info("named %d previously-unnamed plants", name_unnamed(plants))
     if args.cluster_pools:
         cluster_pools(plants)
 
