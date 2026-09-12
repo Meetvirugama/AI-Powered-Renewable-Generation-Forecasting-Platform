@@ -1,0 +1,25 @@
+{
+  "Mean_Trust_Score": 0.7716105526265093,
+  "High_Trust_Percent": 75.51020408163265,
+  "conformal_artifacts_available": true,
+  "empirical_calibration_available": true,
+  "formal_exchangeability_guaranteed": false,
+  "status_explanation": {
+    "conformal_artifacts_available": "PASS - conformal_validation_report.json contains full horizon summary, coverage, reliability, trust score data.",
+    "empirical_calibration_available": "PASS - Chronological empirical calibration performed (50% calibration split). Coverage measured on held-out samples.",
+    "formal_exchangeability_guaranteed": "WARNING - Time-series data can violate exchangeability assumption required for formal conformal guarantees. Disclosed in limitations."
+  },
+  "empirical_coverage_summary": {
+    "24h_conformal_80_coverage": 0.8039,
+    "48h_conformal_80_coverage": 0.7959,
+    "72h_conformal_80_coverage": 0.766,
+    "24h_mean_trust": 0.7879,
+    "48h_mean_trust": 0.7616,
+    "72h_mean_trust": 0.7644,
+    "overall_mean_trust": 0.7716,
+    "high_trust_percent": 75.51
+  },
+  "available_deprecated": false,
+  "available_deprecated_note": "Original 'available: false' denoted absence of formal guarantee, not absence of data. Use conformal_artifacts_available and empirical_calibration_available instead.",
+  "updated_at": "2026-09-12T07:17:21.932919Z"
+}

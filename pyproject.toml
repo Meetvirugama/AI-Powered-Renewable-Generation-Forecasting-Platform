@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 [tool.ruff]
 line-length = 110
 target-version = "py311"
-exclude = [".venv", "venv", "backend/db/migrations/versions", "colab_notebooks"]
+exclude = [".venv", "venv", "backend/db/migrations/versions", "colab_notebooks", "Hackout.ipynb"]
 
 [tool.ruff.lint]
 # This selection IS what CI gates on, so `ruff check .` passing locally means the

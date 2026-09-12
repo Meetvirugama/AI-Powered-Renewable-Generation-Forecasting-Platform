@@ -1,0 +1,2173 @@
+{
+  "status": "success",
+  "forecast_generated_at_utc": "2026-09-12T00:17:41.113332+00:00",
+  "forecast_horizon_hours": 72,
+  "location": {
+    "latitude": 19.076,
+    "longitude": 72.8777
+  },
+  "model": "LightGBM Quantile Recursive Forecast",
+  "uncertainty": "Conformal Prediction",
+  "forecast": [
+    {
+      "timestamp": "2020-06-12 00:00:00",
+      "step_hours": 1,
+      "forecast": {
+        "p10": 2.567859792324333,
+        "p50": 2.567859792324333,
+        "p90": 35.09274632556803
+      },
+      "uncertainty": {
+        "width": 32.524886533243695,
+        "normalized": 10.0
+      },
+      "trust": {
+        "score": 9.090909090909092,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.55,
+        "dominant": "Uncertainty",
+        "ramp": 0.0,
+        "grid": 0.45,
+        "battery": 0.5,
+        "asset": 0.2
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 01:00:00",
+      "step_hours": 2,
+      "forecast": {
+        "p10": 51.25252852207713,
+        "p50": 70.45170818109835,
+        "p90": 319.70118982663723
+      },
+      "uncertainty": {
+        "width": 268.4486613045601,
+        "normalized": 3.8103924578253214
+      },
+      "trust": {
+        "score": 20.7883246277182,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5890006838456916,
+        "dominant": "Uncertainty",
+        "ramp": 0.10612430978419467,
+        "grid": 0.48714350842446813,
+        "battery": 0.5318372929352584,
+        "asset": 0.23714350842446813
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 02:00:00",
+      "step_hours": 3,
+      "forecast": {
+        "p10": 5.431841696775001,
+        "p50": 5.431841696775001,
+        "p90": 15.411886918119349
+      },
+      "uncertainty": {
+        "width": 9.980045221344348,
+        "normalized": 1.8373222087726713
+      },
+      "trust": {
+        "score": 35.24449908819364,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5873552666301624,
+        "dominant": "Uncertainty",
+        "ramp": 0.10164698402765267,
+        "grid": 0.48557644440967845,
+        "battery": 0.5304940952082958,
+        "asset": 0.23557644440967845
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 03:00:00",
+      "step_hours": 4,
+      "forecast": {
+        "p10": 2.7729032128568964,
+        "p50": 2.7729032128568964,
+        "p90": 9.159850572427727
+      },
+      "uncertainty": {
+        "width": 6.386947359570831,
+        "normalized": 2.3033422250783127
+      },
+      "trust": {
+        "score": 30.27237058298714,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5515276155026235,
+        "dominant": "Uncertainty",
+        "ramp": 0.004156776877886989,
+        "grid": 0.45145487190726047,
+        "battery": 0.501247033063366,
+        "asset": 0.20145487190726047
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 04:00:00",
+      "step_hours": 5,
+      "forecast": {
+        "p10": -0.05623529031757565,
+        "p50": 2.725114672717496,
+        "p90": 17.277618661956314
+      },
+      "uncertainty": {
+        "width": 17.33385395227389,
+        "normalized": 6.360777315184021
+      },
+      "trust": {
+        "score": 13.5855217075671,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5500274555109892,
+        "dominant": "Uncertainty",
+        "ramp": 7.470887343986878e-05,
+        "grid": 0.45002614810570396,
+        "battery": 0.500022412662032,
+        "asset": 0.20002614810570396
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 05:00:00",
+      "step_hours": 6,
+      "forecast": {
+        "p10": 0.032094956120534875,
+        "p50": 2.567859792324333,
+        "p90": 70.7897420695936
+      },
+      "uncertainty": {
+        "width": 70.75764711347307,
+        "normalized": 10.0
+      },
+      "trust": {
+        "score": 9.090909090909092,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5500903462019167,
+        "dominant": "Uncertainty",
+        "ramp": 0.00024584000521514753,
+        "grid": 0.45008604400182534,
+        "battery": 0.5000737520015646,
+        "asset": 0.2000860440018253
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 06:00:00",
+      "step_hours": 7,
+      "forecast": {
+        "p10": 29.881185732146314,
+        "p50": 29.881185732146314,
+        "p90": 99.49281951070635
+      },
+      "uncertainty": {
+        "width": 69.61163377856005,
+        "normalized": 2.3296140947331097
+      },
+      "trust": {
+        "score": 30.033510537507397,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5656920742567901,
+        "dominant": "Uncertainty",
+        "ramp": 0.04269952178718393,
+        "grid": 0.4649448326255144,
+        "battery": 0.5128098565361552,
+        "asset": 0.2149448326255144
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 07:00:00",
+      "step_hours": 8,
+      "forecast": {
+        "p10": 76.72887287205492,
+        "p50": 151.74997492023132,
+        "p90": 151.74997492023132
+      },
+      "uncertainty": {
+        "width": 75.0211020481764,
+        "normalized": 0.49437307382250845
+      },
+      "trust": {
+        "score": 66.91769394921346,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.34192134658931295,
+        "dominant": "Uncertainty",
+        "ramp": 0.1905201523453968,
+        "grid": 0.28914993654101767,
+        "battery": 0.30434258261487324,
+        "asset": 0.16555666808539057
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "MEDIUM",
+        "action": "NORMAL_OPERATION"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 08:00:00",
+      "step_hours": 9,
+      "forecast": {
+        "p10": 121.01055373235882,
+        "p50": 218.35019998713807,
+        "p90": 275.3604358559454
+      },
+      "uncertainty": {
+        "width": 154.3498821235866,
+        "normalized": 0.7068914130868083
+      },
+      "trust": {
+        "score": 58.586034959983856,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.4270534927274621,
+        "dominant": "Uncertainty",
+        "ramp": 0.10411759327814302,
+        "grid": 0.3545422935364138,
+        "battery": 0.384680984526847,
+        "asset": 0.1778194402647117
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "MEDIUM",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 09:00:00",
+      "step_hours": 10,
+      "forecast": {
+        "p10": 252.20735568096018,
+        "p50": 654.4855713795364,
+        "p90": 789.875022443607
+      },
+      "uncertainty": {
+        "width": 537.6676667626468,
+        "normalized": 0.8215118704723
+      },
+      "trust": {
+        "score": 54.89945007828633,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.7024003774229041,
+        "dominant": "Uncertainty",
+        "ramp": 0.681819996362283,
+        "grid": 0.608317340439334,
+        "battery": 0.6153019341448349,
+        "asset": 0.402939372821259
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 10:00:00",
+      "step_hours": 11,
+      "forecast": {
+        "p10": 169.46435631160773,
+        "p50": 411.16116611306876,
+        "p90": 822.627956433364
+      },
+      "uncertainty": {
+        "width": 653.1636001217563,
+        "normalized": 1.5885829021935265
+      },
+      "trust": {
+        "score": 38.63117534897626,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6897949354224849,
+        "dominant": "Uncertainty",
+        "ramp": 0.38039438210199994,
+        "grid": 0.5831380337357,
+        "battery": 0.6141183146306,
+        "asset": 0.33313803373569995
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 11:00:00",
+      "step_hours": 12,
+      "forecast": {
+        "p10": 192.13691246146487,
+        "p50": 441.41000771159463,
+        "p90": 1002.3096595588296
+      },
+      "uncertainty": {
+        "width": 810.1727470973647,
+        "normalized": 1.8354199748712758
+      },
+      "trust": {
+        "score": 35.26814400908629,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5673785891030539,
+        "dominant": "Uncertainty",
+        "ramp": 0.04728867783143914,
+        "grid": 0.4665510372410037,
+        "battery": 0.5141866033494318,
+        "asset": 0.21655103724100372
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 12:00:00",
+      "step_hours": 13,
+      "forecast": {
+        "p10": 176.67287509739623,
+        "p50": 418.201550767401,
+        "p90": 1001.2068237820603
+      },
+      "uncertainty": {
+        "width": 824.533948684664,
+        "normalized": 1.9716185776930366
+      },
+      "trust": {
+        "score": 33.65169431590821,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5633337415793376,
+        "dominant": "Uncertainty",
+        "ramp": 0.036282290011802776,
+        "grid": 0.462698801504131,
+        "battery": 0.5108846870035408,
+        "asset": 0.21269880150413098
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 13:00:00",
+      "step_hours": 14,
+      "forecast": {
+        "p10": 181.9157112194706,
+        "p50": 410.69465586038297,
+        "p90": 980.3763725235833
+      },
+      "uncertainty": {
+        "width": 798.4606613041127,
+        "normalized": 1.9441710476782563
+      },
+      "trust": {
+        "score": 33.96541789882045,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5543128673739107,
+        "dominant": "Uncertainty",
+        "ramp": 0.011735693534450801,
+        "grid": 0.4541074927370578,
+        "battery": 0.5035207080603352,
+        "asset": 0.2041074927370578
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 14:00:00",
+      "step_hours": 15,
+      "forecast": {
+        "p10": 251.78978843941812,
+        "p50": 669.4322488871886,
+        "p90": 996.4207399311307
+      },
+      "uncertainty": {
+        "width": 744.6309514917126,
+        "normalized": 1.112332056929131
+      },
+      "trust": {
+        "score": 47.34104170410505,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6986501326035959,
+        "dominant": "Uncertainty",
+        "ramp": 0.40449015674447836,
+        "grid": 0.5915715548605675,
+        "battery": 0.6213470470233435,
+        "asset": 0.34157155486056745
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 15:00:00",
+      "step_hours": 16,
+      "forecast": {
+        "p10": 251.48077380750257,
+        "p50": 637.6379012821694,
+        "p90": 861.1671258268617
+      },
+      "uncertainty": {
+        "width": 609.6863520193591,
+        "normalized": 0.9561639134644146
+      },
+      "trust": {
+        "score": 51.1204604643266,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.5441566668776457,
+        "dominant": "Uncertainty",
+        "ramp": 0.04970480128494616,
+        "grid": 0.44767044150871776,
+        "battery": 0.4929933971176912,
+        "asset": 0.2086294631426141
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 16:00:00",
+      "step_hours": 17,
+      "forecast": {
+        "p10": 166.5367953299953,
+        "p50": 411.16167613494395,
+        "p90": 535.1167308536944
+      },
+      "uncertainty": {
+        "width": 368.57993552369913,
+        "normalized": 0.8964355289433519
+      },
+      "trust": {
+        "score": 52.73050334366894,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.6231548461818444,
+        "dominant": "Uncertainty",
+        "ramp": 0.3540552524163287,
+        "grid": 0.5273153263702234,
+        "battery": 0.5544343401965746,
+        "asset": 0.3032064441343854
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 17:00:00",
+      "step_hours": 18,
+      "forecast": {
+        "p10": 70.69691573109439,
+        "p50": 159.15605709881848,
+        "p90": 261.001197333719
+      },
+      "uncertainty": {
+        "width": 190.3042816026246,
+        "normalized": 1.1957086891688815
+      },
+      "trust": {
+        "score": 45.54338218602757,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6947824734254613,
+        "dominant": "Uncertainty",
+        "ramp": 0.3939659140828877,
+        "grid": 0.5878880699290108,
+        "battery": 0.6181897742248663,
+        "asset": 0.3378880699290107
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 18:00:00",
+      "step_hours": 19,
+      "forecast": {
+        "p10": 36.434490787936866,
+        "p50": 43.95142299024966,
+        "p90": 80.15375681250777
+      },
+      "uncertainty": {
+        "width": 43.7192660245709,
+        "normalized": 0.994717851104659
+      },
+      "trust": {
+        "score": 50.13240340964552,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.6132822782924198,
+        "dominant": "Uncertainty",
+        "ramp": 0.18010193247580197,
+        "grid": 0.5106587093636273,
+        "battery": 0.5513895052950701,
+        "asset": 0.2619792465874625
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 19:00:00",
+      "step_hours": 20,
+      "forecast": {
+        "p10": 35.17698304142265,
+        "p50": 47.03993220503665,
+        "p90": 59.847383304337725
+      },
+      "uncertainty": {
+        "width": 24.670400262915074,
+        "normalized": 0.5244565326099054
+      },
+      "trust": {
+        "score": 65.59714748232123,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.2902255057641162,
+        "dominant": "Uncertainty",
+        "ramp": 0.004828334227668756,
+        "grid": 0.23769535665414152,
+        "battery": 0.26367676657325334,
+        "asset": 0.10658122350166516
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "LOW",
+        "action": "NORMAL_OPERATION"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 20:00:00",
+      "step_hours": 21,
+      "forecast": {
+        "p10": 44.930157612164464,
+        "p50": 45.27702854431129,
+        "p90": 126.13567589561457
+      },
+      "uncertainty": {
+        "width": 81.2055182834501,
+        "normalized": 1.7935257480612032
+      },
+      "trust": {
+        "score": 35.797056844528186,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5510128248464732,
+        "dominant": "Uncertainty",
+        "ramp": 0.002755985976797497,
+        "grid": 0.45096459509187914,
+        "battery": 0.5008267957930392,
+        "asset": 0.20096459509187914
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 21:00:00",
+      "step_hours": 22,
+      "forecast": {
+        "p10": 46.976421541926285,
+        "p50": 49.63074026387424,
+        "p90": 123.54498836536676
+      },
+      "uncertainty": {
+        "width": 76.56856682344048,
+        "normalized": 1.5427649249956708
+      },
+      "trust": {
+        "score": 39.32726891777865,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5525012980018092,
+        "dominant": "Uncertainty",
+        "ramp": 0.006806253066147376,
+        "grid": 0.4523821885731516,
+        "battery": 0.5020418759198442,
+        "asset": 0.2023821885731516
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 22:00:00",
+      "step_hours": 23,
+      "forecast": {
+        "p10": 45.252318915113754,
+        "p50": 49.63074026387424,
+        "p90": 212.53467655221266
+      },
+      "uncertainty": {
+        "width": 167.2823576370989,
+        "normalized": 3.370539173446966
+      },
+      "trust": {
+        "score": 22.88047218694342,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.55,
+        "dominant": "Uncertainty",
+        "ramp": 0.0,
+        "grid": 0.45,
+        "battery": 0.5,
+        "asset": 0.2
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-12 23:00:00",
+      "step_hours": 24,
+      "forecast": {
+        "p10": 40.166615018391475,
+        "p50": 49.57295106386344,
+        "p90": 240.28106841847216
+      },
+      "uncertainty": {
+        "width": 200.1144534000807,
+        "normalized": 4.036766927704424
+      },
+      "trust": {
+        "score": 19.85400584052365,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5500332010982408,
+        "dominant": "Uncertainty",
+        "ramp": 9.03431244646495e-05,
+        "grid": 0.4500316200935626,
+        "battery": 0.5000271029373394,
+        "asset": 0.20003162009356265
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 00:00:00",
+      "step_hours": 25,
+      "forecast": {
+        "p10": 47.28169726630524,
+        "p50": 69.85541859806986,
+        "p90": 243.2155725843459
+      },
+      "uncertainty": {
+        "width": 195.93387531804066,
+        "normalized": 2.804848592212227
+      },
+      "trust": {
+        "score": 26.2822547537582,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5616526997612424,
+        "dominant": "Uncertainty",
+        "ramp": 0.03170802656120401,
+        "grid": 0.4610978092964214,
+        "battery": 0.5095124079683612,
+        "asset": 0.2110978092964214
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 01:00:00",
+      "step_hours": 26,
+      "forecast": {
+        "p10": 44.578418365235656,
+        "p50": 69.85541859806986,
+        "p90": 221.73507252940826
+      },
+      "uncertainty": {
+        "width": 177.1566541641726,
+        "normalized": 2.5360473844905163
+      },
+      "trust": {
+        "score": 28.280164015508035,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.55,
+        "dominant": "Uncertainty",
+        "ramp": 0.0,
+        "grid": 0.45,
+        "battery": 0.5,
+        "asset": 0.2
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 02:00:00",
+      "step_hours": 27,
+      "forecast": {
+        "p10": 45.632558066899556,
+        "p50": 72.76718904265994,
+        "p90": 221.8056442020949
+      },
+      "uncertainty": {
+        "width": 176.17308613519535,
+        "normalized": 2.4210511087746203
+      },
+      "trust": {
+        "score": 29.23078224219188,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5516728727265184,
+        "dominant": "Uncertainty",
+        "ramp": 0.004552034629981886,
+        "grid": 0.4515932121204937,
+        "battery": 0.5013656103889945,
+        "asset": 0.20159321212049366
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 03:00:00",
+      "step_hours": 28,
+      "forecast": {
+        "p10": 43.86244069818686,
+        "p50": 69.90320713820924,
+        "p90": 188.16686864231343
+      },
+      "uncertainty": {
+        "width": 144.3044279441266,
+        "normalized": 2.0643462837759157
+      },
+      "trust": {
+        "score": 32.63338759377386,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5516454172155292,
+        "dominant": "Uncertainty",
+        "ramp": 0.00447732575654205,
+        "grid": 0.45156706401478974,
+        "battery": 0.5013431977269626,
+        "asset": 0.20156706401478972
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 04:00:00",
+      "step_hours": 29,
+      "forecast": {
+        "p10": 5.0791293010944925,
+        "p50": 6.7820823287267045,
+        "p90": 54.2242579285123
+      },
+      "uncertainty": {
+        "width": 49.14512862741781,
+        "normalized": 7.246317428636566
+      },
+      "trust": {
+        "score": 12.126625110589984,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5862644000172237,
+        "dominant": "Uncertainty",
+        "ramp": 0.09867863950264942,
+        "grid": 0.4845375238259273,
+        "battery": 0.5296035918507949,
+        "asset": 0.2345375238259273
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 05:00:00",
+      "step_hours": 30,
+      "forecast": {
+        "p10": 1.0221461467763233,
+        "p50": 3.5257738669151384,
+        "p90": 54.070849762150395
+      },
+      "uncertainty": {
+        "width": 53.04870361537407,
+        "normalized": 10.0
+      },
+      "trust": {
+        "score": 9.090909090909092,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5518708169886869,
+        "dominant": "Uncertainty",
+        "ramp": 0.005090658472617363,
+        "grid": 0.4517817304654161,
+        "battery": 0.5015271975417852,
+        "asset": 0.2017817304654161
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 06:00:00",
+      "step_hours": 31,
+      "forecast": {
+        "p10": 19.61677373273893,
+        "p50": 19.61677373273893,
+        "p90": 30.02862639537902
+      },
+      "uncertainty": {
+        "width": 10.41185266264009,
+        "normalized": 0.53076271734229
+      },
+      "trust": {
+        "score": 65.3269111320009,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.30116410888207207,
+        "dominant": "Uncertainty",
+        "ramp": 0.02515541318044239,
+        "grid": 0.24764761741718533,
+        "battery": 0.2729279826252777,
+        "asset": 0.11495693808161284
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "MEDIUM",
+        "action": "NORMAL_OPERATION"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 07:00:00",
+      "step_hours": 32,
+      "forecast": {
+        "p10": 125.09638837901696,
+        "p50": 200.4346554017757,
+        "p90": 360.7686369983668
+      },
+      "uncertainty": {
+        "width": 235.67224861934983,
+        "normalized": 1.175805885320249
+      },
+      "trust": {
+        "score": 45.95998231031596,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6538836365940026,
+        "dominant": "Uncertainty",
+        "ramp": 0.2826765621605512,
+        "grid": 0.5489367967561929,
+        "battery": 0.5848029686481654,
+        "asset": 0.29893679675619295
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 08:00:00",
+      "step_hours": 33,
+      "forecast": {
+        "p10": 157.09931977245103,
+        "p50": 364.3704785730568,
+        "p90": 616.2384090108611
+      },
+      "uncertainty": {
+        "width": 459.13908923841007,
+        "normalized": 1.2600886048079316
+      },
+      "trust": {
+        "score": 44.24605291459282,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6441845426009118,
+        "dominant": "Uncertainty",
+        "ramp": 0.25628446966234514,
+        "grid": 0.5396995643818208,
+        "battery": 0.5768853408987036,
+        "asset": 0.2896995643818208
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 09:00:00",
+      "step_hours": 34,
+      "forecast": {
+        "p10": 259.29342169508766,
+        "p50": 639.8885765452796,
+        "p90": 764.157053323339
+      },
+      "uncertainty": {
+        "width": 504.86363162825137,
+        "normalized": 0.7889867851134229
+      },
+      "trust": {
+        "score": 55.89756214641907,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.5922336137794972,
+        "dominant": "Uncertainty",
+        "ramp": 0.43072348834589,
+        "grid": 0.5057972742221019,
+        "battery": 0.5237104390604784,
+        "asset": 0.3085505779437461
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 10:00:00",
+      "step_hours": 35,
+      "forecast": {
+        "p10": 265.1748066484264,
+        "p50": 676.5515644854978,
+        "p90": 960.2552137279836
+      },
+      "uncertainty": {
+        "width": 695.0804070795572,
+        "normalized": 1.0273871830904167
+      },
+      "trust": {
+        "score": 49.32456949223016,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5710636496815245,
+        "dominant": "Uncertainty",
+        "ramp": 0.05731605355516841,
+        "grid": 0.47006061874430893,
+        "battery": 0.5171948160665505,
+        "asset": 0.22006061874430896
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 11:00:00",
+      "step_hours": 36,
+      "forecast": {
+        "p10": 208.21261087221058,
+        "p50": 458.28695717336814,
+        "p90": 999.4464918865672
+      },
+      "uncertainty": {
+        "width": 791.2338810143566,
+        "normalized": 1.7265031589989868
+      },
+      "trust": {
+        "score": 36.67701600489404,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6753975598986827,
+        "dominant": "Uncertainty",
+        "ramp": 0.3412178500644426,
+        "grid": 0.5694262475225549,
+        "battery": 0.6023653550193327,
+        "asset": 0.3194262475225549
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 12:00:00",
+      "step_hours": 37,
+      "forecast": {
+        "p10": 313.7033902051005,
+        "p50": 769.5884176227457,
+        "p90": 1124.9354793545529
+      },
+      "uncertainty": {
+        "width": 811.2320891494523,
+        "normalized": 1.0541116128036752
+      },
+      "trust": {
+        "score": 48.6828463344838,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.7288491685114301,
+        "dominant": "Uncertainty",
+        "ramp": 0.4866644041127352,
+        "grid": 0.6203325414394574,
+        "battery": 0.6459993212338205,
+        "asset": 0.3703325414394573
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 13:00:00",
+      "step_hours": 38,
+      "forecast": {
+        "p10": 194.09868304656712,
+        "p50": 407.15167315410963,
+        "p90": 965.1241587427999
+      },
+      "uncertainty": {
+        "width": 771.0254756962328,
+        "normalized": 1.893705772665924
+      },
+      "trust": {
+        "score": 34.5577635931768,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.7582274535192751,
+        "dominant": "Uncertainty",
+        "ramp": 0.5666053156987081,
+        "grid": 0.6483118604945478,
+        "battery": 0.6699815947096124,
+        "asset": 0.3983118604945478
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "CRITICAL",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 14:00:00",
+      "step_hours": 39,
+      "forecast": {
+        "p10": 186.9363883490772,
+        "p50": 457.5778191895881,
+        "p90": 745.5686129267209
+      },
+      "uncertainty": {
+        "width": 558.6322245776437,
+        "normalized": 1.22084637831918
+      },
+      "trust": {
+        "score": 45.02787809919736,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.578970870476041,
+        "dominant": "Uncertainty",
+        "ramp": 0.07883230061507722,
+        "grid": 0.47759130521527704,
+        "battery": 0.5236496901845231,
+        "asset": 0.22759130521527704
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 15:00:00",
+      "step_hours": 40,
+      "forecast": {
+        "p10": 277.80633804960473,
+        "p50": 541.1962404865162,
+        "p90": 897.1459669932913
+      },
+      "uncertainty": {
+        "width": 619.3396289436865,
+        "normalized": 1.144390114836223
+      },
+      "trust": {
+        "score": 46.63330580948769,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5980405234835896,
+        "dominant": "Uncertainty",
+        "ramp": 0.13072251288051584,
+        "grid": 0.49575287950818053,
+        "battery": 0.5392167538641548,
+        "asset": 0.24575287950818056
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 16:00:00",
+      "step_hours": 41,
+      "forecast": {
+        "p10": 184.46073445727723,
+        "p50": 355.0535443563858,
+        "p90": 491.41301351500556
+      },
+      "uncertainty": {
+        "width": 306.95227905772833,
+        "normalized": 0.864523909343376
+      },
+      "trust": {
+        "score": 53.63299419164688,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.5824310034723809,
+        "dominant": "Uncertainty",
+        "ramp": 0.2910009614517662,
+        "grid": 0.49088609571263736,
+        "battery": 0.5195622431072179,
+        "asset": 0.27475511837679334
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 17:00:00",
+      "step_hours": 42,
+      "forecast": {
+        "p10": 64.32746365942901,
+        "p50": 120.68235108809847,
+        "p90": 220.31286133588247
+      },
+      "uncertainty": {
+        "width": 155.98539767645346,
+        "normalized": 1.2925286504408173
+      },
+      "trust": {
+        "score": 43.61995649684533,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6846511287758037,
+        "dominant": "Uncertainty",
+        "ramp": 0.3663976293219148,
+        "grid": 0.5782391702626701,
+        "battery": 0.6099192887965744,
+        "asset": 0.3282391702626702
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 18:00:00",
+      "step_hours": 43,
+      "forecast": {
+        "p10": 16.17584330779701,
+        "p50": 22.115177750661218,
+        "p90": 35.25042065312632
+      },
+      "uncertainty": {
+        "width": 19.07457734532931,
+        "normalized": 0.8625106566122149
+      },
+      "trust": {
+        "score": 53.69096796573152,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.5310097538135303,
+        "dominant": "Uncertainty",
+        "ramp": 0.15409222497091724,
+        "grid": 0.4420620742153178,
+        "battery": 0.4774829957973826,
+        "asset": 0.22643441006226403
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 19:00:00",
+      "step_hours": 44,
+      "forecast": {
+        "p10": 34.09151593209005,
+        "p50": 47.9936557671772,
+        "p90": 137.55723172040894
+      },
+      "uncertainty": {
+        "width": 103.46571578831889,
+        "normalized": 2.1558206387615573
+      },
+      "trust": {
+        "score": 31.687478930755436,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5648677242596741,
+        "dominant": "Uncertainty",
+        "ramp": 0.04045639254333106,
+        "grid": 0.46415973739016586,
+        "battery": 0.5121369177629993,
+        "asset": 0.2141597373901659
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 20:00:00",
+      "step_hours": 45,
+      "forecast": {
+        "p10": 49.36714690211546,
+        "p50": 51.18862666613908,
+        "p90": 183.88483803210363
+      },
+      "uncertainty": {
+        "width": 134.51769112998818,
+        "normalized": 2.6278823493244516
+      },
+      "trust": {
+        "score": 27.564289679520893,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.551835577282139,
+        "dominant": "Uncertainty",
+        "ramp": 0.004994768114663757,
+        "grid": 0.4517481688401323,
+        "battery": 0.5014984304343991,
+        "asset": 0.20174816884013233
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 21:00:00",
+      "step_hours": 46,
+      "forecast": {
+        "p10": 2.6156483324637336,
+        "p50": 2.6156483324637336,
+        "p90": 22.24412687729915
+      },
+      "uncertainty": {
+        "width": 19.628478544835414,
+        "normalized": 7.5042469574264175
+      },
+      "trust": {
+        "score": 11.758830676086378,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.577906187059197,
+        "dominant": "Uncertainty",
+        "ramp": 0.07593520288216872,
+        "grid": 0.47657732100875905,
+        "battery": 0.5227805608646506,
+        "asset": 0.22657732100875905
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 22:00:00",
+      "step_hours": 47,
+      "forecast": {
+        "p10": 50.09892005148488,
+        "p50": 70.11334486056268,
+        "p90": 288.18648848297704
+      },
+      "uncertainty": {
+        "width": 238.08756843149217,
+        "normalized": 3.3957524849118856
+      },
+      "trust": {
+        "score": 22.749233571099158,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.588778831564301,
+        "dominant": "Uncertainty",
+        "ramp": 0.10552063010694168,
+        "grid": 0.48693222053742957,
+        "battery": 0.5316561890320826,
+        "asset": 0.2369322205374296
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-13 23:00:00",
+      "step_hours": 48,
+      "forecast": {
+        "p10": 2.567859792324333,
+        "p50": 2.567859792324333,
+        "p90": 45.9235603967985
+      },
+      "uncertainty": {
+        "width": 43.355700604474166,
+        "normalized": 10.0
+      },
+      "trust": {
+        "score": 9.090909090909092,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5888062870752904,
+        "dominant": "Uncertainty",
+        "ramp": 0.10559533898038156,
+        "grid": 0.4869583686431336,
+        "battery": 0.5316786016941145,
+        "asset": 0.23695836864313355
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 00:00:00",
+      "step_hours": 49,
+      "forecast": {
+        "p10": 2.6156483324637336,
+        "p50": 2.6156483324637336,
+        "p90": 52.992894498712516
+      },
+      "uncertainty": {
+        "width": 50.37724616624878,
+        "normalized": 10.0
+      },
+      "trust": {
+        "score": 9.090909090909092,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5500274555109892,
+        "dominant": "Uncertainty",
+        "ramp": 7.470887343986878e-05,
+        "grid": 0.45002614810570396,
+        "battery": 0.500022412662032,
+        "asset": 0.20002614810570396
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 01:00:00",
+      "step_hours": 50,
+      "forecast": {
+        "p10": -0.5555645029419675,
+        "p50": 1.2198143655207974,
+        "p90": 32.26726823580367
+      },
+      "uncertainty": {
+        "width": 32.82283273874564,
+        "normalized": 10.0
+      },
+      "trust": {
+        "score": 9.090909090909092,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.550801935667142,
+        "dominant": "Uncertainty",
+        "ramp": 0.0021821378697741913,
+        "grid": 0.450763748254421,
+        "battery": 0.5006546413609323,
+        "asset": 0.20076374825442098
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 02:00:00",
+      "step_hours": 51,
+      "forecast": {
+        "p10": 44.57810995799033,
+        "p50": 70.29935965875572,
+        "p90": 239.04370948290818
+      },
+      "uncertainty": {
+        "width": 194.46559952491785,
+        "normalized": 2.7662499018858053
+      },
+      "trust": {
+        "score": 26.551610383030834,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5896876366047498,
+        "dominant": "Uncertainty",
+        "ramp": 0.10799356899251607,
+        "grid": 0.4877977491473806,
+        "battery": 0.5323980706977548,
+        "asset": 0.23779774914738064
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 03:00:00",
+      "step_hours": 52,
+      "forecast": {
+        "p10": 5.431841696775001,
+        "p50": 5.431841696775001,
+        "p90": 8.842126768418181
+      },
+      "uncertainty": {
+        "width": 3.4102850716431803,
+        "normalized": 0.627832075046639
+      },
+      "trust": {
+        "score": 61.43139795125053,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.3825753805087191,
+        "dominant": "Uncertainty",
+        "ramp": 0.10140881423963977,
+        "grid": 0.31801751875486145,
+        "battery": 0.34433868179521143,
+        "asset": 0.1610594999932017
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "MEDIUM",
+        "action": "NORMAL_OPERATION"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 04:00:00",
+      "step_hours": 53,
+      "forecast": {
+        "p10": 0.7763356331610505,
+        "p50": 2.567859792324333,
+        "p90": 20.262125483169495
+      },
+      "uncertainty": {
+        "width": 19.485789850008445,
+        "normalized": 7.588335749451053
+      },
+      "trust": {
+        "score": 11.643699421787483,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5516454172155292,
+        "dominant": "Uncertainty",
+        "ramp": 0.004477325756542005,
+        "grid": 0.4515670640147897,
+        "battery": 0.5013431977269626,
+        "asset": 0.20156706401478972
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 05:00:00",
+      "step_hours": 54,
+      "forecast": {
+        "p10": 47.303076093159596,
+        "p50": 51.08304892598889,
+        "p90": 78.98051336639828
+      },
+      "uncertainty": {
+        "width": 31.677437273238688,
+        "normalized": 0.6201164049353786
+      },
+      "trust": {
+        "score": 61.72395989286258,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.3689370086754145,
+        "dominant": "Uncertainty",
+        "ramp": 0.07584485975770408,
+        "grid": 0.3055980831361168,
+        "battery": 0.3328116603950005,
+        "asset": 0.15056898190227214
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "MEDIUM",
+        "action": "NORMAL_OPERATION"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 06:00:00",
+      "step_hours": 55,
+      "forecast": {
+        "p10": 37.79934340592403,
+        "p50": 37.79934340592403,
+        "p90": 79.59633384822584
+      },
+      "uncertainty": {
+        "width": 41.79699044230181,
+        "normalized": 1.105759665920324
+      },
+      "trust": {
+        "score": 47.48880017905315,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5576317653106566,
+        "dominant": "Uncertainty",
+        "ramp": 0.020766708328317268,
+        "grid": 0.45726834791491106,
+        "battery": 0.5062300124984952,
+        "asset": 0.20726834791491106
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 07:00:00",
+      "step_hours": 56,
+      "forecast": {
+        "p10": 121.17165551283611,
+        "p50": 217.8359579639782,
+        "p90": 343.1698461403511
+      },
+      "uncertainty": {
+        "width": 221.99819062751502,
+        "normalized": 1.0191071836042693
+      },
+      "trust": {
+        "score": 49.52684077993914,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6534347823773122,
+        "dominant": "Uncertainty",
+        "ramp": 0.28145519014234616,
+        "grid": 0.5485093165498212,
+        "battery": 0.5844365570427038,
+        "asset": 0.29850931654982116
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 08:00:00",
+      "step_hours": 57,
+      "forecast": {
+        "p10": 133.8704643523306,
+        "p50": 231.8207057687218,
+        "p90": 339.4125660913165
+      },
+      "uncertainty": {
+        "width": 205.54210173898588,
+        "normalized": 0.8866425463194147
+      },
+      "trust": {
+        "score": 53.00421120847005,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.4956879291704999,
+        "dominant": "Uncertainty",
+        "ramp": 0.02186266311516125,
+        "grid": 0.4066410779340431,
+        "battery": 0.44988007209425573,
+        "asset": 0.1849804413541894
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "MEDIUM",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 09:00:00",
+      "step_hours": 58,
+      "forecast": {
+        "p10": 163.6730406735342,
+        "p50": 412.1167949964214,
+        "p90": 416.42337079338273
+      },
+      "uncertainty": {
+        "width": 252.75033011984854,
+        "normalized": 0.6132978140547402
+      },
+      "trust": {
+        "score": 61.98483573759243,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.4408976537058819,
+        "dominant": "Uncertainty",
+        "ramp": 0.2818608325871424,
+        "grid": 0.3746353077301329,
+        "battery": 0.3912071568035128,
+        "asset": 0.22131085421644786
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "MEDIUM",
+        "action": "NORMAL_OPERATION"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 10:00:00",
+      "step_hours": 59,
+      "forecast": {
+        "p10": 166.31793932731435,
+        "p50": 454.9070993043706,
+        "p90": 762.1104487117449
+      },
+      "uncertainty": {
+        "width": 595.7925093844306,
+        "normalized": 1.3097014950652472
+      },
+      "trust": {
+        "score": 43.29563807862327,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5745839204698249,
+        "dominant": "Uncertainty",
+        "ramp": 0.06689502168659789,
+        "grid": 0.4734132575903093,
+        "battery": 0.5200685065059794,
+        "asset": 0.22341325759030928
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 11:00:00",
+      "step_hours": 60,
+      "forecast": {
+        "p10": 328.8454474396533,
+        "p50": 645.9030752894738,
+        "p90": 1096.326467973532
+      },
+      "uncertainty": {
+        "width": 767.4810205338788,
+        "normalized": 1.1882293933988286
+      },
+      "trust": {
+        "score": 45.699047961638406,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6597311636272252,
+        "dominant": "Uncertainty",
+        "ramp": 0.29858820034619077,
+        "grid": 0.5545058701211668,
+        "battery": 0.5895764601038572,
+        "asset": 0.30450587012116676
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 12:00:00",
+      "step_hours": 61,
+      "forecast": {
+        "p10": 191.72049993896707,
+        "p50": 432.8663423732566,
+        "p90": 984.8911425316265
+      },
+      "uncertainty": {
+        "width": 793.1706425926595,
+        "normalized": 1.8323684775573228
+      },
+      "trust": {
+        "score": 35.30614070604313,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6723940372443352,
+        "dominant": "Uncertainty",
+        "ramp": 0.3330449993043136,
+        "grid": 0.5665657497565098,
+        "battery": 0.599913499791294,
+        "asset": 0.31656574975650975
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 13:00:00",
+      "step_hours": 62,
+      "forecast": {
+        "p10": 308.4047587683872,
+        "p50": 769.714812433255,
+        "p90": 1064.137566827964
+      },
+      "uncertainty": {
+        "width": 755.7328080595769,
+        "normalized": 0.9818348235870472
+      },
+      "trust": {
+        "score": 50.458291886810095,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.7335356102455519,
+        "dominant": "Uncertainty",
+        "ramp": 0.5266026048236081,
+        "grid": 0.6261365823024341,
+        "battery": 0.648898193240606,
+        "asset": 0.3806778764056723
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 14:00:00",
+      "step_hours": 63,
+      "forecast": {
+        "p10": 259.72133194465977,
+        "p50": 651.9467015107131,
+        "p90": 1032.1835600752556
+      },
+      "uncertainty": {
+        "width": 772.4622281305958,
+        "normalized": 1.1848548741112812
+      },
+      "trust": {
+        "score": 45.76963036992392,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6176602309711413,
+        "dominant": "Uncertainty",
+        "ramp": 0.18410947203031655,
+        "grid": 0.5144383152106108,
+        "battery": 0.5552328416090949,
+        "asset": 0.2644383152106108
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 15:00:00",
+      "step_hours": 64,
+      "forecast": {
+        "p10": 259.7989362002105,
+        "p50": 612.2238604561726,
+        "p90": 899.1204568853076
+      },
+      "uncertainty": {
+        "width": 639.3215206850971,
+        "normalized": 1.0442610308661815
+      },
+      "trust": {
+        "score": 48.91743201582659,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5728215989840226,
+        "dominant": "Uncertainty",
+        "ramp": 0.06209958907217034,
+        "grid": 0.4717348561752596,
+        "battery": 0.5186298767216511,
+        "asset": 0.22173485617525962
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 16:00:00",
+      "step_hours": 65,
+      "forecast": {
+        "p10": 162.75413914072513,
+        "p50": 270.097404460197,
+        "p90": 481.8667950447108
+      },
+      "uncertainty": {
+        "width": 319.1126559039857,
+        "normalized": 1.1814724964139347
+      },
+      "trust": {
+        "score": 45.840596278150365,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.746558770049821,
+        "dominant": "Uncertainty",
+        "ramp": 0.5348537960539346,
+        "grid": 0.6371988286188771,
+        "battery": 0.6604561388161804,
+        "asset": 0.3871988286188771
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 17:00:00",
+      "step_hours": 66,
+      "forecast": {
+        "p10": 66.59249944374389,
+        "p50": 148.40445448653068,
+        "p90": 230.15288756411752
+      },
+      "uncertainty": {
+        "width": 163.56038812037363,
+        "normalized": 1.1021258599289057
+      },
+      "trust": {
+        "score": 47.570890928187346,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.6199151326983016,
+        "dominant": "Uncertainty",
+        "ramp": 0.19024525904299733,
+        "grid": 0.5165858406650491,
+        "battery": 0.5570735777128992,
+        "asset": 0.2665858406650491
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 18:00:00",
+      "step_hours": 67,
+      "forecast": {
+        "p10": 44.74639995599623,
+        "p50": 47.09360415283737,
+        "p90": 93.07847161953644
+      },
+      "uncertainty": {
+        "width": 48.33207166354021,
+        "normalized": 1.0262979762684026
+      },
+      "trust": {
+        "score": 49.35108319268935,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.608205192218536,
+        "dominant": "Uncertainty",
+        "ramp": 0.1583814754245877,
+        "grid": 0.5054335163986057,
+        "battery": 0.5475144426273764,
+        "asset": 0.2554335163986057
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 19:00:00",
+      "step_hours": 68,
+      "forecast": {
+        "p10": 42.80027354619494,
+        "p50": 48.12575696419789,
+        "p90": 68.72969174650167
+      },
+      "uncertainty": {
+        "width": 25.929418200306735,
+        "normalized": 0.5387846196541229
+      },
+      "trust": {
+        "score": 64.9863526855872,
+        "class": "MEDIUM"
+      },
+      "risk": {
+        "overall": 0.2969245340833041,
+        "dominant": "Uncertainty",
+        "ramp": 0.0016135871388747779,
+        "grid": 0.2430178343429615,
+        "battery": 0.26987638596872393,
+        "asset": 0.10832167942943076
+      },
+      "decision": {
+        "readiness": "MONITOR",
+        "priority": "LOW",
+        "action": "NORMAL_OPERATION"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 20:00:00",
+      "step_hours": 69,
+      "forecast": {
+        "p10": -1.4355255938487792,
+        "p50": 2.9058246445484603,
+        "p90": 2.9058246445484603
+      },
+      "uncertainty": {
+        "width": 4.34135023839724,
+        "normalized": 1.4940160799192916
+      },
+      "trust": {
+        "score": 40.095972437850556,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5759797923332506,
+        "dominant": "Uncertainty",
+        "ramp": 0.07069331247143015,
+        "grid": 0.47474265936500054,
+        "battery": 0.521207993741429,
+        "asset": 0.22474265936500057
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 21:00:00",
+      "step_hours": 70,
+      "forecast": {
+        "p10": 48.74835305193947,
+        "p50": 48.74835305193947,
+        "p90": 131.75264733996497
+      },
+      "uncertainty": {
+        "width": 83.0042942880255,
+        "normalized": 1.7027096791737353
+      },
+      "trust": {
+        "score": 36.99990449235809,
+        "class": "LOW"
+      },
+      "risk": {
+        "overall": 0.5763374867444825,
+        "dominant": "Uncertainty",
+        "ramp": 0.07166663059723107,
+        "grid": 0.47508332070903087,
+        "battery": 0.5214999891791693,
+        "asset": 0.2250833207090309
+      },
+      "decision": {
+        "readiness": "OPERATOR_REVIEW",
+        "priority": "HIGH",
+        "action": "INCREASE_RESERVE_MARGIN"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 22:00:00",
+      "step_hours": 71,
+      "forecast": {
+        "p10": 46.76583702208641,
+        "p50": 48.282694837070714,
+        "p90": 219.02609048351638
+      },
+      "uncertainty": {
+        "width": 172.26025346142998,
+        "normalized": 3.5677430697473858
+      },
+      "trust": {
+        "score": 21.89264993084,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.550267530336734,
+        "dominant": "Uncertainty",
+        "ramp": 0.0007279737053985124,
+        "grid": 0.4502547907968895,
+        "battery": 0.5002183921116196,
+        "asset": 0.2002547907968895
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    },
+    {
+      "timestamp": "2020-06-14 23:00:00",
+      "step_hours": 72,
+      "forecast": {
+        "p10": 48.58441272241899,
+        "p50": 48.71663523788518,
+        "p90": 238.24856162417595
+      },
+      "uncertainty": {
+        "width": 189.66414890175696,
+        "normalized": 3.893211098886626
+      },
+      "trust": {
+        "score": 20.436477801408046,
+        "class": "VERY_LOW"
+      },
+      "risk": {
+        "overall": 0.5502493077923797,
+        "dominant": "Uncertainty",
+        "ramp": 0.0006783885506928236,
+        "grid": 0.4502374359927425,
+        "battery": 0.5002035165652079,
+        "asset": 0.2002374359927425
+      },
+      "decision": {
+        "readiness": "CAUTION",
+        "priority": "HIGH",
+        "action": "CONSERVATIVE_DISPATCH"
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+model_id,original_path,bundle_path,file_size_bytes,file_size_mb,num_features,num_trees,objective,inference_status,audit_note
+lightgbm_24h,/content/lightgbm_24h.txt,models/lightgbm_24h.txt,231245,0.220532,61,85,regression_l2,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_24h_P10,/content/lightgbm_24h_P10.txt,models/lightgbm_24h_P10.txt,1403419,1.338405,61,500,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_24h_P50,/content/lightgbm_24h_P50.txt,models/lightgbm_24h_P50.txt,312661,0.298177,61,113,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_24h_P90,/content/lightgbm_24h_P90.txt,models/lightgbm_24h_P90.txt,1221191,1.164618,61,434,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_48h,/content/lightgbm_48h.txt,models/lightgbm_48h.txt,248931,0.237399,61,91,regression_l2,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_48h_P10,/content/lightgbm_48h_P10.txt,models/lightgbm_48h_P10.txt,897182,0.855619,61,321,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_48h_P50,/content/lightgbm_48h_P50.txt,models/lightgbm_48h_P50.txt,493112,0.470268,61,177,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_48h_P90,/content/lightgbm_48h_P90.txt,models/lightgbm_48h_P90.txt,946770,0.902910,61,337,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_72h,/content/lightgbm_72h.txt,models/lightgbm_72h.txt,156928,0.149658,61,56,regression_l2,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_72h_P10,/content/lightgbm_72h_P10.txt,models/lightgbm_72h_P10.txt,1401568,1.336639,61,497,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_72h_P50,/content/lightgbm_72h_P50.txt,models/lightgbm_72h_P50.txt,194338,0.185335,61,69,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully
+lightgbm_72h_P90,/content/lightgbm_72h_P90.txt,models/lightgbm_72h_P90.txt,461493,0.440114,61,165,quantile,PASS,load_error was metadata-accessor bug (booster.objective); model file parsed successfully

@@ -1,0 +1,13 @@
+Model,Features,Trees,Best_Iteration,Objective,Size_MB,Model_File,Parameter_File,Feature_File
+lightgbm_24h,61,85,-1,regression_l2,0.22053241729736328,models/lightgbm_24h.txt,,
+lightgbm_24h_P10,61,500,-1,quantile,1.338404655456543,models/lightgbm_24h_P10.txt,,
+lightgbm_24h_P50,61,113,-1,quantile,0.29817676544189453,models/lightgbm_24h_P50.txt,,
+lightgbm_24h_P90,61,434,-1,quantile,1.1646184921264648,models/lightgbm_24h_P90.txt,,
+lightgbm_48h,61,91,-1,regression_l2,0.23739910125732422,models/lightgbm_48h.txt,,
+lightgbm_48h_P10,61,321,-1,quantile,0.8556194305419922,models/lightgbm_48h_P10.txt,,
+lightgbm_48h_P50,61,177,-1,quantile,0.47026824951171875,models/lightgbm_48h_P50.txt,,
+lightgbm_48h_P90,61,337,-1,quantile,0.9029102325439453,models/lightgbm_48h_P90.txt,,
+lightgbm_72h,61,56,-1,regression_l2,0.149658203125,models/lightgbm_72h.txt,,
+lightgbm_72h_P10,61,497,-1,quantile,1.336639404296875,models/lightgbm_72h_P10.txt,,
+lightgbm_72h_P50,61,69,-1,quantile,0.1853351593017578,models/lightgbm_72h_P50.txt,,
+lightgbm_72h_P90,61,165,-1,quantile,0.44011402130126953,models/lightgbm_72h_P90.txt,,
