@@ -23,16 +23,34 @@ import time
 
 logger = logging.getLogger("renewable_platform")
 
-DEFAULT_PRIMARY = "gemini/gemini-3.6-flash"   # Groq removed — all 5 keys expired 2026-09
-DEFAULT_FALLBACK = "gemini/gemini-3.6-flash"  # gemini-1.5-flash deprecated 2026-09
+# Verified against both providers on 2026-09-12 with a real completion, not just
+# a models-list call -- several models connect happily and then return an empty
+# string. llama-3.3-70b-versatile is retired and no longer served by Groq.
+#
+# gpt-oss-120b returns clean prose and stops cleanly. Avoid qwen3.6-27b: it emits
+# its <think> block into message.content, which would land verbatim in an
+# operator's answer.
+DEFAULT_PRIMARY = "groq/openai/gpt-oss-120b"
+DEFAULT_FALLBACK = "gemini/gemini-3.6-flash"
 
-# Provider prefix -> env var that must be non-empty for that provider to be tried.
+# Provider prefix -> env vars holding its credentials. The plural form is checked
+# first and may hold several comma-separated keys; see _keys_for().
 _PROVIDER_KEYS = {
-    "groq": "GROQ_API_KEY",
-    "gemini": "GEMINI_API_KEY",
-    "openai": "OPENAI_API_KEY",
-    "anthropic": "ANTHROPIC_API_KEY",
+    "groq": ("GROQ_API_KEYS", "GROQ_API_KEY"),
+    "gemini": ("GEMINI_API_KEYS", "GEMINI_API_KEY"),
+    "openai": ("OPENAI_API_KEYS", "OPENAI_API_KEY"),
+    "anthropic": ("ANTHROPIC_API_KEYS", "ANTHROPIC_API_KEY"),
 }
+
+# Errors worth retrying on a *different key* rather than giving up on the
+# provider: a per-key quota or a single revoked key says nothing about the
+# others. Matched against the exception text because each provider SDK raises
+# its own type.
+_ROTATABLE = (
+    "rate limit", "ratelimit", "429", "quota", "resource_exhausted",
+    "invalid api key", "invalid_api_key", "unauthorized", "401", "403",
+    "permission denied", "api key not valid",
+)
 
 _CONTEXT_HEADER = re.compile(r"^\[([^\]|]+)\s*\|\s*([^\]|]+)\s*\|\s*p\.(\d+)\]", re.M)
 
@@ -49,12 +67,57 @@ def fallback_model() -> str:
     return os.getenv("RAG_FALLBACK_MODEL", DEFAULT_FALLBACK)
 
 
+def provider_of(model: str) -> str:
+    return model.split("/", 1)[0].lower()
+
+
+def _keys_for(model: str) -> list[str]:
+    """Every credential configured for this model's provider, in order.
+
+    Free tiers are rate-limited per key (Groq's is roughly 30 requests/minute per
+    org), and during a demo four teammates and a judge share that budget. Holding
+    several keys and rotating on a quota error turns a hard failure into a
+    slightly slower answer.
+
+    `GROQ_API_KEYS` (comma-separated) is checked before `GROQ_API_KEY`, and both
+    are merged so an existing single-key deployment keeps working untouched.
+    """
+    provider = provider_of(model)
+    env_vars = _PROVIDER_KEYS.get(provider)
+    if env_vars is None:
+        return [""]  # unknown provider: let LiteLLM find its own credentials
+
+    keys: list[str] = []
+    for env_var in env_vars:
+        for key in os.getenv(env_var, "").split(","):
+            key = key.strip()
+            if key and key not in keys:
+                keys.append(key)
+    return keys
+
+
 def _has_key(model: str) -> bool:
-    provider = model.split("/", 1)[0].lower()
-    env_var = _PROVIDER_KEYS.get(provider)
-    if env_var is None:
+    provider = provider_of(model)
+    if provider not in _PROVIDER_KEYS:
         return True  # unknown provider: let LiteLLM decide
-    return bool(os.getenv(env_var, "").strip())
+    return bool(_keys_for(model))
+
+
+def _is_rotatable(exc: Exception) -> bool:
+    """Would another key plausibly succeed where this one failed?"""
+    text = str(exc).lower()
+    return any(marker in text for marker in _ROTATABLE)
+
+
+# Which key each model last succeeded with, so the next call starts there rather
+# than replaying the exhausted ones. In-process only: a restart simply begins at
+# the first key again, which is harmless.
+_key_cursor: dict[str, int] = {}
+
+
+def reset_key_cursor() -> None:
+    """Forget the rotation position. Used by tests."""
+    _key_cursor.clear()
 
 
 def _candidates() -> list[str]:
@@ -115,27 +178,52 @@ def complete(
     litellm.set_verbose = False
 
     last_error: Exception | None = None
+
     for model in candidates:
-        for attempt in range(attempts_per_model):
-            started = time.time()
-            try:
-                response = litellm.completion(
-                    model=model,
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    timeout=timeout,
-                )
-                elapsed_ms = int((time.time() - started) * 1000)
-                logger.info("llm_ok model=%s ms=%d", model, elapsed_ms)
-                return (response.choices[0].message.content or ""), model
-            except Exception as exc:  # noqa: BLE001 - provider SDKs raise many types
-                last_error = exc
-                # "llm_fail" is the literal token the CloudWatch metric filter
-                # matches on; see infra/aws/cloudwatch_alarms.sh.
-                logger.warning("llm_fail model=%s attempt=%d err=%s", model, attempt, exc)
-                if attempt + 1 < attempts_per_model:
-                    time.sleep(0.8 * (attempt + 1))
+        keys = _keys_for(model) or [""]
+        # Start from wherever the last success left off, so load spreads across
+        # keys instead of hammering the first one until it hits its quota.
+        start = _key_cursor.get(model, 0) % len(keys)
+        order = [(start + i) % len(keys) for i in range(len(keys))]
+
+        for position, key_index in enumerate(order):
+            api_key = keys[key_index] or None
+            for attempt in range(attempts_per_model):
+                started = time.time()
+                try:
+                    response = litellm.completion(
+                        model=model,
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        timeout=timeout,
+                        **({"api_key": api_key} if api_key else {}),
+                    )
+                    elapsed_ms = int((time.time() - started) * 1000)
+                    _key_cursor[model] = key_index
+                    logger.info(
+                        "llm_ok model=%s key=%d/%d ms=%d",
+                        model, key_index + 1, len(keys), elapsed_ms,
+                    )
+                    return (response.choices[0].message.content or ""), model
+                except Exception as exc:  # noqa: BLE001 - provider SDKs raise many types
+                    last_error = exc
+                    # "llm_fail" is the literal token the CloudWatch metric
+                    # filter matches on; see infra/aws/cloudwatch_alarms.sh.
+                    logger.warning(
+                        "llm_fail model=%s key=%d/%d attempt=%d err=%s",
+                        model, key_index + 1, len(keys), attempt, exc,
+                    )
+                    if _is_rotatable(exc):
+                        # A per-key quota or a revoked key says nothing about the
+                        # other keys. Move on immediately rather than burning the
+                        # retry budget on a credential that cannot work.
+                        break
+                    if attempt + 1 < attempts_per_model:
+                        time.sleep(0.8 * (attempt + 1))
+
+            if position + 1 < len(order):
+                logger.info("rotating to the next %s key", provider_of(model))
 
     raise AllProvidersFailed(str(last_error))
 
@@ -168,6 +256,9 @@ def health() -> dict:
         "fallback": fallback_model(),
         "usable": usable,
         "redundancy": redundancy(),
+        # How many credentials each usable model can rotate through. One key on a
+        # free tier is a rate-limit away from the fallback template.
+        "keys_per_model": {m: len(_keys_for(m)) for m in usable if m != "mock"},
     }
     if primary_model() == fallback_model() and usable != ["mock"]:
         report["warning"] = (
