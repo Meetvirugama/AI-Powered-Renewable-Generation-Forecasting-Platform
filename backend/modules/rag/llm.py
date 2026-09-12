@@ -185,8 +185,14 @@ def complete(
         # keys instead of hammering the first one until it hits its quota.
         start = _key_cursor.get(model, 0) % len(keys)
         order = [(start + i) % len(keys) for i in range(len(keys))]
+        # Set when the model answers but says nothing. That is a property of the
+        # model and the prompt, not of the credential, so rotating keys is
+        # pointless -- move straight on to the next model.
+        model_is_mute = False
 
         for position, key_index in enumerate(order):
+            if model_is_mute:
+                break
             api_key = keys[key_index] or None
             for attempt in range(attempts_per_model):
                 started = time.time()
@@ -200,12 +206,33 @@ def complete(
                         **({"api_key": api_key} if api_key else {}),
                     )
                     elapsed_ms = int((time.time() - started) * 1000)
+                    text = (response.choices[0].message.content or "").strip()
+
+                    # A successful call that returns no text is a failure, not an
+                    # answer. Reasoning models spend the token budget thinking and
+                    # can emit nothing into `content` when the context is long --
+                    # returning that verbatim put a blank answer on the dashboard
+                    # with citations beneath it, which reads as the copilot having
+                    # nothing to say rather than as a fault. Treat it like any
+                    # other failure so the next key or provider gets a turn.
+                    if not text:
+                        finish = getattr(response.choices[0], "finish_reason", "?")
+                        logger.warning(
+                            "llm_fail model=%s key=%d/%d empty completion (finish=%s)",
+                            model, key_index + 1, len(keys), finish,
+                        )
+                        last_error = RuntimeError(
+                            f"{model} returned an empty completion (finish_reason={finish})"
+                        )
+                        model_is_mute = True
+                        break
+
                     _key_cursor[model] = key_index
                     logger.info(
-                        "llm_ok model=%s key=%d/%d ms=%d",
-                        model, key_index + 1, len(keys), elapsed_ms,
+                        "llm_ok model=%s key=%d/%d ms=%d chars=%d",
+                        model, key_index + 1, len(keys), elapsed_ms, len(text),
                     )
-                    return (response.choices[0].message.content or ""), model
+                    return text, model
                 except Exception as exc:  # noqa: BLE001 - provider SDKs raise many types
                     last_error = exc
                     # "llm_fail" is the literal token the CloudWatch metric

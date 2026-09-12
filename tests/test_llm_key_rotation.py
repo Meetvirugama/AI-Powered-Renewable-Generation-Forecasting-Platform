@@ -204,3 +204,63 @@ def test_health_reports_key_counts(monkeypatch):
     assert report["redundancy"] == "dual_provider"
     assert report["keys_per_model"] == {"groq/m": 3, "gemini/f": 2}
     assert "warning" not in report
+
+
+# ------------------------------------------------------- empty completions
+def test_an_empty_completion_is_a_failure_not_an_answer(monkeypatch):
+    """A blank answer under a list of citations reads as 'nothing to say'.
+
+    Reasoning models spend the token budget thinking and can return nothing in
+    message.content when the retrieved context is long. Observed live: Groq
+    gpt-oss-120b answered a corpus-backed question with an empty string while
+    reporting success.
+    """
+    monkeypatch.setenv("GROQ_API_KEYS", "g1")
+    monkeypatch.setenv("GEMINI_API_KEYS", "m1")
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "groq/mute")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/talks")
+
+    def behaviour(key):
+        return "a real answer" if key == "m1" else ""
+
+    _fake_litellm(monkeypatch, behaviour)
+    text, model = llm.complete([{"role": "user", "content": "hi"}])
+    assert text == "a real answer"
+    assert model == "gemini/talks", "should fall through to the model that speaks"
+
+
+def test_a_mute_model_does_not_burn_every_key(monkeypatch):
+    """Rotating keys cannot fix a model that returns nothing."""
+    monkeypatch.setenv("GROQ_API_KEYS", "a,b,c,d")
+    monkeypatch.setenv("GEMINI_API_KEYS", "m1")
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "groq/mute")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/talks")
+
+    def behaviour(key):
+        return "answer" if key == "m1" else ""
+
+    calls = _fake_litellm(monkeypatch, behaviour)
+    llm.complete([{"role": "user", "content": "hi"}])
+    groq_calls = [c for c in calls if c in {"a", "b", "c", "d"}]
+    assert len(groq_calls) == 1, f"should try the mute model once, not {len(groq_calls)} times"
+
+
+def test_whitespace_only_completion_counts_as_empty(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEYS", "g1")
+    monkeypatch.setenv("GEMINI_API_KEYS", "m1")
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "groq/mute")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/talks")
+    _fake_litellm(monkeypatch, lambda key: "answer" if key == "m1" else "   \n  ")
+    text, model = llm.complete([{"role": "user", "content": "hi"}])
+    assert text == "answer" and model == "gemini/talks"
+
+
+def test_all_models_mute_raises_rather_than_returning_blank(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEYS", "g1")
+    monkeypatch.setenv("GEMINI_API_KEYS", "m1")
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "groq/mute")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/mute2")
+    _fake_litellm(monkeypatch, lambda key: "")
+    with pytest.raises(llm.AllProvidersFailed) as exc:
+        llm.complete([{"role": "user", "content": "hi"}])
+    assert "empty completion" in str(exc.value)
