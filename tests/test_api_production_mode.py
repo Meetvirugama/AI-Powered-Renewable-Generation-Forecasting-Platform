@@ -205,3 +205,54 @@ def test_the_feature_builder_and_the_ingester_agree_on_the_variable_list():
     from backend.data.ingestion.openmeteo import HOURLY_VARIABLES
 
     assert set(feature_builder.WEATHER_FEATURES) <= set(HOURLY_VARIABLES)
+
+
+# ------------------------------------------------------------------- horizons
+@pytest.mark.parametrize("hours,blocks,model", [(24, 96, "lightgbm_24h"),
+                                                (48, 192, "lightgbm_48h"),
+                                                (72, 288, "lightgbm_72h")])
+def test_each_horizon_is_served_by_its_own_model(client, hours, blocks, model):
+    """The brief asks for 24-72 hours and three horizons are trained, but the
+    route took no horizon argument -- so every call used the default 96 blocks
+    and the 48h and 72h boosters sat in memory, advertised by /health as
+    `horizons_trained`, and were never reachable."""
+    body = client.get(f"/forecast?plant_id={PLANT_ID}&date={_tomorrow()}&hours={hours}").json()
+    assert len(body["blocks"]) == blocks
+    assert body["model_name"] == model
+
+
+def test_a_longer_horizon_gets_its_own_weather_not_the_shorter_one_cached(client):
+    """Regression: the weather cache keyed on (plant, date) and not on the
+    number of blocks. A 24-hour request cached 96 blocks, a 48-hour request for
+    the same plant and date was handed that same dict, half the frame arrived
+    empty, completeness fell to 62.6% and the engine refused a horizon it can
+    serve perfectly well."""
+    client.get(f"/forecast?plant_id={PLANT_ID}&date={_tomorrow()}&hours=24")
+    response = client.get(f"/forecast?plant_id={PLANT_ID}&date={_tomorrow()}&hours=48")
+    assert response.status_code == 200
+    assert len(response.json()["blocks"]) == 192
+
+
+def test_a_72_hour_forecast_spans_three_calendar_days(client):
+    blocks = client.get(
+        f"/forecast?plant_id={PLANT_ID}&date={_tomorrow()}&hours=72"
+    ).json()["blocks"]
+    days = {b["ist_time"][:10] for b in blocks}
+    assert len(days) == 3
+
+
+def test_an_unsupported_horizon_is_refused_rather_than_rounded(client):
+    """Silently serving 24 hours to a caller who asked for 36 would be
+    indistinguishable from a working long-range forecast; the response carries
+    no horizon field to contradict it."""
+    response = client.get(f"/forecast?plant_id={PLANT_ID}&hours=36")
+    assert response.status_code == 422
+    assert "24, 48, 72" in str(response.json()["detail"])
+
+
+def test_health_only_advertises_horizons_the_api_can_actually_serve(client):
+    """/health listed [24, 48, 72] while the route could only produce 24."""
+    from backend.api.forecast import SUPPORTED_HOURS
+
+    advertised = client.get("/health").json()["forecast_models"]["horizons_trained"]
+    assert sorted(advertised) == sorted(SUPPORTED_HOURS)

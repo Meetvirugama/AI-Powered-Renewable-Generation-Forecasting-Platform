@@ -332,11 +332,12 @@ class LGBMForecastEngine:
     def _horizon_for(num_blocks: int) -> int:
         """Pick the booster trained nearest the requested lead time.
 
-        Only the 24h horizon was retrained, so longer requests fall back to it.
-        A 48-hour lead time served by a 24-hour model is a worse forecast; the
-        48h and 72h boosters in the legacy bundle would have been a dishonest
-        one, because they were trained on features that do not exist that far
-        ahead.
+        All three horizons in HORIZONS are trained without look-ahead features,
+        so a 48- or 72-hour request is served by a model built for that lead
+        time rather than by extrapolating the 24-hour one. Anything between
+        snaps to the nearest trained horizon, preferring the shorter on a tie --
+        a slightly stale model beats one asked to see further than it was
+        trained to.
         """
         hours = num_blocks * feature_builder.BLOCK_MINUTES / 60.0
         return min(HORIZONS, key=lambda h: (abs(h - hours), h))

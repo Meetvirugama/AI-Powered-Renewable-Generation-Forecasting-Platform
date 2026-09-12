@@ -22,8 +22,17 @@ export default function ForecastFanChart({ blocks, optimisedSchedule, avcMw }: P
     // the chart wants a short axis label. Slicing the fixed-width HH:MM substring
     // still honours the backend's own field (no independent block_no arithmetic)
     // without a Date-parsing/timezone round trip; block_no is only the fallback.
-    const x = (b: BlockForecast) =>
-      b.ist_time?.length >= 16 ? b.ist_time.slice(11, 16) : blockLabel(b.block_no);
+    // Past one day, HH:MM alone repeats — "06:00" would appear three times on a
+    // 72-hour axis with nothing saying which morning. Multi-day series prefix the
+    // IST calendar day, read from the backend's own timestamp.
+    const multiDay = blocks.length > 96;
+    const x = (b: BlockForecast) => {
+      if (b.ist_time?.length >= 16) {
+        const hhmm = b.ist_time.slice(11, 16);
+        return multiDay ? `${b.ist_time.slice(8, 10)}/${b.ist_time.slice(5, 7)} ${hhmm}` : hhmm;
+      }
+      return blockLabel(b.block_no);
+    };
 
     const band = (lo: keyof BlockForecast, hi: keyof BlockForecast) =>
       blocks.map((b) => ({ x: x(b), y: [b[lo] as number, b[hi] as number] }));
