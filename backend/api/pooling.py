@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
 from datetime import datetime
 
 from backend.core.config import get_settings
-from backend.core.plants import list_plants, plants_in_pool
+from backend.core.plants import plants_in_pool
 from backend.modules.factory import get_forecast_engine
 from backend.modules.dsm.engine import DSMEngine
 from backend.modules.dsm.pooling import compute_pooling_benefit_by_block, allocate_pool_savings
@@ -18,12 +18,15 @@ settings = get_settings()
 @router.post("", response_model=PoolingResponse)
 def calculate_pooling(request: PoolingRequest, db: Session = Depends(get_db)):
     forecast_engine = get_forecast_engine()
-    all_plants = list_plants(db)
     pool_plants = plants_in_pool(request.pool_id, db)
-    
+
     if not pool_plants:
-        pool_plants = all_plants[:2]
-        
+        # This used to fall back to the first two plants in the table and pool
+        # them, so an unknown pool id returned a savings figure for two plants
+        # that share no pooling station. Pool membership decides the settled
+        # rupee amount; it cannot be guessed.
+        raise HTTPException(status_code=404, detail=f"Pool '{request.pool_id}' not found")
+
     target_date = datetime.strptime(request.date, "%Y-%m-%d").date()
     rule_config_file = f"config/dsm_rules_{request.rule_year}.yaml" if request.rule_year else settings.dsm_rule_config
     try:

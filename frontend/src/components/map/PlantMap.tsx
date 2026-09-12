@@ -82,7 +82,6 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
           <TileLayer
             url={DARK_TILE_URL}
             attribution={DARK_TILE_ATTRIBUTION}
-            bounds={GUJARAT_BOUNDS}
           />
           {plants.map((plant) => {
             const isSelected = plant.id === selectedPlantId;
@@ -98,7 +97,13 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
                   weight: isSelected ? 3 : 1.5,
                 }}
                 eventHandlers={{
-                  click: () => onSelectPlant?.(plant.id),
+                  click: (e) => {
+                    // Stop Leaflet from propagating the click to the map,
+                    // which can cause unwanted side effects.
+                    e.originalEvent.stopPropagation();
+                    e.originalEvent.preventDefault();
+                    onSelectPlant?.(plant.id);
+                  },
                 }}
               >
                 <Popup>
@@ -117,7 +122,7 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
           })}
         </MapContainer>
       </div>
-      <div className="flex items-center gap-4 border-t border-border px-4 py-2 text-xs text-text-muted">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border px-4 py-2 text-xs text-text-muted">
         <span className="flex items-center gap-2">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
@@ -133,7 +138,7 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
           Wind
         </span>
         {selectedPlantId && (
-          <span className="flex items-center gap-2 ml-auto">
+          <span className="flex items-center gap-2">
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{ background: "var(--color-accent)" }}
@@ -141,6 +146,12 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
             Selected
           </span>
         )}
+        {/* Required by the data licences: OpenStreetMap is ODbL and the WRI Global
+            Power Plant Database is CC-BY 4.0. Both oblige visible credit wherever
+            the plant records are shown. Keep this line when editing the legend. */}
+        <span className="ml-auto text-right text-[11px] leading-tight">
+          Plant data © OpenStreetMap contributors (ODbL) · WRI Global Power Plant Database (CC-BY 4.0)
+        </span>
       </div>
     </div>
   );
