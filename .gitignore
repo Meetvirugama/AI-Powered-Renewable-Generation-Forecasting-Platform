@@ -68,3 +68,9 @@ mlartifacts/
 .env.local
 .env.production
 secrets.yaml
+
+# Local development artifacts
+.coverage
+.pytest_cache/
+renewable.db
+*.db

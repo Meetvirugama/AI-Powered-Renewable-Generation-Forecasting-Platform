@@ -1,0 +1,49 @@
+plants:
+  - id: "GJ_SOLAR_A"
+    name: "Gujarat Solar Plant A"
+    type: "solar"
+    location: "near Gandhinagar"
+    lat: 23.2156
+    lon: 72.6369
+    avc_mw: 50.0
+    tilt_deg: 22.0
+    azimuth_deg: 180.0
+    pool_id: "GJ_POOL_1"
+    technology: "mono_perc"
+
+  - id: "GJ_SOLAR_B"
+    name: "Gujarat Solar Plant B"
+    type: "solar"
+    location: "near Rajkot"
+    lat: 22.3039
+    lon: 70.8022
+    avc_mw: 75.0
+    tilt_deg: 20.0
+    azimuth_deg: 180.0
+    pool_id: "GJ_POOL_1"
+    technology: "mono_perc"
+
+  - id: "GJ_WIND_C"
+    name: "Gujarat Wind Farm C"
+    type: "wind"
+    location: "near Kutch"
+    lat: 23.6102
+    lon: 68.9761
+    avc_mw: 40.0
+    hub_height_m: 120.0
+    rotor_diameter_m: 130.0
+    pool_id: "GJ_POOL_1"
+    power_curve: "care_wind_farm_a_fitted"
+
+  - id: "GJ_SOLAR_D"
+    name: "Gujarat Solar Plant D"
+    type: "solar"
+    location: "near Palanpur"
+    lat: 24.1858
+    lon: 72.4337
+    avc_mw: 30.0
+    tilt_deg: 23.0
+    azimuth_deg: 180.0
+    pool_id: "GJ_POOL_2"
+    technology: "bifacial"
+

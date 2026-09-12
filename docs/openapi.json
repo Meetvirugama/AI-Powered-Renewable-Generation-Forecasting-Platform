@@ -1,0 +1,1528 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI-Powered Renewable Generation Forecasting Platform API",
+    "description": "REST API for Probabilistic Renewable Generation Forecasting, CERC DSM Settlement & Schedule Optimization",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/plants": {
+      "get": {
+        "tags": [
+          "Plants"
+        ],
+        "summary": "Get Plants",
+        "operationId": "get_plants_plants_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plants/{plant_id}": {
+      "get": {
+        "tags": [
+          "Plants"
+        ],
+        "summary": "Get Plant",
+        "operationId": "get_plant_plants__plant_id__get",
+        "parameters": [
+          {
+            "name": "plant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/forecast": {
+      "get": {
+        "tags": [
+          "Forecast"
+        ],
+        "summary": "Get Forecast",
+        "operationId": "get_forecast_forecast_get",
+        "parameters": [
+          {
+            "name": "plant_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the renewable plant",
+              "title": "Plant Id"
+            },
+            "description": "ID of the renewable plant"
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date in YYYY-MM-DD format",
+              "title": "Date"
+            },
+            "description": "Date in YYYY-MM-DD format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dsm": {
+      "post": {
+        "tags": [
+          "DSM"
+        ],
+        "summary": "Calculate Dsm",
+        "operationId": "calculate_dsm_dsm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DSMRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSMResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optimize": {
+      "post": {
+        "tags": [
+          "Optimization"
+        ],
+        "summary": "Optimize Schedule",
+        "operationId": "optimize_schedule_optimize_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimizeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pooling": {
+      "post": {
+        "tags": [
+          "Pooling"
+        ],
+        "summary": "Calculate Pooling",
+        "operationId": "calculate_pooling_pooling_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PoolingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/{plant_id}": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get Dashboard Data",
+        "operationId": "get_dashboard_data_dashboard__plant_id__get",
+        "parameters": [
+          {
+            "name": "plant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plant Id"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date in YYYY-MM-DD format",
+              "title": "Date"
+            },
+            "description": "Date in YYYY-MM-DD format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rag/query": {
+      "post": {
+        "tags": [
+          "RAG Copilot"
+        ],
+        "summary": "Query Rag Copilot",
+        "operationId": "query_rag_copilot_rag_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RAGQueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAGQueryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/run": {
+      "post": {
+        "tags": [
+          "Pipeline"
+        ],
+        "summary": "Trigger Daily Pipeline",
+        "operationId": "trigger_daily_pipeline_pipeline_run_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineRunRequest",
+                "default": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/status/{run_id}": {
+      "get": {
+        "tags": [
+          "Pipeline"
+        ],
+        "summary": "Get Pipeline Status",
+        "operationId": "get_pipeline_status_pipeline_status__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionCard": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "block_no": {
+            "type": "integer",
+            "title": "Block No"
+          },
+          "mw": {
+            "type": "number",
+            "title": "Mw"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "inr_impact": {
+            "type": "number",
+            "title": "Inr Impact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "block_no",
+          "mw",
+          "reason",
+          "inr_impact"
+        ],
+        "title": "ActionCard"
+      },
+      "BatteryDispatchBlock": {
+        "properties": {
+          "block_no": {
+            "type": "integer",
+            "title": "Block No"
+          },
+          "charge_mw": {
+            "type": "number",
+            "title": "Charge Mw"
+          },
+          "discharge_mw": {
+            "type": "number",
+            "title": "Discharge Mw"
+          },
+          "soc_mwh": {
+            "type": "number",
+            "title": "Soc Mwh"
+          }
+        },
+        "type": "object",
+        "required": [
+          "block_no",
+          "charge_mw",
+          "discharge_mw",
+          "soc_mwh"
+        ],
+        "title": "BatteryDispatchBlock"
+      },
+      "BlockDSMResult": {
+        "properties": {
+          "block_no": {
+            "type": "integer",
+            "title": "Block No"
+          },
+          "expected_penalty_inr": {
+            "type": "number",
+            "title": "Expected Penalty Inr"
+          },
+          "p50_penalty_inr": {
+            "type": "number",
+            "title": "P50 Penalty Inr"
+          },
+          "schedule_mw": {
+            "type": "number",
+            "title": "Schedule Mw"
+          },
+          "deviation_pct_at_p50": {
+            "type": "number",
+            "title": "Deviation Pct At P50"
+          }
+        },
+        "type": "object",
+        "required": [
+          "block_no",
+          "expected_penalty_inr",
+          "p50_penalty_inr",
+          "schedule_mw",
+          "deviation_pct_at_p50"
+        ],
+        "title": "BlockDSMResult"
+      },
+      "BlockForecast": {
+        "properties": {
+          "block_no": {
+            "type": "integer",
+            "title": "Block No"
+          },
+          "valid_time": {
+            "type": "string",
+            "title": "Valid Time"
+          },
+          "ist_time": {
+            "type": "string",
+            "title": "Ist Time"
+          },
+          "p05": {
+            "type": "number",
+            "title": "P05"
+          },
+          "p10": {
+            "type": "number",
+            "title": "P10"
+          },
+          "p25": {
+            "type": "number",
+            "title": "P25"
+          },
+          "p50": {
+            "type": "number",
+            "title": "P50"
+          },
+          "p75": {
+            "type": "number",
+            "title": "P75"
+          },
+          "p90": {
+            "type": "number",
+            "title": "P90"
+          },
+          "p95": {
+            "type": "number",
+            "title": "P95"
+          }
+        },
+        "type": "object",
+        "required": [
+          "block_no",
+          "valid_time",
+          "ist_time",
+          "p05",
+          "p10",
+          "p25",
+          "p50",
+          "p75",
+          "p90",
+          "p95"
+        ],
+        "title": "BlockForecast"
+      },
+      "Citation": {
+        "properties": {
+          "clause": {
+            "type": "string",
+            "title": "Clause"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "doc": {
+            "type": "string",
+            "title": "Doc"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "clause",
+          "doc"
+        ],
+        "title": "Citation"
+      },
+      "DSMRequest": {
+        "properties": {
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "schedule_mw": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Schedule Mw"
+          },
+          "rule_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Year",
+            "default": 2026
+          },
+          "freq_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freq Hz",
+            "default": 50.0
+          },
+          "ncd_inr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncd Inr",
+            "default": 450.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "date",
+          "schedule_mw"
+        ],
+        "title": "DSMRequest"
+      },
+      "DSMResponse": {
+        "properties": {
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "x_value": {
+            "type": "number",
+            "title": "X Value"
+          },
+          "total_expected_penalty_inr": {
+            "type": "number",
+            "title": "Total Expected Penalty Inr"
+          },
+          "total_p50_penalty_inr": {
+            "type": "number",
+            "title": "Total P50 Penalty Inr"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/BlockDSMResult"
+            },
+            "type": "array",
+            "title": "Blocks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "date",
+          "rule_version",
+          "x_value",
+          "total_expected_penalty_inr",
+          "total_p50_penalty_inr",
+          "blocks"
+        ],
+        "title": "DSMResponse"
+      },
+      "DashboardBriefing": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "risk_level": {
+            "type": "string",
+            "title": "Risk Level"
+          },
+          "total_expected_penalty_inr": {
+            "type": "number",
+            "title": "Total Expected Penalty Inr"
+          },
+          "potential_savings_inr": {
+            "type": "number",
+            "title": "Potential Savings Inr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "summary",
+          "risk_level",
+          "total_expected_penalty_inr",
+          "potential_savings_inr"
+        ],
+        "title": "DashboardBriefing"
+      },
+      "DashboardResponse": {
+        "properties": {
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "plant_name": {
+            "type": "string",
+            "title": "Plant Name"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "avc_mw": {
+            "type": "number",
+            "title": "Avc Mw"
+          },
+          "forecast": {
+            "$ref": "#/components/schemas/ForecastResponse"
+          },
+          "dsm_summary": {
+            "$ref": "#/components/schemas/DSMResponse"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionCard"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "pooling_benefit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PoolingResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "briefing": {
+            "$ref": "#/components/schemas/DashboardBriefing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "plant_name",
+          "date",
+          "avc_mw",
+          "forecast",
+          "dsm_summary",
+          "actions",
+          "briefing"
+        ],
+        "title": "DashboardResponse"
+      },
+      "ForecastResponse": {
+        "properties": {
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/BlockForecast"
+            },
+            "type": "array",
+            "title": "Blocks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "date",
+          "model_name",
+          "blocks"
+        ],
+        "title": "ForecastResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "OptimizeRequest": {
+        "properties": {
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "rule_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Year",
+            "default": 2026
+          },
+          "freq_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freq Hz",
+            "default": 50.0
+          },
+          "ncd_inr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncd Inr",
+            "default": 450.0
+          },
+          "battery_capacity_mwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Battery Capacity Mwh"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "date"
+        ],
+        "title": "OptimizeRequest"
+      },
+      "OptimizeResponse": {
+        "properties": {
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "naive_total_inr": {
+            "type": "number",
+            "title": "Naive Total Inr"
+          },
+          "optimised_total_inr": {
+            "type": "number",
+            "title": "Optimised Total Inr"
+          },
+          "savings_inr": {
+            "type": "number",
+            "title": "Savings Inr"
+          },
+          "savings_pct": {
+            "type": "number",
+            "title": "Savings Pct"
+          },
+          "optimised_schedule": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Optimised Schedule"
+          },
+          "naive_schedule": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Naive Schedule"
+          },
+          "battery_dispatch": {
+            "items": {
+              "$ref": "#/components/schemas/BatteryDispatchBlock"
+            },
+            "type": "array",
+            "title": "Battery Dispatch"
+          },
+          "action_cards": {
+            "items": {
+              "$ref": "#/components/schemas/ActionCard"
+            },
+            "type": "array",
+            "title": "Action Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "date",
+          "rule_version",
+          "naive_total_inr",
+          "optimised_total_inr",
+          "savings_inr",
+          "savings_pct",
+          "optimised_schedule",
+          "naive_schedule",
+          "battery_dispatch",
+          "action_cards"
+        ],
+        "title": "OptimizeResponse"
+      },
+      "PipelineRunRequest": {
+        "properties": {
+          "target_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Date"
+          }
+        },
+        "type": "object",
+        "title": "PipelineRunRequest"
+      },
+      "PipelineRunResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "plants_processed": {
+            "type": "integer",
+            "title": "Plants Processed"
+          },
+          "duration_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration S"
+          },
+          "error_msg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Msg"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "plants_processed",
+          "timestamp"
+        ],
+        "title": "PipelineRunResponse"
+      },
+      "PlantListResponse": {
+        "properties": {
+          "plants": {
+            "items": {
+              "$ref": "#/components/schemas/PlantResponse"
+            },
+            "type": "array",
+            "title": "Plants"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plants",
+          "total"
+        ],
+        "title": "PlantListResponse"
+      },
+      "PlantMetadata": {
+        "properties": {
+          "tilt_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tilt Deg"
+          },
+          "azimuth_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Azimuth Deg"
+          },
+          "hub_height_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hub Height M"
+          },
+          "rotor_diameter_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotor Diameter M"
+          },
+          "technology": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technology"
+          },
+          "power_curve": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power Curve"
+          }
+        },
+        "type": "object",
+        "title": "PlantMetadata"
+      },
+      "PlantPoolAllocation": {
+        "properties": {
+          "plant_id": {
+            "type": "string",
+            "title": "Plant Id"
+          },
+          "individual_penalty_inr": {
+            "type": "number",
+            "title": "Individual Penalty Inr"
+          },
+          "allocated_penalty_inr": {
+            "type": "number",
+            "title": "Allocated Penalty Inr"
+          },
+          "savings_inr": {
+            "type": "number",
+            "title": "Savings Inr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plant_id",
+          "individual_penalty_inr",
+          "allocated_penalty_inr",
+          "savings_inr"
+        ],
+        "title": "PlantPoolAllocation"
+      },
+      "PlantResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "avc_mw": {
+            "type": "number",
+            "title": "Avc Mw"
+          },
+          "pool_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pool Id"
+          },
+          "metadata_json": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "lat",
+          "lon",
+          "avc_mw"
+        ],
+        "title": "PlantResponse"
+      },
+      "PoolingRequest": {
+        "properties": {
+          "pool_id": {
+            "type": "string",
+            "title": "Pool Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "rule_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Year",
+            "default": 2026
+          },
+          "freq_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freq Hz",
+            "default": 50.0
+          },
+          "ncd_inr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ncd Inr",
+            "default": 450.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "pool_id",
+          "date"
+        ],
+        "title": "PoolingRequest"
+      },
+      "PoolingResponse": {
+        "properties": {
+          "pool_id": {
+            "type": "string",
+            "title": "Pool Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "individual_total_inr": {
+            "type": "number",
+            "title": "Individual Total Inr"
+          },
+          "pooled_total_inr": {
+            "type": "number",
+            "title": "Pooled Total Inr"
+          },
+          "savings_inr": {
+            "type": "number",
+            "title": "Savings Inr"
+          },
+          "savings_pct": {
+            "type": "number",
+            "title": "Savings Pct"
+          },
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/PlantPoolAllocation"
+            },
+            "type": "array",
+            "title": "Allocations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pool_id",
+          "date",
+          "individual_total_inr",
+          "pooled_total_inr",
+          "savings_inr",
+          "savings_pct",
+          "allocations"
+        ],
+        "title": "PoolingResponse"
+      },
+      "RAGQueryRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "plant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plant Id"
+          },
+          "block_no": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block No"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "RAGQueryRequest"
+      },
+      "RAGQueryResponse": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "engine_values": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "citations"
+        ],
+        "title": "RAGQueryResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
