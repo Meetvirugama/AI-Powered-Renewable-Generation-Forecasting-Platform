@@ -144,6 +144,7 @@ class ProductionScheduleOptimizer:
         ncd: float = 450.0,
         freq_hz: float = 50.0,
         asset_type: str = "solar",
+        battery_capacity_mwh: float = 0.0,
         **kwargs: Any,
     ) -> dict:
         avc_mw = float(avc_mw or 0.0)
@@ -202,6 +203,26 @@ class ProductionScheduleOptimizer:
         savings_inr = naive_total - optimised_total
         savings_pct = (savings_inr / naive_total * 100.0) if naive_total > 0 else 0.0
 
+        # Battery LP: run after the per-block grid-search so the no-battery
+        # optimum serves as the linearisation point for the LP objective.
+        battery_modelled = False
+        if float(battery_capacity_mwh or 0.0) > 0:
+            try:
+                from backend.modules.optimize.battery_lp import solve_battery_dispatch
+                battery_dispatch = solve_battery_dispatch(
+                    forecast_blocks=forecast_blocks,
+                    optimised_schedules=optimised_schedule,
+                    dsm_engine=dsm_engine,
+                    avc_mw=avc_mw,
+                    battery_capacity_mwh=float(battery_capacity_mwh),
+                    ncd=ncd,
+                    freq_hz=freq_hz,
+                    asset_type=asset_type,
+                )
+                battery_modelled = True
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("battery LP failed (%s); dispatch set to zeros", exc)
+
         logger.info(
             "optimiser: naive=%.2f optimised=%.2f saving=%.2f (%.1f%%) over %d blocks",
             naive_total, optimised_total, savings_inr, savings_pct, len(per_block),
@@ -217,10 +238,13 @@ class ProductionScheduleOptimizer:
             "savings_pct": savings_pct,
             "action_cards": self._action_cards(per_block, avc_mw),
             "per_block": per_block,
-            "method": f"grid_search_{GRID_POINTS}pt_probability_weighted",
-            # Battery is not modelled. Stated explicitly so a zero dispatch is
-            # never read as "the optimiser decided not to use the battery".
-            "battery_modelled": False,
+            "method": (
+                f"grid_search_{GRID_POINTS}pt_probability_weighted"
+                + ("+battery_lp_highs" if battery_modelled else "")
+            ),
+            # True when battery_capacity_mwh > 0 and the LP solved successfully.
+            # False (zero dispatch) otherwise — never mislead about what ran.
+            "battery_modelled": battery_modelled,
         }
 
     @staticmethod

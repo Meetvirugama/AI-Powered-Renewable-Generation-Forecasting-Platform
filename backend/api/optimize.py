@@ -42,6 +42,7 @@ def optimize_schedule(request: OptimizeRequest):
         ncd=request.ncd_inr or 450.0,
         freq_hz=request.freq_hz or 50.0,
         asset_type=asset_type,
+        battery_capacity_mwh=float(request.battery_capacity_mwh or 0.0),
     )
     
     battery_blocks = [

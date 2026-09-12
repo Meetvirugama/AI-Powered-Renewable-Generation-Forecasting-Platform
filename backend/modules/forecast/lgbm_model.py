@@ -65,10 +65,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_MODEL_DIR = PROJECT_ROOT / "prediction_bundle" / "models_v2"
 LEGACY_MODEL_DIR = PROJECT_ROOT / "prediction_bundle" / "models"
 
-# Only the 24h horizon is retrained. 48h and 72h fall back to it: a 48-hour lead
-# time served by a model trained for 24 is worse than ideal but honest, whereas
-# serving the leaking 48h model would not be.
-HORIZONS = (24,)
+# All three horizons are now trained and available in models_v2/. The 48h and 72h
+# boosters drop generation lags shorter than the horizon (unavailable at forecast
+# issue time) but keep generation_lag_96 and all weather + time features.
+HORIZONS = (24, 48, 72)
 QUANTILE_TAGS = ("P10", "P50", "P90")
 MANIFEST_NAME = "MANIFEST.json"
 
@@ -168,7 +168,11 @@ class LGBMForecastEngine:
     def __init__(self, model_directory: Path | None = None) -> None:
         self._dir = Path(model_directory) if model_directory else model_dir()
         self._boosters: dict[str, object] = {}
-        self._feature_order: list[str] | None = None
+        # Per-horizon feature order: {24: [...44 features...], 48: [...43...], 72: [...43...]}
+        # Different horizons may legitimately differ: the 24h model includes
+        # generation_lag_96 (yesterday's same block, available at 24h), while
+        # 48h and 72h drop it because the lag window there reaches 2–3 days back.
+        self._feature_orders: dict[int, list[str]] = {}
         self._manifest: dict = {}
         self._lock = threading.Lock()
 
@@ -184,6 +188,7 @@ class LGBMForecastEngine:
                 raise ModelsUnavailable(f"model directory not found: {self._dir}")
 
             loaded: dict[str, object] = {}
+            feature_orders: dict[int, list[str]] = {}
             for horizon in HORIZONS:
                 for tag in QUANTILE_TAGS:
                     name = f"lightgbm_{horizon}h_{tag}"
@@ -195,18 +200,32 @@ class LGBMForecastEngine:
                     except Exception as exc:  # noqa: BLE001
                         raise ModelsUnavailable(f"could not load {path.name}: {exc}") from exc
 
-            # Feature order comes from the models themselves so it cannot drift
-            # from whatever a JSON contract happens to say.
-            orders = {tuple(b.feature_name()) for b in loaded.values()}
-            if len(orders) != 1:
-                raise ModelsUnavailable("models disagree on feature order; refusing to serve")
+                # Feature order is read from the model itself so it can never
+                # drift from a hard-coded contract. We verify the three quantile
+                # boosters for each horizon agree with each other (they must,
+                # because they were trained on the same frame), but allow
+                # different horizons to carry different feature sets: the 24h
+                # model includes generation_lag_96 while 48h/72h models trained
+                # without it because a lag of 96 blocks = 24h is within the
+                # horizon for a 48h forecast.
+                horizon_orders = {tuple(loaded[f"lightgbm_{horizon}h_{tag}"].feature_name()) for tag in QUANTILE_TAGS}
+                if len(horizon_orders) != 1:
+                    raise ModelsUnavailable(
+                        f"the three {horizon}h quantile boosters disagree on feature order"
+                    )
+                feature_orders[horizon] = list(next(iter(horizon_orders)))
 
-            self._feature_order = list(next(iter(orders)))
-            self._manifest = self._read_manifest(self._feature_order)
+            # Use the 24h (shortest horizon) feature order as the canonical one
+            # for manifest validation and health reporting. It is the superset.
+            canonical_order = feature_orders[min(HORIZONS)]
+            self._feature_orders = feature_orders
+            self._manifest = self._read_manifest(canonical_order)
             self._boosters = loaded
             logger.info(
-                "loaded %d LightGBM boosters from %s (%d features, target=%s)",
-                len(loaded), self._dir, len(self._feature_order), self.target,
+                "loaded %d LightGBM boosters from %s (horizons=%s, features per horizon: %s, target=%s)",
+                len(loaded), self._dir, list(HORIZONS),
+                {h: len(fo) for h, fo in feature_orders.items()},
+                self.target,
             )
 
     def _read_manifest(self, feature_order: list[str]) -> dict:
@@ -273,9 +292,18 @@ class LGBMForecastEngine:
 
     @property
     def feature_order(self) -> list[str]:
+        """Feature list for the shortest (24h) horizon — the canonical superset.
+
+        Use `_feature_order_for(horizon)` inside generate_forecast when you need
+        the exact feature list for a specific horizon.
+        """
         self._load()
-        assert self._feature_order is not None
-        return self._feature_order
+        return self._feature_orders[min(HORIZONS)]
+
+    def _feature_order_for(self, horizon: int) -> list[str]:
+        """Per-horizon feature list. 24h has generation_lag_96; 48h/72h do not."""
+        self._load()
+        return self._feature_orders.get(horizon, self._feature_orders[min(HORIZONS)])
 
     def health(self) -> dict:
         """Reported by /health so a broken model set is visible before a demo."""
@@ -430,15 +458,16 @@ class LGBMForecastEngine:
             )
 
         horizon = self._horizon_for(num_blocks)
+        horizon_features = self._feature_order_for(horizon)
 
         frame = feature_builder.build_frame(
-            self.feature_order,
+            horizon_features,
             date_str,
             num_blocks,
             weather=weather,
             history=self._rescaled_history(history, avc_mw),
         )
-        report = feature_builder.completeness(self.feature_order, frame)
+        report = feature_builder.completeness(horizon_features, frame)
 
         if report["populated_pct"] < MIN_POPULATED_PCT:
             raise InsufficientFeatures(

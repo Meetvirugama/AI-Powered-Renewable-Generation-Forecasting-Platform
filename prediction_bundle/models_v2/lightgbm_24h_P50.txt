@@ -7669,7 +7669,7 @@ parameters:
 [num_iterations: 400]
 [learning_rate: 0.05]
 [num_leaves: 31]
-[num_threads: 14]
+[num_threads: 8]
 [seed: 42]
 [deterministic: 0]
 [force_col_wise: 0]

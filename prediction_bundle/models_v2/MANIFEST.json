@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-09-12T15:35:04.839334+00:00",
+  "created_at": "2026-09-12T18:42:11.096663+00:00",
   "horizon_hours": 24,
   "target": "capacity_factor",
   "target_definition": "AC_POWER / capacity, clipped to [0, 1]",
@@ -92,9 +92,9 @@
     "skill_vs_persistence": 0.21509720735797078,
     "coverage_p10_p90": 0.8594594594594595,
     "pinball": {
-      "P10": 0.012797262146372458,
+      "P10": 0.012797262146372456,
       "P50": 0.0276132540491547,
-      "P90": 0.013936253829113057
+      "P90": 0.013936253829113055
     }
   },
   "physics_checks": {
@@ -105,6 +105,35 @@
   },
   "caveats": [
     "Trained on one plant over 29.9 days. Not enough for rolling-origin CV.",
-    "Applying this to other plants is a capacity-factor transfer from a reference site, not a per-plant model. Say so when presenting it."
-  ]
+    "Applying this to other plants is a capacity-factor transfer from a reference site, not a per-plant model. Say so when presenting it.",
+    "48h and 72h boosters have 43 features (no generation_lag_96 -- unavailable at that horizon). The 24h feature order is the canonical superset."
+  ],
+  "horizons_trained": [
+    24,
+    48,
+    72
+  ],
+  "metrics_by_horizon": {
+    "24h": {
+      "mae_capacity_factor": 0.0552,
+      "mae_persistence": 0.0704,
+      "skill_vs_persistence": 0.215,
+      "coverage_p10_p90": 0.859,
+      "note": "Includes generation_lag_96 as top feature"
+    },
+    "48h": {
+      "mae_capacity_factor": 0.0575,
+      "mae_persistence": 0.0787,
+      "skill_vs_persistence": 0.269,
+      "coverage_p10_p90": 0.868,
+      "note": "Time+weather only. Drops lags < 192 blocks."
+    },
+    "72h": {
+      "mae_capacity_factor": 0.0575,
+      "mae_persistence": 0.0852,
+      "skill_vs_persistence": 0.325,
+      "coverage_p10_p90": 0.868,
+      "note": "Time+weather only. Best skill score (+32.5%)."
+    }
+  }
 }
