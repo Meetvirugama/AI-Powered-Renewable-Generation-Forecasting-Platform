@@ -84,7 +84,7 @@ export interface DSMRequest {
 // --- optimize ---------------------------------------------------------------
 
 export interface ActionCard {
-  type: "curtailment" | "reserve_flag" | "high_risk_block";
+  type: "curtailment" | "reserve_flag" | "high_risk_block" | "storage_dispatch";
   block_no: number;
   mw: number;
   reason: string;
@@ -113,6 +113,11 @@ export interface OptimizeResponse {
   naive_schedule: number[];
   battery_dispatch: BatteryDispatchBlock[];
   action_cards: ActionCard[];
+  /** False means dispatch is zeros because no battery was requested. */
+  battery_modelled?: boolean;
+  /** The optimum with no battery, for showing what the battery itself adds. */
+  optimised_without_battery_inr?: number | null;
+  battery_saving_inr?: number | null;
 }
 
 export interface OptimizeRequest {
