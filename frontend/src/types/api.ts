@@ -84,12 +84,13 @@ export interface DSMRequest {
 // --- optimize ---------------------------------------------------------------
 
 export interface ActionCard {
-  type: "curtailment" | "reserve_flag";
+  type: "curtailment" | "reserve_flag" | "high_risk_block";
   block_no: number;
   mw: number;
   reason: string;
   inr_impact: number;
 }
+
 
 export interface BatteryDispatchBlock {
   block_no: number;
