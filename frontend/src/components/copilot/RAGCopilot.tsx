@@ -132,7 +132,7 @@ export default function RAGCopilot({ plantId, ruleYear, blockNo }: Props) {
   // ------ render -----------------------------------------------------------
 
   return (
-    <div className="flex flex-col" style={{ maxHeight: 420 }}>
+    <div className="flex flex-1 flex-col min-h-0">
 
       {/* Message list — scrolls, page does not */}
       <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-4">
