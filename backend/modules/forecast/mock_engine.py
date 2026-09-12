@@ -7,6 +7,10 @@ from typing import List, Dict
 class MockForecastEngine:
     """Mock forecast engine generating synthetic probabilistic forecasts."""
     
+    # The mock invents its series from a seeded RNG, so fetching real weather
+    # for it would be a network call whose result is discarded.
+    requires_weather = False
+
     def generate_forecast(self, plant: Dict, date_str: str, num_blocks: int = 96, **kwargs) -> List[Dict]:
         # Callers from the API pass 'id' and 'type' (the config/DB field names).
         # Old callers may pass 'plant_id' and 'asset_type'; accept both.

@@ -5,6 +5,7 @@ from backend.core.config import load_plants_config, get_settings
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
 from backend.schemas.optimize import OptimizeRequest, OptimizeResponse, BatteryDispatchBlock, ActionCard
+from backend.modules.forecast.weather_provider import forecast_for
 
 router = APIRouter(prefix="/optimize", tags=["Optimization"])
 settings = get_settings()
@@ -32,7 +33,7 @@ def optimize_schedule(request: OptimizeRequest):
     except Exception:
         dsm_engine = DSMEngine(config_path=settings.dsm_rule_config, rule_date=target_date)
         
-    forecast_blocks = forecast_engine.generate_forecast(plant=plant_cfg, date_str=request.date, num_blocks=96)
+    forecast_blocks = forecast_for(forecast_engine, plant_cfg, request.date)
     
     opt_result = optimizer.optimize_day_ahead(
         forecast_blocks=forecast_blocks,

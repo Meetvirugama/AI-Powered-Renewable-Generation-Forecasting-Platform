@@ -6,8 +6,17 @@ logger = logging.getLogger('renewable_platform')
 
 OPENMETEO_BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
+# Every weather variable the forecast models were trained on, plus the hub-height
+# winds the DSM side uses. Keep this a superset of
+# backend.modules.forecast.feature_builder.WEATHER_FEATURES: a variable missing
+# here does not fail, it arrives as NaN, and the boosters quietly fall back on a
+# learned default. Seven of these (dew point, the three cloud layers, direct
+# radiation, surface pressure, precipitation) were absent until the models were
+# retrained, so every production frame was built with 5 fewer inputs than the
+# models expect.
 HOURLY_VARIABLES = [
     "shortwave_radiation",
+    "direct_radiation",
     "direct_normal_irradiance",
     "diffuse_radiation",
     "global_tilted_irradiance",
@@ -17,7 +26,13 @@ HOURLY_VARIABLES = [
     "wind_direction_10m",
     "temperature_2m",
     "relative_humidity_2m",
+    "dew_point_2m",
     "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "surface_pressure",
+    "precipitation",
 ]
 
 async def fetch_weather_forecast(lat: float, lon: float, forecast_days: int = 3) -> pd.DataFrame:

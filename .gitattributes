@@ -18,6 +18,7 @@
 # Model artefacts: never touch these bytes.
 *.txt binary
 prediction_bundle/models/*.txt binary
+prediction_bundle/models_v2/*.txt binary
 
 # Data and archives.
 *.csv binary
