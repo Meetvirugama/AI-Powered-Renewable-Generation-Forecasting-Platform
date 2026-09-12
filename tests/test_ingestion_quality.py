@@ -27,14 +27,19 @@ def test_resample_hourly_to_15min():
     assert 'shortwave_radiation' in df_15min.columns
 
 def test_add_block_numbers():
-    dates = pd.date_range('2026-01-01 00:00', periods=96, freq='15min')
+    # Blocks are defined in IST: block 1 is 00:00-00:15 IST, which is 18:30 UTC
+    # the previous day. Starting this range at 00:00 UTC would begin at 05:30
+    # IST and therefore at block 23 -- which is what the function used to return,
+    # because it read the UTC hour. See tests/test_block_alignment.py.
+    dates = pd.date_range('2025-12-31 18:30', periods=96, freq='15min')
     df = pd.DataFrame({'timestamp': dates})
     df_blocks = add_block_numbers(df, time_col='timestamp')
-    
+
     assert 'block_no' in df_blocks.columns
     assert df_blocks['block_no'].iloc[0] == 1
     assert df_blocks['block_no'].iloc[-1] == 96
     assert 'ist_time' in df_blocks.columns
+    assert df_blocks['ist_time'].iloc[0] == '00:00'
 
 def test_validate_weather_data():
     df = pd.DataFrame({

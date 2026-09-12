@@ -20,10 +20,26 @@ from pathlib import Path
 logger = logging.getLogger("renewable_platform")
 
 # Ordered most-specific -> least-specific. First match wins.
+#
+# The bare-number form is the one CERC actually uses. Its notifications number
+# regulations as "4. Scope" / "7. Normal Rate of Charges for Deviations", with
+# sub-clauses as "(1)", "(2)". Without a pattern for it, 48% of the DSM 2024
+# text landed in PREAMBLE with no clause to cite.
+#
+# Sub-clauses are deliberately NOT split on. "(2)" is not a citable unit on its
+# own -- an operator needs "Regulation 6", not "(2)" -- so they stay attached to
+# the parent regulation, which is also what keeps a chunk self-contained.
 CLAUSE_PATTERNS = [
     re.compile(r"^\s*(?P<id>Regulation\s+\d{1,2}(?:\(\w{1,3}\))*(?:\.\d{1,2})*)\s*[.:\-\u2013]?\s*(?P<title>[^\n]{0,120})", re.I),
     re.compile(r"^\s*(?P<id>Clause\s+\d{1,2}(?:\.\d{1,2})*)\s*[.:\-\u2013]?\s*(?P<title>[^\n]{0,120})", re.I),
-    re.compile(r"^\s*(?P<id>\d{1,2}(?:\.\d{1,2}){1,3})\s+(?P<title>[A-Z][^\n]{0,120})"),
+    # "7.2.1 Deviation Settlement". End-anchored with a title-like charset so a
+    # frequency out of a table -- "50.00 Hz]; and" -- is not read as a clause
+    # heading, which is exactly what it did before.
+    re.compile(r"^\s*(?P<id>\d{1,2}(?:\.\d{1,2}){1,3})\s+(?P<title>[A-Z][A-Za-z0-9 ,\-()&/'‘’]{2,110})\s*$"),
+    # "7. Normal Rate of Charges for Deviations" -- anchored to end-of-line, which
+    # is what separates a heading from a numbered sentence that happens to start
+    # the same way. A heading occupies its own line; a sentence runs on.
+    re.compile(r"^\s*(?P<id>\d{1,2})\.\s+(?P<title>[A-Z][A-Za-z0-9 ,\-()&/'\u2018\u2019]{2,80})\s*$"),
     re.compile(r"^\s*(?P<id>CHAPTER\s+[IVXLC]+)\s*[.:\-\u2013\u2014]?\s*(?P<title>[^\n]{0,120})"),
     re.compile(r"^\s*(?P<id>SCHEDULE\s+[IVXLC0-9]+)\s*[.:\-\u2013\u2014]?\s*(?P<title>[^\n]{0,120})"),
 ]
@@ -51,13 +67,26 @@ class Chunk:
         return f"{self.doc_name}::{self.clause}::{self.page_no}::{self.chunk_index}"
 
 
-def _match_heading(line: str) -> tuple[str, str] | None:
+_BARE_NUMBER = re.compile(r"^\d{1,2}(?:\.\d{1,2})*$")
+
+# What a bare number is called in a given document. CERC notifications number
+# "Regulations"; the Grid Code numbers "Clauses". Emitting the wrong word would
+# make the citation itself inaccurate, which is the one thing this pipeline
+# cannot afford -- so it comes from the document's metadata, not a guess.
+DEFAULT_CLAUSE_PREFIX = "Regulation"
+
+
+def _match_heading(line: str, clause_prefix: str = DEFAULT_CLAUSE_PREFIX) -> tuple[str, str] | None:
     if len(line) > 200:          # a heading is never a full paragraph
         return None
     for pat in CLAUSE_PATTERNS:
         m = pat.match(line)
         if m:
-            return m.group("id").strip(), (m.groupdict().get("title") or "").strip()
+            clause_id = m.group("id").strip()
+            # A citation badge reading "7" tells an operator nothing.
+            if _BARE_NUMBER.match(clause_id):
+                clause_id = f"{clause_prefix} {clause_id}".strip()
+            return clause_id, (m.groupdict().get("title") or "").strip()
     return None
 
 
@@ -94,6 +123,7 @@ def _window(text: str, limit: int = MAX_CHARS, overlap: int = OVERLAP_CHARS) -> 
 def chunk_pages(pages: list[tuple[int, str]], doc_meta: dict) -> list[Chunk]:
     """Chunk already-extracted page text. `pages` is [(page_no, text), ...], 1-indexed."""
     chunks: list[Chunk] = []
+    clause_prefix = str(doc_meta.get("clause_prefix", DEFAULT_CLAUSE_PREFIX))
     cur_clause, cur_section = PREAMBLE, PREAMBLE
     buf: list[str] = []
     buf_page = 1
@@ -122,7 +152,7 @@ def chunk_pages(pages: list[tuple[int, str]], doc_meta: dict) -> list[Chunk]:
 
     for page_no, page_text in pages:
         for line in (page_text or "").split("\n"):
-            hit = _match_heading(line)
+            hit = _match_heading(line, clause_prefix)
             if hit:
                 # Close the previous clause before switching -- a chunk must never
                 # span two clauses.

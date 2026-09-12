@@ -246,3 +246,51 @@ def test_pipeline_runs_identically_without_langgraph(rag_db, monkeypatch):
     assert result["answer"]
     assert result["engine_values"] == ENGINE_CONTEXT
     assert result["meta"]["retrieved_chunks"] > 0
+
+
+# ------------------------------------------------------- provider redundancy
+def test_identical_primary_and_fallback_is_reported_as_no_failover(monkeypatch):
+    """Configuring one model twice gives retries, not failover.
+
+    _candidates() de-duplicates, so the two-provider design collapses to one
+    entry. That is a legitimate state when only one provider has a key, but it
+    must be visible: a rate-limit then goes straight to the deterministic
+    template with nothing in between.
+    """
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "gemini/gemini-3.6-flash")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/gemini-3.6-flash")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    report = llm.health()
+    assert report["redundancy"] == "single_provider"
+    assert "no failover" in report["warning"]
+
+
+def test_two_distinct_providers_report_dual_redundancy(monkeypatch):
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "groq/llama-3.3-70b-versatile")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/gemini-3.6-flash")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    report = llm.health()
+    assert report["redundancy"] == "dual_provider"
+    assert "warning" not in report
+
+
+def test_one_key_missing_is_flagged_even_with_distinct_models(monkeypatch):
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "groq/llama-3.3-70b-versatile")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/gemini-3.6-flash")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+
+    report = llm.health()
+    assert report["redundancy"] == "single_provider"
+    assert "nowhere to fail over" in report["warning"]
+
+
+def test_no_keys_at_all_reports_none(monkeypatch):
+    monkeypatch.setenv("RAG_PRIMARY_MODEL", "groq/llama-3.3-70b-versatile")
+    monkeypatch.setenv("RAG_FALLBACK_MODEL", "gemini/gemini-3.6-flash")
+    monkeypatch.setenv("GROQ_API_KEY", "")
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    assert llm.health()["redundancy"] == "none"

@@ -21,7 +21,7 @@ This platform bridges meteorological physics, probabilistic machine learning, ma
 2. **Probabilistic Fan Forecasting**: Multi-quantile regression (P05 → P95) using LightGBM boosters and Amazon Chronos-2, capturing uncertainty without Gaussian assumptions.
 3. **Deterministic Financial Pricing**: Real-time evaluation of ₹ deviation penalties under CERC 2024, 2026 glidepath, and 2031 end-state regimes across 5 grid frequency tiers.
 4. **Schedule Optimization & Battery LP**: 1D Expected Penalty grid search paired with 96-block Linear Programming (PuLP/CBC) Battery Energy Storage System (BESS) dispatch, reducing penalty exposure by **18–42%**.
-5. **Portfolio Pooling & Netting**: Multi-asset aggregation enabling solar over-generation to offset wind deficits, delivering **~27%** net savings on the demo portfolio with fair pro-rata allocation. (Measured under a conservative 0.70 intra-technology correlation assumption; rises to ~57% as plants become less correlated — see `savings_pct` and `correlation_assumed` in the `/pooling` response.)
+5. **Portfolio Pooling & Netting**: Multi-asset aggregation enabling solar over-generation to offset wind deficits, delivering **~35%** net savings on the demo portfolio with fair pro-rata allocation. (Measured live under a conservative 0.70 intra-technology correlation assumption, with a mixed solar/wind pool; rises further as plants become less correlated — see `savings_pct` and `correlation_assumed` in the `/pooling` response.)
 6. **Regulatory AI Copilot**: Grounded hybrid retrieval (pgvector dense + BM25 sparse) with a deterministic financial guardrail that cites exact legal clauses and never hallucinates numbers.
 
 ---
@@ -69,7 +69,7 @@ graph LR
 | **Forecasting** | Single point estimate (P50 mean) | **Full 96-block probabilistic distribution (P05..P95)** |
 | **Penalty Risk** | Estimated post-facto on monthly bill | **Pre-priced in ₹ before schedule submission** |
 | **Schedule Strategy** | Submitting naive P50 forecast | **Optimised min-expected-₹ schedule via grid search + BESS LP** |
-| **Portfolio Synergies** | Plants scheduled independently | **Multi-plant netting yielding ~27% penalty reduction (measured)** |
+| **Portfolio Synergies** | Plants scheduled independently | **Multi-plant netting yielding ~35% penalty reduction (measured)** |
 | **Regulatory Advisory** | Manual reading of 100+ page PDF gazettes | **AI Copilot citing exact CERC clauses with anti-hallucination guardrail** |
 
 ---
