@@ -146,12 +146,17 @@ class TestUncertaintyBand:
 # ──────────────────────────────────────────── full engine integration ─────────
 
 def _make_weather(num_blocks: int = 96, wind_speed_ms: float = 9.0) -> dict:
-    """Synthetic flat wind-day: 9 m/s at all mast heights all day."""
+    """Synthetic flat wind-day: 9 m/s at all mast heights all day.
+
+    Emitted in km/h, the unit Open-Meteo actually returns. Feeding the engine
+    m/s here is what let the km/h-as-m/s bug pass every test.
+    """
+    kmh = wind_speed_ms * 3.6
     return {
         b: {
-            "wind_speed_10m": wind_speed_ms,
-            "wind_speed_80m": wind_speed_ms * 1.08,
-            "wind_speed_120m": wind_speed_ms * 1.12,
+            "wind_speed_10m": kmh,
+            "wind_speed_80m": kmh * 1.08,
+            "wind_speed_120m": kmh * 1.12,
             # Solar variables present but should be ignored for wind
             "shortwave_radiation": 600.0 if 24 <= b <= 72 else 0.0,
         }
@@ -218,3 +223,21 @@ class TestWindPhysicsEngine:
         blocks = engine.generate_forecast(PLANT, "2026-09-13", 96, weather=weather)
         p50s = [b["p50"] for b in blocks]
         assert all(p == 0.0 for p in p50s)
+
+    def test_open_meteo_kmh_is_not_read_as_ms(self, engine):
+        """Regression: production served GJ_WIND_C at nameplate all day with a
+        cut-out trip at 18:00, from Open-Meteo readings of 20.3 and 25.2 km/h at
+        120 m on 2026-09-14. Those are 5.6 and 7.0 m/s -- the ramp zone, where a
+        40 MW farm makes a few MW, not 40 and certainly not a storm trip.
+        """
+        weather = {
+            1: {"wind_speed_120m": 20.3},   # 5.64 m/s
+            2: {"wind_speed_120m": 25.2},   # 7.00 m/s -- above cut_out if misread
+        }
+        blocks = engine.generate_forecast(PLANT, "2026-09-14", 2, weather=weather)
+        breeze, stronger = blocks[0]["p50"], blocks[1]["p50"]
+
+        # P = 40 x (u^3 - 3^3) / (12.5^3 - 3^3)
+        assert breeze == pytest.approx(3.16, abs=0.05)
+        assert stronger == pytest.approx(6.56, abs=0.05)
+        assert 0.0 < breeze < stronger < AVC_MW
