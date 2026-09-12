@@ -111,8 +111,14 @@ jobs:
           context: .
           load: true
           tags: ${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-          # Without this cache the model layer is rebuilt on every run, which is
-          # a 2.2 GB download each time.
+          # BAKE_MODELS=false skips the 2.2 GB bge-m3 + bge-reranker download.
+          # The test job already ran ruff + pytest; there is no value in proving
+          # that HuggingFace weights download successfully on every PR push.
+          # Without this, the image is ~12 GB and export alone costs 8 minutes.
+          # Production ECR pushes (gated to main, below) use BAKE_MODELS=true
+          # via the deploy workflow, which runs against a docker buildx cache that
+          # already has the model layer from the last time it was baked.
+          build-args: BAKE_MODELS=false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

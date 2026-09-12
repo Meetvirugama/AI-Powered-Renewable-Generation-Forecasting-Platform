@@ -6,13 +6,16 @@
 # weights go in early and code goes in last. Get this backwards and every
 # teammate's rebuild costs six minutes instead of twelve seconds.
 #
-# The other mistake this avoids: downloading 2.2 GB of embedding weights at
-# container start. Baked in, cold start is ~12 s instead of ~90 s, and the
-# container works with no internet -- which is exactly the situation on hackathon
-# venue wifi.
+# BAKE_MODELS build arg (default true):
+#   true  -- bge-m3 + bge-reranker-base are downloaded and baked into the image.
+#            Cold start is ~12 s instead of ~90 s; container works with no internet.
+#            Use this for production ECR images.
+#   false -- model layer is skipped. Image is ~500 MB instead of ~12 GB.
+#            CI uses this: there is no point proving the weights download on every
+#            PR. The image still boots (RAG_COPILOT_TYPE=mock), and ruff+tests
+#            already ran in the test job. Build time drops from 14 min to <2 min.
 #
-# Expected image size ~4.5 GB. Fine for ECR and a t3.large. If that becomes a
-# problem, the escape hatch is BAKE_MODELS=false plus an S3 sync at boot.
+# Expected production image size ~4.5 GB. Fine for ECR and a t3.large.
 
 FROM python:3.11-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -54,8 +57,8 @@ RUN pip install --upgrade pip \
     && pip install -r requirements-ml.txt
 
 
-# ---------- model layer (changes never) ----------
-FROM deps AS models
+# ---------- model layer (changes never; skipped in CI via BAKE_MODELS=false) ----------
+FROM deps AS models-true
 # Both models are pinned by name in .env; changing either one invalidates this
 # layer on purpose, because a changed embedding model means the index must be
 # rebuilt anyway.
@@ -63,6 +66,15 @@ RUN python -c "\
 from huggingface_hub import snapshot_download; \
 snapshot_download('BAAI/bge-m3', cache_dir='/models'); \
 snapshot_download('BAAI/bge-reranker-base', cache_dir='/models')"
+
+# Thin alias used when BAKE_MODELS=false: identical to deps, no model weights.
+FROM deps AS models-false
+RUN mkdir -p /models
+
+# The ARG selects which stage to use. "true" is the safe default so a plain
+# `docker build .` produces a production-ready image without any extra flag.
+ARG BAKE_MODELS=true
+FROM models-${BAKE_MODELS} AS models
 
 
 # ---------- application layer (changes constantly) ----------
@@ -85,6 +97,7 @@ EXPOSE 8000
 # start-period is 90s because the lifespan loads bge-m3 before serving. Set it to
 # the usual 10s and Docker marks a still-loading container unhealthy and
 # restart-loops it forever -- a failure mode that looks like a crash and is not.
+# When BAKE_MODELS=false (CI) the production copilot is not loaded, so 30s is fine.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
     CMD curl -fsS http://localhost:8000/health || exit 1
 
