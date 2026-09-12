@@ -2,7 +2,31 @@
 
 > **Platform classification:** `HACKATHON_READY` · Evidence score **70 / 80 (87.5%)** · Forecast horizons: 24h / 48h / 72h · Champion model family: Hybrid P50
 
+## Document Status
+
+This document describes the full intended ML pipeline design. Sections are annotated below.
+For what is **actually built and committed**, see `docs/roadmap.md`.
+
+| Section | Status | Notes |
+|---|---|---|
+| Architecture Overview | ✅ Implemented | Matches the shipped backend |
+| Data Ingestion | ✅ Implemented | Open-Meteo live ingestion is live |
+| Data Quality Layer | ✅ Implemented | Validator + resampler committed |
+| Feature Engineering | ⚠️ Partial | `feature_builder.py` exists; `features.py` not yet |
+| LightGBM Quantile Models | ⚠️ Trained but blocked | Models fail physics gate — retraining needed. See `docs/model_integration.md` |
+| Persistence Baseline | ❌ Not built | Planned in Phase 1 |
+| DSM Cost Engine | ✅ Implemented | Tested, YAML-driven, 2024/2026/2031 |
+| Schedule Optimizer | ✅ Implemented | `schedule_optimizer.py`, 23–28% savings measured |
+| Battery LP | ❌ Not built | `battery_lp.py` planned, not yet implemented |
+| Portfolio Pooling | ✅ Implemented | Fix for correlation bug pending (B1 in `roadmap.md`) |
+| SHAP Explainability | ❌ **Descoped** | Removed from demo scope |
+| Asset Anomaly Detection | ❌ **Descoped** | Removed from demo scope |
+| Chronos-2 | ❌ **Descoped** | Explicitly removed — see `roadmap.md` |
+| RAG Copilot Pipeline | ✅ Implemented | Corpus empty until PDFs loaded |
+| Production Daily Pipeline | ✅ Implemented | `/pipeline/run` async, EventBridge scheduled |
+
 ---
+
 
 ## Table of Contents
 

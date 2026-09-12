@@ -1,8 +1,27 @@
-# 🌞⚡ End-to-End Implementation Plan
+# End-to-End Implementation Plan
 ## AI-Powered Renewable Generation Forecasting Platform
 ### Hackathon Edition — Predict → Price in ₹ → Optimise → Act → Explain
 
 ---
+
+> [!NOTE]
+> **Historical reference document.** This was the master planning spec written at project start.
+> It has been largely superseded by narrower, more accurate docs as the codebase was built.
+> Prefer these instead:
+>
+> | Topic | Read instead |
+> |---|---|
+> | What & Why | `docs/project_understanding.md` |
+> | System architecture + DB schema | `docs/system_architecture.md` |
+> | ML pipeline status | `docs/ml_pipeline.md` |
+> | Model integration blockers | `docs/model_integration.md` |
+> | What remains to do | `docs/roadmap.md` |
+> | API contract (RAG) | `docs/api_rag_contract.md` |
+> | Frontend sprints | `docs/frontend_implementation_plan.md` |
+> | Deploy + ops | `docs/deployment.md` · `docs/runbook.md` |
+>
+> This file is kept because it contains original design rationale not captured elsewhere.
+
 
 ## Table of Contents
 1. [Project Mission & What Makes This Win](#1-project-mission)

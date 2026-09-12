@@ -2,7 +2,18 @@
 
 **Owner:** Member 4. Everything here is reproducible from a clean AWS account.
 
----
+> **See also:** `docs/runbook.md` — demo-day failover, failure modes, and alarm handling.
+
+## Table of Contents
+
+- [The fallback ladder](#the-fallback-ladder)
+- [Rung 1 — local](#rung-1--local)
+- [Building the regulation index](#building-the-regulation-index)
+- [Rungs 3–6 — AWS](#rungs-36--aws)
+- [CI/CD](#cicd)
+- [Cost control](#cost-control)
+- [Terraform](#terraform)
+
 
 ## The fallback ladder
 

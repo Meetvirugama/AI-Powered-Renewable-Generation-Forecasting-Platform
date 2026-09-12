@@ -2,7 +2,31 @@
 
 **Owner:** Member 4. Read this before judging, not during it.
 
+> **See also:** `docs/deployment.md` — provisioning, CI/CD, and cost teardown.
+
+## Quick Reference (5 commands to know cold)
+
+```bash
+# 1. Check backend health
+curl -fsS https://<cloudfront>/api/health | jq
+
+# 2. Check RAG readiness (chunks must be non-zero, no warning key)
+curl -fsS https://<cloudfront>/api/rag/health | jq '.chunks, .warning, .llm.usable'
+
+# 3. Get on the box (no SSH key, no port 22)
+aws ssm start-session --target <instance-id>
+
+# 4. Tail backend logs
+docker compose -f docker-compose.prod.yml logs --tail 100 backend
+
+# 5. Emergency rollback
+IMAGE_TAG=<previous-sha> docker compose -f docker-compose.prod.yml up -d --no-deps backend
+```
+
+**Five failover scenarios to rehearse the day before:** Rogue Groq key · both keys revoked · backend stopped · corpus truncated · wifi dead. See [Failover drill](#failover-drill--break-it-on-purpose-the-day-before).
+
 ---
+
 
 ## Pre-flight (run 30 minutes before judging)
 

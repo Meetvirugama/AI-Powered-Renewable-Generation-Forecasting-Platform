@@ -61,7 +61,7 @@ graph TB
         BG_TASKS["FastAPI BackgroundTasks<br/>(Async EventBridge Worker)"]
     end
 
-    subgraph Presentation["💻 React 18 SCADA Dashboard"]
+    subgraph Presentation["💻 React 19 SCADA Dashboard"]
         FAN_CHART["96-Block Fan Chart (P05..P95)"]
         HEATMAP["96-Block Financial Risk Heatmap"]
         BARS["Naive vs Optimised ₹ Comparison"]
@@ -448,7 +448,7 @@ flowchart TD
 
     subgraph AWS_Cloud["AWS Production Architecture"]
         CF["Amazon CloudFront CDN<br/>(HTTPS / Global Edge)"]
-        S3_FE["Amazon S3 Bucket<br/>(React 18 Static Build)"]
+        S3_FE["Amazon S3 Bucket<br/>(React 19 Static Build)"]
         ALB["Application Load Balancer<br/>(Port 443/80)"]
         EC2["Amazon EC2 (t3.large)<br/>Docker Backend Container (:8000)"]
         RDS[("Amazon RDS PostgreSQL 15<br/>+ pgvector extension")]
@@ -469,3 +469,25 @@ flowchart TD
     EC2 --> SSM
     EB --> LAMBDA --> ALB
 ```
+
+---
+
+## 8. Frontend Stack
+
+| Technology | Version | Role |
+|---|---|---|
+| React | 19 | UI framework |
+| TypeScript | 5.7 | Type safety |
+| Vite | 6 | Dev server + bundler |
+| Tailwind CSS | v4 | Styling (dark lime theme) |
+| react-router | 7 | Client-side routing |
+| ApexCharts | 4 | All charts (fan, heatmap, comparison bars) |
+| react-leaflet | latest | Gujarat plant map with lat/lon pins |
+| axios | latest | API client (one function per endpoint) |
+
+**Theme:** Dark-first with lime accent — `--bg #0d0e11`, `--surface #1a1c22`, `--accent #cff245`, Inter font.
+
+**Routes:** `/` (Dashboard) · `/plant/:id` (PlantDetail) · `/backtest` (Backtest)
+
+**API base URL:** `http://localhost:8000` (dev) — configured via `VITE_API_BASE_URL`.
+Mocks behind the same hook interface, toggled by `VITE_USE_MOCKS=true`.
