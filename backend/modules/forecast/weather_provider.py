@@ -49,7 +49,7 @@ logger = logging.getLogger("renewable_platform")
 # fan-out of a single dashboard load without ever serving yesterday's sky.
 CACHE_TTL_SECONDS = float(os.getenv("WEATHER_CACHE_TTL_SECONDS", "900"))
 
-_cache: dict[tuple[str, str], tuple[float, dict[int, dict[str, float]]]] = {}
+_cache: dict[tuple[str, str, int], tuple[float, dict[int, dict[str, float]]]] = {}
 _lock = threading.Lock()
 
 
@@ -79,7 +79,10 @@ def _fetch(lat: float, lon: float) -> pd.DataFrame:
     at the call site means a test that replaces the runner leaks an un-awaited
     coroutine, and it is the obvious seam to stub.
     """
-    return _run_async(fetch_weather_forecast(lat=lat, lon=lon, forecast_days=3))
+    # 4 days, not 3: a 72-hour forecast starting at 00:00 IST begins at 18:30Z
+    # on the previous UTC day and ends 72 hours later, which lands inside a
+    # fourth calendar day in UTC.
+    return _run_async(fetch_weather_forecast(lat=lat, lon=lon, forecast_days=4))
 
 
 def _to_blocks(df: pd.DataFrame, date_str: str, num_blocks: int) -> dict[int, dict[str, float]]:
@@ -150,7 +153,11 @@ def weather_for(
         logger.warning("no coordinates for plant %s; cannot fetch weather", plant_id)
         return {}
 
-    key = (plant_id, date_str)
+    # num_blocks is part of the key. Without it a 24-hour request caches 96
+    # blocks and a 48-hour request for the same plant and date is served that
+    # same dict -- half the frame arrives empty, completeness falls to 62.6%,
+    # and the engine refuses a horizon it is perfectly capable of serving.
+    key = (plant_id, date_str, num_blocks)
     now = time.monotonic()
 
     with _lock:
