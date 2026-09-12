@@ -1,0 +1,55 @@
+seller_side: true
+under_legal_challenge: true
+ncd_default_inr_per_mwh: 450
+
+bands:
+  solar_band: 0.10
+  wind_band: 0.15
+
+x_trajectory:
+  - date: "2026-04-01"
+    x: 1.00
+    solar_band: 0.10
+    wind_band: 0.15
+  - date: "2026-10-01"
+    x: 0.90
+    solar_band: 0.10
+    wind_band: 0.15
+  - date: "2027-10-01"
+    x: 0.75
+    solar_band: 0.08
+    wind_band: 0.12
+  - date: "2028-10-01"
+    x: 0.55
+    solar_band: 0.07
+    wind_band: 0.11
+  - date: "2030-10-01"
+    x: 0.30
+    solar_band: 0.06
+    wind_band: 0.10
+  - date: "2031-04-01"
+    x: 0.00
+    solar_band: 0.05
+    wind_band: 0.10
+
+frequency_multipliers:
+  - min: -inf
+    max: 49.90
+    over: 2.0
+    under: 2.0
+  - min: 49.90
+    max: 49.95
+    over: 1.5
+    under: 1.5
+  - min: 49.95
+    max: 50.03
+    over: 1.0
+    under: 1.0
+  - min: 50.03
+    max: 50.05
+    over: 0.75
+    under: 0.75
+  - min: 50.05
+    max: inf
+    over: 0.0
+    under: 1.0

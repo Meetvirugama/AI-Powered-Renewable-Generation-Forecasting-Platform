@@ -1,0 +1,19 @@
+app:
+  name: "Renewable Forecasting Platform"
+  version: "1.0.0"
+  timezone: "Asia/Kolkata"
+forecast:
+  default_horizon_blocks: 96
+  max_horizon_blocks: 288
+  quantile_levels: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
+  model_champion_path: "s3://bucket/models/champion/"
+dsm:
+  default_rule_config: "config/dsm_rules_2026.yaml"
+  ncd_default_inr_per_mwh: 450
+rag:
+  top_k_retrieve: 5
+  cache_ttl_seconds: 3600
+  primary_llm: "groq/llama-3.3-70b-versatile"
+  fallback_llm: "gemini/gemini-1.5-flash"
+pipeline:
+  schedule_cron: "30 2 * * *"

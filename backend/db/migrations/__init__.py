@@ -1,0 +1,3 @@
+"""
+Alembic migrations initialization.
+"""
