@@ -1,4 +1,4 @@
-﻿# ⚡ AI-Powered Renewable Generation Forecasting Platform
+# ⚡ AI-Powered Renewable Generation Forecasting Platform
 ### DSM-Aware Decision & Scheduling Platform
 
 > **Predict → Quantify Risk → Price in ₹ → Optimise → Act → Explain with Citations**
@@ -75,6 +75,7 @@ All planning documents are in [`/docs`](./docs/):
 | [Team Division Plan](./docs/team_plan.md) | 4-member roles, dependency map, handoff schedule |
 | [Team Execution Plans](./docs/team_execution_plans_nocode.md) | Detailed per-member task breakdown |
 | [ML Engineer Deep Dive](./docs/member1_ml_engineer.md) | ML engineering guide for forecasting + DSM engine |
+| [Infra + RAG Deep Dive](./docs/member4_infra_rag_engineer.md) | Docker, AWS, CI/CD and the regulatory RAG copilot (Member 4) |
 
 ---
 
