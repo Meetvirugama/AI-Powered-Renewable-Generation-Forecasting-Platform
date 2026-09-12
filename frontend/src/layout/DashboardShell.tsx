@@ -9,8 +9,8 @@ function ShellContent() {
   const { plantId, setPlantId, ruleYear, setRuleYear } = useDashboardContext();
   
   return (
-    <div className="flex flex-col gap-[var(--gap-section)]">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex h-full flex-col gap-[var(--gap-section)]">
+      <header className="shrink-0 flex flex-wrap items-center justify-between gap-3">
         <PlantSelector value={plantId} onChange={setPlantId} />
         <div className="flex flex-wrap items-center gap-3">
           <RuleYearControl value={ruleYear} onChange={setRuleYear} />
@@ -21,12 +21,13 @@ function ShellContent() {
           )}
         </div>
       </header>
-      <main>
+      <main className="flex flex-1 flex-col min-h-0">
         <Outlet />
       </main>
     </div>
   );
 }
+
 
 export default function DashboardShell() {
   return (

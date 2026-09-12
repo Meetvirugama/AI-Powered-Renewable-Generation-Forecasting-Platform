@@ -12,11 +12,13 @@ const LayoutContent: React.FC = () => {
     <div className="flex h-screen overflow-hidden bg-bg">
       <AppSidebar />
       <Backdrop />
-      <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
         <AppHeader />
-        <main>
-          <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
-            <Outlet />
+        <main className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden p-4 md:p-6">
+            <div className="mx-auto w-full max-w-[--breakpoint-2xl] flex flex-1 flex-col">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>
