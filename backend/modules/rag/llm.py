@@ -140,10 +140,43 @@ def complete(
     raise AllProvidersFailed(str(last_error))
 
 
+def redundancy() -> str:
+    """Whether a provider failure actually has somewhere to fail over to.
+
+    `_candidates()` de-duplicates, so configuring the same model as primary and
+    fallback collapses to a single entry: retries against the one provider
+    rather than failover to a second. That is a legitimate configuration -- it
+    is what you get when only one provider has a working key -- but it must not
+    be mistaken for the two-provider design, because a rate-limit or outage then
+    takes the copilot straight to the deterministic template.
+    """
+    usable = _candidates()
+    if usable == ["mock"]:
+        return "mock"
+    if len(usable) >= 2:
+        return "dual_provider"
+    if len(usable) == 1:
+        return "single_provider"
+    return "none"
+
+
 def health() -> dict:
     """Reported by GET /rag/health so a missing key is visible before the demo, not during it."""
-    return {
+    usable = _candidates()
+    report = {
         "primary": primary_model(),
         "fallback": fallback_model(),
-        "usable": _candidates(),
+        "usable": usable,
+        "redundancy": redundancy(),
     }
+    if primary_model() == fallback_model() and usable != ["mock"]:
+        report["warning"] = (
+            f"primary and fallback are both {primary_model()!r}, so there is no failover. "
+            "Set RAG_FALLBACK_MODEL to a different provider or model to restore it."
+        )
+    elif len(usable) == 1 and primary_model() != fallback_model():
+        report["warning"] = (
+            f"only {usable[0]!r} is usable; the other configured model has no API key, "
+            "so a failure has nowhere to fail over to."
+        )
+    return report
