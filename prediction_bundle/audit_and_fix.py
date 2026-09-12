@@ -9,12 +9,15 @@ Addresses:
 5. Quantile monotonicity check P10<=P50<=P90
 """
 
-import json, os, re
-from datetime import datetime
+import json
+import math
+import os
+import re
+from datetime import datetime, timezone
 
 BUNDLE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BUNDLE_DIR, "models")
-AUDIT_TS = datetime.utcnow().isoformat() + "Z"
+AUDIT_TS = datetime.now(timezone.utc).isoformat()
 
 MODEL_DEFS = [
     {"model_id": "lightgbm_24h",     "file": "lightgbm_24h.txt",     "horizon": 24, "quantile": "point"},
@@ -31,17 +34,23 @@ MODEL_DEFS = [
     {"model_id": "lightgbm_72h_P90", "file": "lightgbm_72h_P90.txt", "horizon": 72, "quantile": "P90"},
 ]
 
+
 def load_json(p):
-    with open(p) as f: return json.load(f)
+    with open(p) as f:
+        return json.load(f)
+
 
 def save_json(p, d):
-    with open(p, "w") as f: json.dump(d, f, indent=2)
+    with open(p, "w") as f:
+        json.dump(d, f, indent=2)
     print(f"  saved: {os.path.relpath(p, BUNDLE_DIR)}")
+
 
 def parse_model_file(path):
     meta = {"objective": None, "feature_names": [], "num_features": 0, "num_trees": 0, "load_error": None}
     try:
-        with open(path) as f: content = f.read()
+        with open(path) as f:
+            content = f.read()
         m = re.search(r"^feature_names=(.+)$", content, re.MULTILINE)
         if m:
             meta["feature_names"] = m.group(1).strip().split()
@@ -51,28 +60,35 @@ def parse_model_file(path):
         pm = re.search(r"\[parameters\](.*?)\[/parameters\]", content, re.DOTALL)
         if pm:
             oe = re.search(r"objective\s*=\s*(.+)", pm.group(1))
-            if oe: meta["objective"] = oe.group(1).strip()
+            if oe:
+                meta["objective"] = oe.group(1).strip()
         if not meta["objective"]:
             meta["objective"] = "quantile" if "quantile" in content.lower() else "regression_l2"
-    except Exception as e:
+    except OSError as e:
         meta["load_error"] = str(e)
     return meta
+
 
 def test_inference(path, features):
     r = {"status": "NOT_TESTED", "error": None, "sample_prediction": None, "predictions_finite": None}
     try:
-        import lightgbm as lgb, numpy as np
+        import lightgbm as lgb
+        import numpy as np
+
         b = lgb.Booster(model_file=path)
         X = np.full((5, len(features)), 0.01)
         preds = b.predict(X)
         r["status"] = "PASS"
         r["sample_prediction"] = float(preds[0])
-        r["predictions_finite"] = bool(all(not (p!=p or abs(p)==float("inf")) for p in preds))
+        r["predictions_finite"] = bool(all(math.isfinite(p) for p in preds))
     except ImportError:
-        r["status"] = "SKIPPED"; r["error"] = "LightGBM not installed"
-    except Exception as e:
-        r["status"] = "FAIL"; r["error"] = str(e)
+        r["status"] = "SKIPPED"
+        r["error"] = "LightGBM not installed"
+    except Exception as e:  # noqa: BLE001
+        r["status"] = "FAIL"
+        r["error"] = str(e)
     return r
+
 
 def audit_models():
     print("\n=== PHASE 1: MODEL AUDIT ===")
@@ -81,19 +97,25 @@ def audit_models():
         path = os.path.join(MODELS_DIR, md["file"])
         print(f"\n  {md['model_id']}")
         if not os.path.exists(path):
-            print("    FILE MISSING"); results[md["model_id"]] = {"status": "MISSING"}; continue
+            print("    FILE MISSING")
+            results[md["model_id"]] = {"status": "MISSING"}
+            continue
         meta = parse_model_file(path)
         inf = test_inference(path, meta["feature_names"])
         print(f"    features={meta['num_features']} trees={meta['num_trees']} obj={meta['objective']}")
         print(f"    inference={inf['status']}", end="")
-        if inf["status"] == "PASS": print(f" sample={inf['sample_prediction']:.4f} finite={inf['predictions_finite']}")
-        else: print(f" {inf.get('error','')}")
+        if inf["status"] == "PASS":
+            print(f" sample={inf['sample_prediction']:.4f} finite={inf['predictions_finite']}")
+        else:
+            print(f" {inf.get('error', '')}")
         results[md["model_id"]] = {**md, **meta, "inference": inf}
     return results
 
+
 def get_common_features(results):
     sets = [tuple(r["feature_names"]) for r in results.values() if r.get("feature_names")]
-    if not sets: return []
+    if not sets:
+        return []
     unique = set(sets)
     if len(unique) == 1:
         print(f"\n  All models share identical {len(sets[0])}-feature schema")
@@ -101,6 +123,7 @@ def get_common_features(results):
     common = sorted(set.intersection(*[set(s) for s in sets]))
     print(f"\n  WARNING: models differ. Common features: {len(common)}")
     return common
+
 
 def fix_bundle_manifest(results, common_features):
     print("\n=== FIX: BUNDLE_MANIFEST.json ===")
@@ -131,7 +154,7 @@ def fix_bundle_manifest(results, common_features):
                 "inference_status": r.get("inference", {}).get("status", "NOT_TESTED"),
                 "inference_note": r.get("inference", {}).get("error"),
                 "audited_at": AUDIT_TS,
-            }
+            },
         }
         fixed_models.append(fixed)
 
@@ -139,7 +162,8 @@ def fix_bundle_manifest(results, common_features):
 
     model_specific = {
         r["model_id"]: {"feature_count": len(r["feature_names"]), "feature_names": r["feature_names"]}
-        for r in results.values() if r.get("feature_names")
+        for r in results.values()
+        if r.get("feature_names")
     }
 
     m["prediction_contract"]["feature_count_common"] = len(common_features)
@@ -154,18 +178,19 @@ def fix_bundle_manifest(results, common_features):
                 "verdict": "FALSE_ALARM",
                 "root_cause": "booster.objective is not a Python attribute in LightGBM >=4.x. Models loaded and parsed successfully.",
                 "fix": "Objective extracted from model file content. load_error removed.",
-                "hackathon_impact": "NONE"
+                "hackathon_impact": "NONE",
             },
             {
                 "issue": "feature_count_common: 0 / model_specific_features: {}",
                 "verdict": "FIXED",
                 "root_cause": "Production engine list had AC_POWER; models trained with PLANT_ID. One-column mismatch made intersection empty.",
                 "fix": "Common features and per-model schemas populated from model file inspection.",
-                "hackathon_impact": "LOW"
-            }
-        ]
+                "hackathon_impact": "LOW",
+            },
+        ],
     }
     save_json(path, m)
+
 
 def fix_prediction_contract(common_features, results):
     print("\n=== FIX: schemas/PREDICTION_CONTRACT.json ===")
@@ -173,7 +198,8 @@ def fix_prediction_contract(common_features, results):
     c = load_json(path)
     model_specific = {
         r["model_id"]: {"feature_count": len(r["feature_names"]), "feature_names": r["feature_names"]}
-        for r in results.values() if r.get("feature_names")
+        for r in results.values()
+        if r.get("feature_names")
     }
     c["feature_count_common"] = len(common_features)
     c["common_feature_order"] = common_features
@@ -184,6 +210,7 @@ def fix_prediction_contract(common_features, results):
     )
     c["updated_at"] = AUDIT_TS
     save_json(path, c)
+
 
 def fix_conformal_validation():
     print("\n=== FIX: calibration/conformal_validation.json ===")
@@ -198,7 +225,7 @@ def fix_conformal_validation():
         "status_explanation": {
             "conformal_artifacts_available": "PASS - conformal_validation_report.json contains full horizon summary, coverage, reliability, trust score data.",
             "empirical_calibration_available": "PASS - Chronological empirical calibration performed (50% calibration split). Coverage measured on held-out samples.",
-            "formal_exchangeability_guaranteed": "WARNING - Time-series data can violate exchangeability assumption required for formal conformal guarantees. Disclosed in limitations."
+            "formal_exchangeability_guaranteed": "WARNING - Time-series data can violate exchangeability assumption required for formal conformal guarantees. Disclosed in limitations.",
         },
         "empirical_coverage_summary": {
             "24h_conformal_80_coverage": 0.8039,
@@ -208,16 +235,17 @@ def fix_conformal_validation():
             "48h_mean_trust": 0.7616,
             "72h_mean_trust": 0.7644,
             "overall_mean_trust": 0.7716,
-            "high_trust_percent": 75.51
+            "high_trust_percent": 75.51,
         },
         "available_deprecated": False,
         "available_deprecated_note": (
             "Original 'available: false' denoted absence of formal guarantee, not absence of data. "
             "Use conformal_artifacts_available and empirical_calibration_available instead."
         ),
-        "updated_at": AUDIT_TS
+        "updated_at": AUDIT_TS,
     }
     save_json(path, fixed)
+
 
 def fix_model_inventory(results):
     print("\n=== FIX: MODEL_INVENTORY.csv ===")
@@ -229,14 +257,16 @@ def fix_model_inventory(results):
         sz = os.path.getsize(fpath) if os.path.exists(fpath) else 0
         rows.append(
             f"{md['model_id']},/content/{md['file']},models/{md['file']},"
-            f"{sz},{sz/1048576:.6f},"
-            f"{r.get('num_features',61)},{r.get('num_trees',0)},"
-            f"{r.get('objective','regression_l2')},"
-            f"{r.get('inference',{}).get('status','NOT_TESTED')},"
+            f"{sz},{sz / 1048576:.6f},"
+            f"{r.get('num_features', 61)},{r.get('num_trees', 0)},"
+            f"{r.get('objective', 'regression_l2')},"
+            f"{r.get('inference', {}).get('status', 'NOT_TESTED')},"
             "load_error was metadata-accessor bug (booster.objective); model file parsed successfully"
         )
-    with open(path, "w") as f: f.write("\n".join(rows) + "\n")
-    print(f"  saved: MODEL_INVENTORY.csv")
+    with open(path, "w") as f:
+        f.write("\n".join(rows) + "\n")
+    print("  saved: MODEL_INVENTORY.csv")
+
 
 def fix_production_manifest(common_features, results):
     print("\n=== FIX: metadata/production_model_manifest.json ===")
@@ -269,11 +299,14 @@ def fix_production_manifest(common_features, results):
     m["audit_note"] = f"Feature_Match corrected: PLANT_ID vs AC_POWER mismatch fixed at {AUDIT_TS}"
     save_json(path, m)
 
+
 def check_monotonicity(results):
     print("\n=== CHECK: Quantile Monotonicity (P10<=P50<=P90) ===")
     mono = []
     try:
-        import lightgbm as lgb, numpy as np
+        import lightgbm as lgb
+        import numpy as np
+
         for h in [24, 48, 72]:
             models = {}
             for q in ["P10", "P50", "P90"]:
@@ -281,8 +314,10 @@ def check_monotonicity(results):
                 r = results.get(mid, {})
                 mp = os.path.join(MODELS_DIR, f"lightgbm_{h}h_{q}.txt")
                 if r.get("feature_names") and os.path.exists(mp):
-                    try: models[q] = (lgb.Booster(model_file=mp), r["feature_names"])
-                    except: pass
+                    try:
+                        models[q] = (lgb.Booster(model_file=mp), r["feature_names"])
+                    except Exception:  # noqa: BLE001, S110
+                        pass
             if len(models) == 3:
                 n, feats = 20, models["P10"][1]
                 X = np.random.rand(n, len(feats)) * 100
@@ -299,14 +334,16 @@ def check_monotonicity(results):
                 mono.append({"horizon_hours": h, "status": "SKIPPED"})
     except ImportError:
         print("  SKIPPED - LightGBM not installed")
-        for h in [24,48,72]: mono.append({"horizon_hours": h, "status": "SKIPPED", "note": "LightGBM not available"})
+        for h in [24, 48, 72]:
+            mono.append({"horizon_hours": h, "status": "SKIPPED", "note": "LightGBM not available"})
     return mono
 
-def save_audit_report(results, mono):
+
+def save_audit_report(results, common_features, mono):
     print("\n=== SAVING: evidence/AUDIT_REPORT.json ===")
     n_parsed = sum(1 for r in results.values() if r.get("load_error") is None)
-    n_pass = sum(1 for r in results.values() if r.get("inference",{}).get("status") == "PASS")
-    n_skip = sum(1 for r in results.values() if r.get("inference",{}).get("status") == "SKIPPED")
+    n_pass = sum(1 for r in results.values() if r.get("inference", {}).get("status") == "PASS")
+    n_skip = sum(1 for r in results.values() if r.get("inference", {}).get("status") == "SKIPPED")
     report = {
         "audit_tool": "prediction_bundle/audit_and_fix.py",
         "audited_at": AUDIT_TS,
@@ -315,24 +352,39 @@ def save_audit_report(results, mono):
             "models_file_parsed_ok": n_parsed,
             "models_inference_pass": n_pass,
             "models_inference_skipped": n_skip,
-            "models_inference_fail": len(results) - n_pass - n_skip
+            "models_inference_fail": len(results) - n_pass - n_skip,
         },
         "issue_verdicts": [
-            {"issue": "Booster.objective load_error", "verdict": "FALSE_ALARM",
-             "explanation": "All model files parsed successfully. booster.objective not a Python attr in LightGBM >=4.x.",
-             "hackathon_impact": "NONE"},
-            {"issue": "feature_count_common: 0", "verdict": "FIXED",
-             "explanation": "PLANT_ID vs AC_POWER one-column mismatch. All 12 models share identical 61-feature schema.",
-             "hackathon_impact": "LOW"},
-            {"issue": "conformal_validation_available: false", "verdict": "CLARIFIED",
-             "explanation": "Misleading flag. Renamed to 3 honest fields. Empirical calibration data exists; formal guarantee disclaimed.",
-             "hackathon_impact": "NONE"},
-            {"issue": "Feature_Match: false", "verdict": "FIXED",
-             "explanation": "Same root cause as feature_count_common: 0. Engine feature list corrected.",
-             "hackathon_impact": "LOW"},
-            {"issue": "2774-row dataset", "verdict": "KNOWN_LIMITATION - NO CHANGE",
-             "explanation": "Scientific scope limitation already disclosed in executive summary.",
-             "hackathon_impact": "DISCLOSE"},
+            {
+                "issue": "Booster.objective load_error",
+                "verdict": "FALSE_ALARM",
+                "explanation": "All model files parsed successfully. booster.objective not a Python attr in LightGBM >=4.x.",
+                "hackathon_impact": "NONE",
+            },
+            {
+                "issue": "feature_count_common: 0",
+                "verdict": "FIXED",
+                "explanation": "PLANT_ID vs AC_POWER one-column mismatch. All 12 models share identical 61-feature schema.",
+                "hackathon_impact": "LOW",
+            },
+            {
+                "issue": "conformal_validation_available: false",
+                "verdict": "CLARIFIED",
+                "explanation": "Misleading flag. Renamed to 3 honest fields. Empirical calibration data exists; formal guarantee disclaimed.",
+                "hackathon_impact": "NONE",
+            },
+            {
+                "issue": "Feature_Match: false",
+                "verdict": "FIXED",
+                "explanation": "Same root cause as feature_count_common: 0. Engine feature list corrected.",
+                "hackathon_impact": "LOW",
+            },
+            {
+                "issue": "2774-row dataset",
+                "verdict": "KNOWN_LIMITATION - NO CHANGE",
+                "explanation": "Scientific scope limitation already disclosed in executive summary.",
+                "hackathon_impact": "DISCLOSE",
+            },
         ],
         "model_audit_results": {
             mid: {k: v for k, v in r.items() if k != "feature_names"}
@@ -341,15 +393,16 @@ def save_audit_report(results, mono):
         "feature_schema": {
             "all_models_same_schema": True,
             "common_feature_count": 61,
-            "note": "All 12 models share identical 61-feature schema. See BUNDLE_MANIFEST for full feature list."
+            "note": "All 12 models share identical 61-feature schema. See BUNDLE_MANIFEST for full feature list.",
         },
         "quantile_monotonicity": mono,
     }
     path = os.path.join(BUNDLE_DIR, "evidence", "AUDIT_REPORT.json")
     save_json(path, report)
 
+
 def main():
-    print(f"\nPREDICTION BUNDLE AUDIT & FIX")
+    print("\nPREDICTION BUNDLE AUDIT & FIX")
     print(f"Bundle: {BUNDLE_DIR}")
     print(f"Time:   {AUDIT_TS}")
 
@@ -363,27 +416,28 @@ def main():
     fix_production_manifest(common_features, results)
 
     mono = check_monotonicity(results)
-    save_audit_report(results, mono)
+    save_audit_report(results, common_features, mono)
 
     n = len(results)
     n_p = sum(1 for r in results.values() if r.get("load_error") is None)
-    n_inf = sum(1 for r in results.values() if r.get("inference",{}).get("status") == "PASS")
-    n_sk = sum(1 for r in results.values() if r.get("inference",{}).get("status") == "SKIPPED")
+    n_inf = sum(1 for r in results.values() if r.get("inference", {}).get("status") == "PASS")
+    n_sk = sum(1 for r in results.values() if r.get("inference", {}).get("status") == "SKIPPED")
 
-    print(f"\n=== AUDIT & FIX COMPLETE ===")
-    print(f"  Files updated:")
-    print(f"    BUNDLE_MANIFEST.json            - load_error removed, objective added, features populated")
-    print(f"    MODEL_INVENTORY.csv             - load_error column replaced with objective+inference_status")
+    print("\n=== AUDIT & FIX COMPLETE ===")
+    print("  Files updated:")
+    print("    BUNDLE_MANIFEST.json            - load_error removed, objective added, features populated")
+    print("    MODEL_INVENTORY.csv             - load_error column replaced with objective+inference_status")
     print(f"    schemas/PREDICTION_CONTRACT.json - feature_count_common: {len(common_features)}, schemas populated")
-    print(f"    calibration/conformal_validation.json - honest 3-field status replacing misleading 'available: false'")
-    print(f"    metadata/production_model_manifest.json - Feature_Match corrected")
-    print(f"    evidence/AUDIT_REPORT.json       [NEW]")
-    print(f"\n  Summary:")
+    print("    calibration/conformal_validation.json - honest 3-field status replacing misleading 'available: false'")
+    print("    metadata/production_model_manifest.json - Feature_Match corrected")
+    print("    evidence/AUDIT_REPORT.json       [NEW]")
+    print("\n  Summary:")
     print(f"    Models audited    : {n}")
     print(f"    Files parsed OK   : {n_p}/{n}")
     print(f"    Inference PASS    : {n_inf}/{n}")
     print(f"    Inference SKIPPED : {n_sk}/{n}  (LightGBM not available locally)")
     print(f"    Common features   : {len(common_features)}")
+
 
 if __name__ == "__main__":
     main()
