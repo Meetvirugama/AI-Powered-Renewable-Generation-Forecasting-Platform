@@ -3,6 +3,11 @@
 Workstream: Member 3 (frontend), executed by the Antigravity agent, reviewed by Claude Code.
 Chain of command and handoff format: `.agents/skills/dual-agent-protocol/SKILL.md`.
 
+> **Build status as of PR #8 merge:** Sprints 0–9 scaffolded and committed to `frontend/`.
+> All components exist; browser verification and Sprint 10 hardening remain.
+> See `docs/roadmap.md` for the current completion picture.
+
+
 ---
 
 ## Decisions — settled, do not relitigate
@@ -60,22 +65,22 @@ frontend/
 Each sprint is one Antigravity handoff. **Claude Code reviews before the next starts.**
 Nothing is merged on the executor's own judgement.
 
-| # | Sprint | Depends on | Ships |
-|---|---|---|---|
-| 0 | Scaffold and theme | — | Dark themed TailAdmin shell running |
-| 1 | API layer | 0 | Typed client, hooks, mocks, health banner |
-| 2 | App shell and global controls | 1 | Sidebar, topbar, plant/date/rule-year selectors |
-| 3 | Stat tiles and briefing | 2 | First real rupee figures on screen |
-| 4 | Forecast fan chart | 3 | P05–P95 bands, P50, optimised step line |
-| 5 | Risk heatmap | 4 | 96-block penalty heatmap |
-| 6 | Schedule comparison and action cards | 5 | Naive vs optimised, action feed |
-| 7 | Regulation slider and pooling toggle | 6 | The two what-if interactions |
-| 8 | Plant map | 2 | Gujarat map, 4 pins, click to select |
-| 9 | RAG copilot | 2 | Chat panel with clause citations |
-| 10 | Pages, responsive, demo hardening | all | PlantDetail, Backtest, 400px, error states |
+| # | Sprint | Depends on | Ships | Status |
+|---|---|---|---|---|
+| 0 | Scaffold and theme | — | Dark themed TailAdmin shell running | ✅ Built |
+| 1 | API layer | 0 | Typed client, hooks, mocks, health banner | ✅ Built |
+| 2 | App shell and global controls | 1 | Sidebar, topbar, plant/date/rule-year selectors | ✅ Built |
+| 3 | Stat tiles and briefing | 2 | First real rupee figures on screen | ✅ Built |
+| 4 | Forecast fan chart | 3 | P05–P95 bands, P50, optimised step line | ✅ Built |
+| 5 | Risk heatmap | 4 | 96-block penalty heatmap | ✅ Built |
+| 6 | Schedule comparison and action cards | 5 | Naive vs optimised, action feed | ✅ Built |
+| 7 | Regulation slider and pooling toggle | 6 | The two what-if interactions | ✅ Built |
+| 8 | Plant map | 2 | Gujarat map, 4 pins, click to select | ✅ Built |
+| 9 | RAG copilot | 2 | Chat panel with clause citations | ✅ Built |
+| 10 | Pages, responsive, demo hardening | all | PlantDetail, Backtest, 400px, error states | ⏳ Remaining |
 
-Sprints 8 and 9 depend only on Sprint 2, so they can run in parallel with 4–7 if you want
-to fan out. Everything else is a hard chain.
+Sprints 8 and 9 depend only on Sprint 2, so they can run in parallel with 4–7.
+
 
 ---
 

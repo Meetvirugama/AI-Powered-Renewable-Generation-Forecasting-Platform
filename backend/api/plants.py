@@ -11,7 +11,11 @@ router = APIRouter(prefix="/plants", tags=["Plants"])
 
 @router.get("", response_model=PlantListResponse)
 def get_plants(db: Session = Depends(get_db)):
-    plants_db = db.execute(select(Plant)).scalars().all()
+    try:
+        plants_db = db.execute(select(Plant)).scalars().all()
+    except Exception:
+        plants_db = []
+
     if not plants_db:
         cfg_plants = load_plants_config()
         responses = [
@@ -53,7 +57,10 @@ def get_plants(db: Session = Depends(get_db)):
 
 @router.get("/{plant_id}", response_model=PlantResponse)
 def get_plant(plant_id: str, db: Session = Depends(get_db)):
-    plant = db.execute(select(Plant).where(Plant.id == plant_id)).scalar_one_or_none()
+    try:
+        plant = db.execute(select(Plant).where(Plant.id == plant_id)).scalar_one_or_none()
+    except Exception:
+        plant = None
     if plant:
         return PlantResponse(
             id=plant.id,

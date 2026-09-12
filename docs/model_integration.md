@@ -3,8 +3,20 @@
 **Owner:** Member 4 (integration) / Member 1 (models)
 **Status:** adapter shipped and tested; **the models are not yet usable in production**
 
+> [!CAUTION]
+> **Human action required before `FORECAST_ENGINE_TYPE=production` can serve.**
+> Three blockers exist in the trained models (target leakage, scale mismatch, negative predictions).
+> Until they are fixed, all forecasts are synthetic (mock sine-wave). The API reports this honestly
+> via `serving_synthetic_data` in `GET /health`.
+>
+> **What needs doing (summary):**
+> 1. Member 1 retrains models on capacity factor, drops leaking features — see [What retraining has to change](#what-retraining-has-to-change).
+> 2. Re-run `tests/test_forecast_lgbm.py` — the physics gate must pass, not raise.
+> 3. Set `FORECAST_ENGINE_TYPE=production` and verify `GET /health` no longer lists `forecast` under `serving_synthetic_data`.
+
 This documents why `FORECAST_ENGINE_TYPE=production` currently refuses to serve, what was
 fixed to get that far, and exactly what has to change in training before it can be switched on.
+
 
 ---
 

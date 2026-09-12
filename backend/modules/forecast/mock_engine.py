@@ -8,9 +8,11 @@ class MockForecastEngine:
     """Mock forecast engine generating synthetic probabilistic forecasts."""
     
     def generate_forecast(self, plant: Dict, date_str: str, num_blocks: int = 96, **kwargs) -> List[Dict]:
-        plant_id = plant.get('plant_id', 'unknown')
+        # Callers from the API pass 'id' and 'type' (the config/DB field names).
+        # Old callers may pass 'plant_id' and 'asset_type'; accept both.
+        plant_id = plant.get('id', plant.get('plant_id', 'unknown'))
         avc_mw = plant.get('avc_mw', 100.0)
-        asset_type = plant.get('asset_type', 'solar').lower()
+        asset_type = plant.get('type', plant.get('asset_type', 'solar')).lower()
         
         # Seed for reproducibility based on plant_id and date
         seed_str = f"{plant_id}_{date_str}"

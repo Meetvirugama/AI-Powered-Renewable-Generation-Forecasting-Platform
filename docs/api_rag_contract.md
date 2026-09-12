@@ -2,6 +2,22 @@
 
 **Status:** frozen. **Owner:** Member 4. **Consumers:** Member 3 (dashboard), Member 2 (pipeline step 8).
 
+## Quick Reference
+
+| | |
+|---|---|
+| **Endpoint** | `POST /rag/query` |
+| **Readiness check** | `GET /rag/health` |
+| **Request field** | `context` (alias: `engine_context`) |
+| **₹ figures** | Always render from `engine_values`, never from `answer` prose |
+| **Guardrail values** | `pass` / `numbers_stripped` / `fallback_template` |
+| **LLM primary** | `groq/llama-3.3-70b-versatile` |
+| **LLM fallback** | `gemini/gemini-1.5-flash` |
+| **Total LLM outage** | Returns `200` with `guardrail: "fallback_template"` — not a 502 |
+
+---
+
+
 Field names in this document do not change. Member 3 builds against it without a running
 backend, so a rename here is a broken frontend there. New *optional* fields may be added;
 existing fields are never renamed, retyped, or removed.

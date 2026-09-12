@@ -23,8 +23,8 @@ import time
 
 logger = logging.getLogger("renewable_platform")
 
-DEFAULT_PRIMARY = "groq/llama-3.3-70b-versatile"
-DEFAULT_FALLBACK = "gemini/gemini-1.5-flash"
+DEFAULT_PRIMARY = "gemini/gemini-3.6-flash"   # Groq removed — all 5 keys expired 2026-09
+DEFAULT_FALLBACK = "gemini/gemini-3.6-flash"  # gemini-1.5-flash deprecated 2026-09
 
 # Provider prefix -> env var that must be non-empty for that provider to be tried.
 _PROVIDER_KEYS = {
