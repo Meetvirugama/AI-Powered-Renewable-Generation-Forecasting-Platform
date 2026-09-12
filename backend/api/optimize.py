@@ -1,7 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from backend.db.session import get_db
 from datetime import datetime
 
-from backend.core.config import load_plants_config, get_settings
+from backend.core.config import get_settings
+from backend.core.plants import find_plant
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
 from backend.schemas.optimize import OptimizeRequest, OptimizeResponse, BatteryDispatchBlock, ActionCard
@@ -11,14 +15,10 @@ router = APIRouter(prefix="/optimize", tags=["Optimization"])
 settings = get_settings()
 
 @router.post("", response_model=OptimizeResponse)
-def optimize_schedule(request: OptimizeRequest):
+def optimize_schedule(request: OptimizeRequest, db: Session = Depends(get_db)):
     forecast_engine = get_forecast_engine()
     optimizer = get_schedule_optimizer()
-    plant_cfg = None
-    for p in load_plants_config():
-        if p["id"] == request.plant_id:
-            plant_cfg = p
-            break
+    plant_cfg = find_plant(request.plant_id, db)
             
     if not plant_cfg:
         plant_cfg = {"id": request.plant_id, "type": "solar", "avc_mw": 50.0, "lat": 23.0, "lon": 72.0}

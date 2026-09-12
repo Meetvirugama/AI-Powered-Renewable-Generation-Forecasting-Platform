@@ -6,7 +6,7 @@ from datetime import datetime
 
 from backend.db.session import get_db
 from backend.db.models import Plant
-from backend.core.config import load_plants_config
+from backend.core.plants import find_plant
 from backend.modules.factory import get_forecast_engine
 from backend.schemas.forecast import ForecastResponse, BlockForecast
 from backend.modules.forecast.weather_provider import forecast_for
@@ -22,11 +22,7 @@ def get_forecast(
     target_date_str = date or datetime.utcnow().strftime("%Y-%m-%d")
     forecast_engine = get_forecast_engine()
     
-    plant_cfg = None
-    for p in load_plants_config():
-        if p["id"] == plant_id:
-            plant_cfg = p
-            break
+    plant_cfg = find_plant(plant_id, db)
             
     if not plant_cfg:
         plant_db = db.execute(select(Plant).where(Plant.id == plant_id)).scalar_one_or_none()

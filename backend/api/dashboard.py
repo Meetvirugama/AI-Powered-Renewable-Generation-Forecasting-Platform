@@ -6,7 +6,8 @@ from typing import Optional
 from datetime import datetime
 
 from backend.db.session import get_db
-from backend.core.config import load_plants_config, get_settings
+from backend.core.config import get_settings
+from backend.core.plants import find_plant, plants_in_pool
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
 from backend.modules.dsm.pooling import compute_pooling_benefit_by_block, allocate_pool_savings
@@ -33,11 +34,7 @@ def get_dashboard_data(
     forecast_engine = get_forecast_engine()
     optimizer = get_schedule_optimizer()
     
-    plant_cfg = None
-    for p in load_plants_config():
-        if p["id"] == plant_id:
-            plant_cfg = p
-            break
+    plant_cfg = find_plant(plant_id, db)
             
     if not plant_cfg:
         plant_cfg = {"id": plant_id, "name": plant_id, "type": "solar", "avc_mw": 50.0, "pool_id": "GJ_POOL_1"}
@@ -128,7 +125,7 @@ def get_dashboard_data(
     pool_id = plant_cfg.get("pool_id", "GJ_POOL_1")
     pooling_resp = None
     try:
-        pool_plants = [p for p in load_plants_config() if p.get("pool_id") == pool_id]
+        pool_plants = plants_in_pool(pool_id, db)
         if pool_plants:
             # Settled per block, not as one flat list of plant-blocks. Deviation
             # settles per block under CERC, and collapsing the day into a single

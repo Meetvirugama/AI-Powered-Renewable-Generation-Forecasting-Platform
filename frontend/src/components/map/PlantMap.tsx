@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { useEffect, useMemo } from "react";
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { usePlants } from "../../hooks/usePlants";
 import { Plant } from "../../types/api";
@@ -17,8 +17,35 @@ const SOLAR_COLOR = readToken("--color-solar", "#F5B33C");
 const WIND_COLOR = readToken("--color-wind", "#5EC8C8");
 const ACCENT_COLOR = readToken("--color-accent", "#CFF245");
 
+// Only used when bounds cannot be computed -- an empty list, or every plant at
+// one point. The real view is fitted to the data below.
 const GUJARAT_CENTER: [number, number] = [23.2, 71.0];
 const GUJARAT_ZOOM = 7;
+
+/**
+ * Frame the map on the plants that were actually returned.
+ *
+ * A fixed centre and zoom was right for four plants placed by hand. The real
+ * inventory runs from Kutch in the far west to Surat in the south, and a
+ * hardcoded viewport either clips it or leaves the state floating in empty sea.
+ * Fitting the bounds also means the component keeps working unchanged if the
+ * corpus is ever imported for another state.
+ */
+function FitToPlants({ plants }: { plants: Plant[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (plants.length === 0) return;
+    if (plants.length === 1) {
+      map.setView([plants[0].lat, plants[0].lon], 9);
+      return;
+    }
+    const bounds: [number, number][] = plants.map((p) => [p.lat, p.lon]);
+    map.fitBounds(bounds, { padding: [28, 28], maxZoom: 9 });
+  }, [map, plants]);
+
+  return null;
+}
 
 const DARK_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 const DARK_TILE_ATTRIBUTION =
@@ -26,8 +53,16 @@ const DARK_TILE_ATTRIBUTION =
 
 const colorFor = (type: Plant["type"]): string => (type === "solar" ? SOLAR_COLOR : WIND_COLOR);
 
-// 6..18 px, scaled by capacity so a 75 MW plant reads visibly larger than a 30 MW one.
-const radiusFor = (avcMw: number): number => Math.min(18, Math.max(6, 6 + avcMw / 12));
+// Square-root of capacity, because marker *area* is what the eye compares and
+// area grows with the square of the radius — so this makes a 1,000 MW park read
+// as roughly ten times the 10 MW one rather than merely bigger.
+//
+// The previous scale was linear and capped (`6 + avcMw / 12`, max 18px), which
+// was fine for four plants between 30 and 75 MW. Against the real inventory it
+// saturates: everything above 144 MW rendered identically, so Khavda at 1,000 MW
+// looked the same as a 150 MW farm.
+const radiusFor = (avcMw: number): number =>
+  Math.min(22, Math.max(4, Math.sqrt(Math.max(avcMw, 0)) * 0.75 + 3));
 
 interface Props {
   selectedPlantId?: string;
@@ -71,6 +106,7 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer url={DARK_TILE_URL} attribution={DARK_TILE_ATTRIBUTION} />
+          <FitToPlants plants={plants} />
           {plants.map((plant) => {
             const isSelected = plant.id === selectedPlantId;
             return (
@@ -93,7 +129,7 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
                     <div className="font-semibold">{plant.name}</div>
                     <div>Type: {plant.type === "solar" ? "Solar" : "Wind"}</div>
                     <div>{plant.avc_mw} MW</div>
-                    <div>Pool: {plant.pool_id ?? "—"}</div>
+                    <div>Pool: {plant.pool_id ?? "not pooled"}</div>
                     <div>
                       {plant.lat.toFixed(3)}, {plant.lon.toFixed(3)}
                     </div>
@@ -120,7 +156,7 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
           Wind
         </span>
         {selectedPlantId && (
-          <span className="flex items-center gap-2 ml-auto">
+          <span className="flex items-center gap-2">
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{ background: "var(--color-accent)" }}
@@ -128,6 +164,12 @@ export default function PlantMap({ selectedPlantId, onSelectPlant }: Props) {
             Selected
           </span>
         )}
+        {/* Plant records are ODbL (OpenStreetMap) and CC-BY 4.0 (WRI). Both
+            licences require this credit wherever the data is shown. */}
+        <span className="ml-auto text-right text-[11px] leading-tight text-text-muted">
+          Plant data © OpenStreetMap contributors (ODbL) · WRI Global Power Plant
+          Database (CC-BY 4.0)
+        </span>
       </div>
     </div>
   );
