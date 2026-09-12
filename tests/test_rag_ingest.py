@@ -241,3 +241,66 @@ def test_snap_to_word_advances_out_of_a_word():
 
     text = "alpha beta gamma"
     assert _snap_to_word(text, 8, len(text)) == 11  # mid-"beta" -> start of "gamma"
+
+
+# ------------------------------------------------------------ page attribution
+def _long(sentence: str, times: int) -> str:
+    return " ".join([sentence] * times)
+
+
+def test_a_chunk_reports_the_page_its_own_text_is_on():
+    """Every chunk of a clause used to carry the page the *clause* started on.
+
+    For a short clause those coincide. For a long one they do not: Paragraph 7
+    of the 2024 Statement of Reasons runs from page 27 across twenty more, and
+    all 45 of its chunks claimed page 27 -- 72% of that document's chunks
+    carried a page number that did not contain their text. A citation badge
+    reading "Paragraph 7, page 27" for text on page 41 sends the reader
+    somewhere the quoted words are not.
+    """
+    pages = [
+        (27, "Paragraph 7 Tolerance bands\n" + _long("The Commission considered the band.", 40)),
+        (28, _long("Respondents submitted that the band should be wider.", 40)),
+        (29, _long("The Commission accordingly revises the trajectory downward.", 40)),
+    ]
+    chunks = chunk_pages(pages, DOC_META)
+    assert len(chunks) > 1
+
+    normalised = {no: " ".join(text.split()) for no, text in pages}
+    for chunk in chunks:
+        needle = " ".join(chunk.chunk_text.split())[:60]
+        if any(needle in t for t in normalised.values()):
+            assert needle in normalised[chunk.page_no], (
+                f"chunk says page {chunk.page_no} but its text is not on that page"
+            )
+
+
+def test_a_clause_spanning_pages_does_not_report_one_page_for_all_of_it():
+    pages = [
+        (27, "Paragraph 7 Tolerance bands\n" + _long("The Commission considered the band.", 40)),
+        (28, _long("Respondents submitted that the band should be wider.", 40)),
+        (29, _long("The Commission accordingly revises the trajectory downward.", 40)),
+    ]
+    chunks = chunk_pages(pages, DOC_META)
+    assert len({c.page_no for c in chunks}) > 1, "all chunks collapsed onto one page"
+
+
+def test_a_repeated_header_on_an_earlier_page_does_not_steal_attribution():
+    """Search starts at the clause's own page, so a running header appearing
+    earlier in the document cannot claim the chunk."""
+    header = "CENTRAL ELECTRICITY REGULATORY COMMISSION"
+    pages = [
+        (1, header),
+        (40, f"{header}\nRegulation 9 Pooling\n" + _long("Generators may pool deviation.", 40)),
+    ]
+    chunks = chunk_pages(pages, DOC_META)
+    pooling = [c for c in chunks if c.clause == "Regulation 9"]
+    assert pooling
+    assert all(c.page_no == 40 for c in pooling)
+
+
+def test_page_falls_back_when_the_text_cannot_be_located():
+    from backend.modules.rag.ingest import _page_for
+
+    assert _page_for("text that appears nowhere at all", [(5, "unrelated")], fallback=5) == 5
+    assert _page_for("", [(5, "unrelated")], fallback=5) == 5

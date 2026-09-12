@@ -154,6 +154,37 @@ def _window(text: str, limit: int = MAX_CHARS, overlap: int = OVERLAP_CHARS) -> 
     return [p for p in parts if p]
 
 
+def _page_index(pages: list[tuple[int, str]]) -> list[tuple[int, str]]:
+    """Page text normalised the same way chunk text is, so the two can be matched."""
+    return [(page_no, " ".join(_clean(text or "").split())) for page_no, text in pages]
+
+
+def _page_for(piece: str, page_index: list[tuple[int, str]], fallback: int) -> int:
+    """The page a chunk's own text begins on.
+
+    Previously every chunk of a clause carried the page the *clause* started on.
+    For a short clause those are the same page. For a long one they are not:
+    `Paragraph 7` of the 2024 Statement of Reasons runs from page 27 across
+    twenty more, and all 45 of its chunks claimed page 27. A citation badge
+    reading "Paragraph 7, page 27" for text on page 41 sends a reader to the
+    wrong page, which is the one thing a citation must not do.
+
+    Matching is by text rather than by character arithmetic because `_clean`
+    de-hyphenates across line breaks and collapses whitespace, so offsets into
+    the raw page text do not survive into the chunk. The search starts at the
+    clause's own page so that a repeated header on an earlier page cannot win.
+    """
+    needle = " ".join(piece.split())[:60]
+    if not needle:
+        return fallback
+
+    ordered = [p for p in page_index if p[0] >= fallback] + [p for p in page_index if p[0] < fallback]
+    for page_no, text in ordered:
+        if needle in text:
+            return page_no
+    return fallback
+
+
 def chunk_pages(pages: list[tuple[int, str]], doc_meta: dict) -> list[Chunk]:
     """Chunk already-extracted page text. `pages` is [(page_no, text), ...], 1-indexed."""
     chunks: list[Chunk] = []
@@ -162,6 +193,7 @@ def chunk_pages(pages: list[tuple[int, str]], doc_meta: dict) -> list[Chunk]:
     buf: list[str] = []
     buf_page = 1
     idx = 0
+    page_index = _page_index(pages)
 
     def flush(clause: str, section: str, page: int) -> None:
         nonlocal buf, idx
@@ -175,7 +207,7 @@ def chunk_pages(pages: list[tuple[int, str]], doc_meta: dict) -> list[Chunk]:
                     doc_name=doc_meta["doc_name"],
                     section=section,
                     clause=clause,
-                    page_no=page,
+                    page_no=_page_for(piece, page_index, page),
                     source_url=doc_meta.get("url", ""),
                     effective_date=doc_meta.get("effective_date"),
                     chunk_text=piece,
