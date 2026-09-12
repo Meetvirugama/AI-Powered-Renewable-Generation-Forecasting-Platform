@@ -33,9 +33,29 @@ def test_explicit_mock_is_honoured(monkeypatch):
     assert isinstance(get_forecast_engine(), MockForecastEngine)
 
 
-def test_missing_production_optimizer_raises_not_falls_back(monkeypatch):
-    """schedule_optimizer.py does not exist yet. That must be loud, not silent."""
+def test_production_optimizer_is_constructible(monkeypatch):
+    """schedule_optimizer.py exists now, so production must build, not raise."""
     monkeypatch.setenv("OPTIMIZER_TYPE", "production")
+    from backend.modules.optimize.schedule_optimizer import ProductionScheduleOptimizer
+
+    assert isinstance(get_schedule_optimizer(), ProductionScheduleOptimizer)
+
+
+def test_a_broken_production_engine_still_raises_rather_than_mocking(monkeypatch):
+    """The fail-fast guard itself, exercised without needing a missing module.
+
+    This is the behaviour that matters: whatever the reason a production engine
+    cannot be built, the factory must refuse rather than hand back a mock whose
+    synthetic output the DSM engine would price into real rupee figures.
+    """
+    import backend.modules.optimize.schedule_optimizer as module
+
+    def explode(*_args, **_kwargs):
+        raise RuntimeError("simulated load failure")
+
+    monkeypatch.setattr(module, "ProductionScheduleOptimizer", explode)
+    monkeypatch.setenv("OPTIMIZER_TYPE", "production")
+
     with pytest.raises(ProductionEngineUnavailable) as exc:
         get_schedule_optimizer()
     message = str(exc.value)
