@@ -1,0 +1,38 @@
+{
+  "_comment": [
+    "Per-document metadata for the RAG corpus. Keys must match the PDF filenames",
+    "in this directory exactly.",
+    "",
+    "`url` is rendered on every citation badge in the dashboard and a judge will",
+    "click one, so it must be a real, live, deep link to the document -- not the",
+    "CERC homepage. `effective_date` and `doc_name` are copied onto every chunk.",
+    "",
+    "Run scripts/hash_regulations.py after adding a PDF to fill in sha256/bytes;",
+    "the descriptive fields are filled in by hand."
+  ],
+  "CERC_DSM_Regulations_2024.pdf": {
+    "doc_name": "CERC_DSM_Regulations_2024",
+    "title": "CERC (Deviation Settlement Mechanism and related matters) Regulations, 2024",
+    "url": "FILL_ME",
+    "effective_date": "2024-01-01",
+    "sha256": "FILL_ME",
+    "bytes": 0
+  },
+  "CERC_DSM_Amendment_2026.pdf": {
+    "doc_name": "CERC_DSM_Amendment_2026",
+    "title": "CERC (Deviation Settlement Mechanism and related matters) (Amendment) Regulations, 2026",
+    "url": "FILL_ME",
+    "effective_date": "2026-04-01",
+    "sha256": "FILL_ME",
+    "bytes": 0,
+    "note": "Introduces the X-trajectory and the narrowed tolerance bands. Under challenge in the Delhi High Court; see the regulatory disclosure in README.md."
+  },
+  "IEGC_2023.pdf": {
+    "doc_name": "IEGC_2023",
+    "title": "Indian Electricity Grid Code, 2023",
+    "url": "FILL_ME",
+    "effective_date": "2023-10-01",
+    "sha256": "FILL_ME",
+    "bytes": 0
+  }
+}

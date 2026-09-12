@@ -75,3 +75,4 @@ secrets.yaml
 renewable.db
 *.db
 .venv/
+regulations/chunks.jsonl

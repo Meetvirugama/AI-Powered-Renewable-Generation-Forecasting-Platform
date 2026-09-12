@@ -1,0 +1,45 @@
+# Production compose, used on the EC2 host at /opt/renewable.
+#
+#   bash infra/docker/fetch_secrets.sh          # writes .env from SSM
+#   docker compose -f docker-compose.prod.yml pull backend
+#   docker compose -f docker-compose.prod.yml up -d --no-deps backend
+#
+# Differences from the dev file, all deliberate:
+#   - pulls a tagged image from ECR instead of building
+#   - no source bind mounts: the image is the only source of truth
+#   - no database service: Postgres is RDS, reached over the VPC
+#   - no port published to the host beyond the ALB target port
+
+services:
+  backend:
+    image: ${ECR_REGISTRY}/renewable-backend:${IMAGE_TAG:-latest}
+    env_file: /opt/renewable/.env
+    environment:
+      APP_ENV: prod
+      RAG_COPILOT_TYPE: production
+    ports:
+      # Bound to the host so the ALB target group can reach it. The EC2 security
+      # group allows 8000 from the ALB security group only -- never 0.0.0.0/0.
+      - "8000:8000"
+    restart: unless-stopped
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-ap-south-1}
+        awslogs-group: /renewable/backend
+        awslogs-create-group: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      # Matches the Dockerfile: the embedding model load has to finish before
+      # the container can honestly report healthy.
+      start_period: 90s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          # bge-m3 (~2.2 GB resident) + bge-reranker-base + two uvicorn workers.
+          # A t3.large has 8 GB; leaving headroom keeps the OOM killer away from
+          # the container mid-demo.
+          memory: 6g

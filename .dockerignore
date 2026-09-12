@@ -1,0 +1,45 @@
+# Keep the build context small: every file here would otherwise be shipped to
+# the daemon on each build, and some of them (venv, node_modules, data) are
+# larger than the image itself.
+.git
+.github
+.venv
+venv
+env
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.ruff_cache
+.ipynb_checkpoints
+
+node_modules
+frontend/node_modules
+frontend/dist
+
+data/
+models/
+mlruns/
+mlartifacts/
+*.parquet
+*.csv
+*.pkl
+*.pt
+
+colab_notebooks/
+docs/
+tests/
+infra/terraform/
+.terraform/
+*.tfstate*
+
+# Secrets must never enter an image layer -- they are read from SSM at boot.
+.env
+.env.*
+!.env.example
+secrets.yaml
+
+*.log
+.DS_Store
+Thumbs.db
+Ideation_Report.docx
+report_extracted.txt

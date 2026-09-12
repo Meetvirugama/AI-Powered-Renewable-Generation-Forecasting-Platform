@@ -1,0 +1,67 @@
+[
+  {
+    "q": "What is the tolerance band for solar generators under the 2026 amendment?",
+    "expect_doc": "CERC_DSM_Amendment_2026",
+    "expect_keywords": ["tolerance"],
+    "note": "The headline change in the 2026 order and the first thing a judge asks."
+  },
+  {
+    "q": "How is deviation percentage calculated for a renewable seller?",
+    "expect_doc": "CERC_DSM_Regulations_2024",
+    "expect_keywords": ["deviation"]
+  },
+  {
+    "q": "What is the X trajectory and how does it change between 2026 and 2031?",
+    "expect_doc": "CERC_DSM_Amendment_2026",
+    "note": "X = 100% -> 0 by April 2031. Drives the regulation slider in the UI."
+  },
+  {
+    "q": "What happens to deviation charges when grid frequency falls below 49.85 Hz?",
+    "expect_keywords": ["frequency"]
+  },
+  {
+    "q": "Can renewable generators pool deviation across multiple plants?",
+    "expect_keywords": ["pool"]
+  },
+  {
+    "q": "What is the tolerance band for wind generators?",
+    "expect_keywords": ["wind"]
+  },
+  {
+    "q": "At what rate are deviation charges payable for under-injection by a seller?",
+    "expect_keywords": ["deviation", "charge"]
+  },
+  {
+    "q": "What is Available Capacity and how does it enter the deviation formula?",
+    "expect_keywords": ["available capacity"]
+  },
+  {
+    "q": "How often must a generator revise its schedule during the day?",
+    "expect_keywords": ["schedule"]
+  },
+  {
+    "q": "What are the obligations of a renewable generator under the grid code?",
+    "expect_doc": "IEGC",
+    "rule_year": 2024
+  },
+  {
+    "q": "What is the normal rate of deviation charges referenced in the regulations?",
+    "expect_keywords": ["rate"]
+  },
+  {
+    "q": "Which entities are exempt from deviation settlement charges?",
+    "expect_keywords": ["deviation"]
+  },
+  {
+    "q": "What is the settlement period for deviation accounts?",
+    "expect_keywords": ["settlement"]
+  },
+  {
+    "q": "How is the deviation of a solar generator capped?",
+    "expect_keywords": ["solar"]
+  },
+  {
+    "q": "What penalties apply for sustained over-injection beyond the tolerance band?",
+    "expect_keywords": ["injection"]
+  }
+]

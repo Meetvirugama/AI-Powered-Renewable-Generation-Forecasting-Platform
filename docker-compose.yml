@@ -1,0 +1,72 @@
+# Local development stack. The thing every teammate runs.
+#
+#   cp .env.example .env && docker compose up
+#
+# Add --profile dev to also bring up the Vite dev server for the frontend.
+#
+# This file is Rung 1 of the fallback ladder: it must keep working on a laptop
+# with no internet for the entire sprint, because it is the demo that survives
+# hackathon venue wifi. Never let it rot in favour of the AWS path.
+
+services:
+  db:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_USER: renewable
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      POSTGRES_DB: renewable
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # NOTE: scripts in docker-entrypoint-initdb.d run ONLY when the pgdata
+      # volume is first created. If you add or change them after someone has
+      # already started the stack, they must `docker compose down -v` for the
+      # change to take effect.
+      - ./infra/docker/init_db.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U renewable -d renewable"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      # Overrides whatever host/port .env carries: inside the compose network
+      # the database is reachable as `db`, not localhost.
+      DATABASE_URL: postgresql+psycopg2://renewable:${POSTGRES_PASSWORD:-devpassword}@db:5432/renewable
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mounts give hot reload in development. They are deliberately absent
+      # from docker-compose.prod.yml, where the image must be the only source of
+      # truth for what is running.
+      - ./backend:/app/backend
+      - ./config:/app/config
+      - ./regulations:/app/regulations:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    # Development convenience only. The production frontend is a static build in
+    # S3 behind CloudFront; see docs/deployment.md.
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    profiles: ["dev"]
+
+volumes:
+  pgdata:
