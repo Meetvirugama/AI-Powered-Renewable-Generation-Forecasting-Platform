@@ -1,6 +1,5 @@
-import pytest
 from datetime import date
-from backend.core.config import get_settings, load_plants_config, load_settings_config, load_dsm_rules
+from backend.core.config import get_settings, load_plants_config
 from backend.modules.dsm.config_loader import DSMRuleConfig
 
 def test_settings_loaded():

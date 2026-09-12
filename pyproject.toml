@@ -1,0 +1,40 @@
+[project]
+name = "renewable-forecasting-platform"
+version = "1.0.0"
+description = "AI-Powered Renewable Generation Forecasting Platform - DSM-aware decision and scheduling"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+exclude = [".venv", "venv", "backend/db/migrations/versions", "colab_notebooks"]
+
+[tool.ruff.lint]
+# This selection IS what CI gates on, so `ruff check .` passing locally means the
+# build passes. Kept narrow on purpose: a linter that fails a 14-day sprint build
+# on import ordering gets switched off, and then it catches nothing at all.
+# Worth revisiting (add "I", "B") once the four feature branches have converged.
+select = ["E", "F", "W"]
+ignore = [
+    "E501",    # line length is handled by the formatter, not by failing the build
+    "B008",    # FastAPI's Depends() in defaults is the documented idiom
+    # Trailing whitespace on blank lines. Cosmetic, and gating the build on it
+    # across four people's in-flight branches buys nothing but merge conflicts.
+    # Real defect classes (F, E7/E9) stay enabled.
+    "W291",
+    "W293",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `slow` marks tests that load real model weights (2.2 GB). CI runs -m "not slow".
+markers = [
+    "slow: requires the real embedding model or a live LLM provider",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:starlette.*",
+]
+asyncio_default_fixture_loop_scope = "function"

@@ -1,4 +1,3 @@
-import numpy as np
 from datetime import date
 from .config_loader import DSMRuleConfig
 

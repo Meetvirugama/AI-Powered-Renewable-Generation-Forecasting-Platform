@@ -2,14 +2,13 @@ import time
 import uuid
 import logging
 from datetime import date, datetime, timezone
-from typing import Optional, Any
+from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from backend.core.config import load_plants_config, get_settings
 from backend.db.models import (
     Plant,
-    WeatherForecast,
     Forecast,
     Schedule,
     DSMResult,

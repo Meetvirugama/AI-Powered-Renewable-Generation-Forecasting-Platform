@@ -1,7 +1,5 @@
 import httpx
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Optional, Dict
 import logging
 
 logger = logging.getLogger('renewable_platform')

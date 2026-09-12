@@ -14,3 +14,12 @@ pandas==2.2.3
 pytest==8.3.4
 pytest-asyncio==0.25.0
 aiofiles==24.1.0
+
+# ---- RAG copilot (Member 4) ----
+# Deliberately excludes FlagEmbedding/torch: see requirements-ml.txt. Keeping the
+# 800 MB ML stack out of the default install is what lets CI run in ~90 s and
+# lets a teammate work on the API without a GPU-sized virtualenv.
+pymupdf==1.25.1              # PDF text + page extraction for the regulation corpus
+rank-bm25==0.2.2             # sparse half of hybrid retrieval
+litellm==1.57.0              # Groq primary -> Gemini fallback routing
+langgraph==0.2.60            # copilot state machine

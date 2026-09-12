@@ -1,5 +1,4 @@
 import pytest
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
@@ -8,7 +7,6 @@ from backend.db.models import Base
 from backend.db.session import get_db
 from backend.db.seed import seed_plants
 from backend.main import app
-from backend.core.config import get_settings
 
 TEST_DB_URL = 'sqlite:///:memory:'
 

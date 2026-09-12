@@ -1,9 +1,8 @@
 import os
 import logging
 from functools import lru_cache
-from typing import Protocol, Optional, Any, List, Dict
+from typing import Protocol, Optional, Any, List
 
-from backend.core.config import get_settings
 from backend.modules.forecast.mock_engine import MockForecastEngine
 from backend.modules.optimize.mock_optimizer import MockScheduleOptimizer
 from backend.modules.rag.mock_copilot import MockRAGCopilot

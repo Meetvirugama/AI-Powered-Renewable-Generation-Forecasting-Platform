@@ -1,7 +1,6 @@
-from sqlalchemy import String, Float, Integer, Boolean, Text, DateTime, Date, ForeignKey, Index, JSON, BigInteger
+from sqlalchemy import String, Float, Integer, Boolean, Text, DateTime, Date, ForeignKey, Index, JSON
 from pgvector.sqlalchemy import Vector
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from datetime import datetime, date
 from typing import Optional, Any
 import uuid
