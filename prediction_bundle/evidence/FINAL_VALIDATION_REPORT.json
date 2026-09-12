@@ -18,7 +18,7 @@
   "stability_rows": 15,
   "day_night_rows": 6,
   "ramp_validation_available": true,
-  "conformal_validation_available": false,
+  "conformal_validation_available": true,
   "stress_testing_available": true,
   "model_artifact_count": 34,
   "latency_models_tested": 12,
@@ -51,5 +51,11 @@
       "RMSE": 157.67743247701918,
       "R2": 0.8116608589515557
     }
+  },
+  "conformal_validation_note": "Updated: Conformal artifacts and empirical calibration data are present. The 'false' value was a stale flag. Empirical calibration available=true, formal exchangeability guarantee=false (time-series limitation, disclosed).",
+  "conformal_artifact_status": {
+    "conformal_artifacts_available": true,
+    "empirical_calibration_available": true,
+    "formal_exchangeability_guaranteed": false
   }
 }
