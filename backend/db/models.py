@@ -1,8 +1,7 @@
-from sqlalchemy import String, Float, Integer, Boolean, Text, DateTime, Date, ForeignKey, Index, JSON, BigInteger
+from sqlalchemy import String, Float, Integer, Boolean, Text, DateTime, Date, ForeignKey, Index, JSON
 from pgvector.sqlalchemy import Vector
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PgUUID
-from datetime import datetime, date
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from datetime import datetime, date, timezone
 from typing import Optional, Any
 import uuid
 
@@ -185,7 +184,7 @@ class JobRun(Base):
     __tablename__ = 'job_runs'
     
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    run_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    run_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     status: Mapped[str] = mapped_column(String)
     plants_processed: Mapped[int] = mapped_column(Integer, default=0)
     error_msg: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

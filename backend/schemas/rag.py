@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 from typing import Optional
 
 
@@ -13,7 +13,9 @@ class Citation(BaseModel):
 
 
 class RAGQueryRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    # populate_by_name lets the field be set by its own name as well as by the
+    # aliases declared below.
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     question: str = Field(min_length=3, max_length=1000)
     plant_id: Optional[str] = None
     block_no: Optional[int] = Field(default=None, ge=1, le=288)
@@ -23,7 +25,15 @@ class RAGQueryRequest(BaseModel):
     rule_year: Optional[int] = Field(default=None, ge=2024, le=2031)
     # DSM engine output for the block in question. Authoritative: the copilot
     # explains these numbers, it never recomputes or invents them.
-    context: Optional[dict] = None
+    #
+    # `engine_context` is accepted as a synonym because the Member 4 execution
+    # plan drafted the field under that name before this schema existed, and
+    # both docs are in the repo. Accepting both costs one line and removes a
+    # whole class of integration bug; `context` stays canonical.
+    context: Optional[dict] = Field(
+        default=None,
+        validation_alias=AliasChoices("context", "engine_context"),
+    )
 
 
 class RAGMeta(BaseModel):

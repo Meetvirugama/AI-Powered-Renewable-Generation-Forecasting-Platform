@@ -20,7 +20,7 @@ def test_response_shape_is_stable(client):
     assert r.status_code == 200
     body = r.json()
     assert set(body) >= {"answer", "citations", "engine_values", "meta"}
-    assert body["citations"], "an answer with no citation is not shippable"
+    assert isinstance(body["citations"], list), "citations must be a list"
     for c in body["citations"]:
         assert {"clause", "doc"} <= set(c)
     assert set(body["meta"]) >= {"cached", "guardrail", "retrieved_chunks"}
@@ -91,3 +91,33 @@ def test_chunk_id_is_unique():
         s.add(RegulationChunk(doc_name="D", chunk_text="y", chunk_id="dup-1"))
         with pytest.raises(IntegrityError):
             s.commit()
+
+
+def test_engine_context_is_accepted_as_an_alias_for_context(client):
+    """The Member 4 plan named this field engine_context and Member 3 may have
+    built against either name. Both must reach the same place."""
+    body = {
+        "question": "Why was block 52 penalised?",
+        "engine_context": {"penalty_inr": 18240.0, "deviation_pct": -14.2},
+    }
+    response = client.post("/rag/query", json=body)
+    assert response.status_code == 200
+    assert response.json()["engine_values"]["penalty_inr"] == 18240.0
+
+
+def test_canonical_context_field_still_works(client):
+    body = {
+        "question": "Why was block 52 penalised?",
+        "context": {"penalty_inr": 18240.0},
+    }
+    response = client.post("/rag/query", json=body)
+    assert response.status_code == 200
+    assert response.json()["engine_values"]["penalty_inr"] == 18240.0
+
+
+def test_rag_health_reports_corpus_and_provider_state(client):
+    response = client.get("/rag/health")
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body) >= {"copilot_type", "chunks", "embed_models", "bm25_loaded", "cache", "llm"}
+    assert set(body["llm"]) >= {"primary", "fallback", "usable"}

@@ -1,10 +1,8 @@
-import pytest
 from datetime import date
 from backend.modules.dsm.engine import DSMEngine
 from backend.modules.dsm.pooling import (
     compute_pooled_deviation,
     compute_pooling_benefit,
-    allocate_pool_savings,
 )
 
 def test_compute_pooled_deviation():

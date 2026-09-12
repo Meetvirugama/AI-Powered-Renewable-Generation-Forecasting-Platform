@@ -1,4 +1,4 @@
-﻿# ⚡ AI-Powered Renewable Generation Forecasting Platform
+# ⚡ AI-Powered Renewable Generation Forecasting Platform
 ### DSM-Aware Decision & Scheduling Platform
 
 > **Predict → Quantify Risk → Price in ₹ → Optimise → Act → Explain with Citations**
@@ -48,6 +48,27 @@ This platform solves that problem end-to-end:
 
 ---
 
+## 🚀 Quick Start
+
+```bash
+cp .env.example .env
+docker compose up          # Postgres + pgvector + API on :8000
+```
+
+The copilot starts in `mock` mode so a fresh clone needs no API keys. For the real
+thing, set `RAG_COPILOT_TYPE=production` and `GROQ_API_KEY`, install
+`requirements-ml.txt`, and build the regulation index:
+
+```bash
+python scripts/build_index.py --dry-run     # validate the chunker first
+python scripts/build_index.py --truncate
+python scripts/eval_retrieval.py --verbose  # recall@5 target: >= 0.7
+```
+
+Full instructions: [docs/deployment.md](./docs/deployment.md).
+
+---
+
 ## 📁 Repository Structure
 
 ```
@@ -75,6 +96,10 @@ All planning documents are in [`/docs`](./docs/):
 | [Team Division Plan](./docs/team_plan.md) | 4-member roles, dependency map, handoff schedule |
 | [Team Execution Plans](./docs/team_execution_plans_nocode.md) | Detailed per-member task breakdown |
 | [ML Engineer Deep Dive](./docs/member1_ml_engineer.md) | ML engineering guide for forecasting + DSM engine |
+| [Infra + RAG Deep Dive](./docs/member4_infra_rag_engineer.md) | Docker, AWS, CI/CD and the regulatory RAG copilot (Member 4) |
+| [RAG API Contract](./docs/api_rag_contract.md) | Frozen `/rag/query` request/response shape |
+| [Deployment](./docs/deployment.md) | Local stack, AWS provisioning, CI/CD, cost control |
+| [Runbook](./docs/runbook.md) | Demo-day pre-flight, failover drill, failure modes |
 
 ---
 

@@ -74,3 +74,5 @@ secrets.yaml
 .pytest_cache/
 renewable.db
 *.db
+.venv/
+regulations/chunks.jsonl

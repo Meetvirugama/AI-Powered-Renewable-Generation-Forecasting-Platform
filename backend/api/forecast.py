@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import Optional
-from datetime import date, datetime
+from datetime import datetime
 
 from backend.db.session import get_db
-from backend.db.models import Forecast, Plant
+from backend.db.models import Plant
 from backend.core.config import load_plants_config
 from backend.modules.factory import get_forecast_engine
 from backend.schemas.forecast import ForecastResponse, BlockForecast

@@ -1,10 +1,9 @@
-import pytest
 from datetime import date
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from backend.modules.pipeline.daily import DailyPipelineOrchestrator
-from backend.db.models import Forecast, Schedule, DSMResult, JobRun
+from backend.db.models import Forecast, Schedule, DSMResult
 
 def test_daily_pipeline_execution(db: Session):
     orchestrator = DailyPipelineOrchestrator()

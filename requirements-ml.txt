@@ -1,0 +1,15 @@
+# Embedding + reranking stack for the RAG copilot.
+#
+# Separated from requirements.txt on purpose. This pulls torch (~800 MB) and the
+# bge-m3 weights (~2.2 GB); installing it in CI would make every push slow enough
+# that the team would switch CI off, which is the same as having no CI.
+#
+# Installed in: the Docker image (baked into a cached layer), Colab notebook 10,
+# and any environment that runs scripts/build_index.py against the real model.
+#
+# The test suite does not need this file -- it runs RAG_EMBED_BACKEND=mock.
+-r requirements.txt
+
+FlagEmbedding==1.3.3         # bge-m3 embeddings (1024-dim) + bge-reranker-base
+torch==2.5.1                 # FlagEmbedding backend (CPU wheel on EC2, CUDA on Colab)
+huggingface-hub==0.27.0      # snapshot_download, used to bake weights into the image

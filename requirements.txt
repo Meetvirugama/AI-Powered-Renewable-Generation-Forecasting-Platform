@@ -14,3 +14,19 @@ pandas==2.2.3
 pytest==8.3.4
 pytest-asyncio==0.25.0
 aiofiles==24.1.0
+
+# ---- RAG copilot (Member 4) ----
+# Deliberately excludes FlagEmbedding/torch: see requirements-ml.txt. Keeping the
+# 800 MB ML stack out of the default install is what lets CI run in ~90 s and
+# lets a teammate work on the API without a GPU-sized virtualenv.
+pymupdf==1.25.1              # PDF text + page extraction for the regulation corpus
+rank-bm25==0.2.2             # sparse half of hybrid retrieval
+litellm==1.61.0              # Groq primary -> Gemini fallback routing; the floor
+                              # that resolves against httpx==0.28.1 above (1.57-1.60
+                              # pin httpx<0.28 and fail to install)
+langgraph==0.2.60            # copilot state machine
+# langsmith is a transitive dep of langgraph. Without a pin, pip can resolve to
+# langsmith 0.3+ which may require a newer pydantic-core than pydantic==2.10.4
+# provides. Pin it here so CI is reproducible regardless of when the job runs.
+# The langsmith pytest11 plugin is also disabled via addopts in pyproject.toml.
+langsmith>=0.1.75,<0.3

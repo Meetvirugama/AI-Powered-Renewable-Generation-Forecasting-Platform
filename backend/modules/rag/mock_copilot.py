@@ -2,10 +2,10 @@ from typing import Optional, Dict, Any
 
 class MockRAGCopilot:
     """Mock RAG Copilot returning structured explanations."""
-    
+
     def query(self, question: str, plant_id: Optional[str] = None, block_no: Optional[int] = None, rule_year: Optional[int] = None, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         q_lower = question.lower()
-        
+
         if 'penalty' in q_lower or 'penalised' in q_lower:
             answer = "Based on CERC DSM Regulations 2026, penalties are computed based on deviations from the scheduled generation. When the deviation exceeds the tolerance band, a penalty is applied proportional to the Normal Charge for Deviation (NCD)."
             citations = [
@@ -26,7 +26,7 @@ class MockRAGCopilot:
             citations = [
                 {'clause': 'General Guidelines', 'page': 1, 'doc': 'CERC_DSM_Regulations_2024.pdf', 'url': ''}
             ]
-            
+
         # Honour the regulation-year slider so the mock never cites an
         # amendment that post-dates the year the user selected.
         if rule_year is not None and rule_year < 2026:

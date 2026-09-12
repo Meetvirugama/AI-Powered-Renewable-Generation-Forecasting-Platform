@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
 from datetime import datetime
 
 from backend.core.config import load_plants_config, get_settings

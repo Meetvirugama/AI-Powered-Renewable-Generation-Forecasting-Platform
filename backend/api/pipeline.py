@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from datetime import datetime, date
+from datetime import datetime
 
 from backend.db.session import get_db
 from backend.db.models import JobRun

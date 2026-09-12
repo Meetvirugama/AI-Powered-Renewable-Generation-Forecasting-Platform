@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Optional
 import yaml
 from pathlib import Path
 
