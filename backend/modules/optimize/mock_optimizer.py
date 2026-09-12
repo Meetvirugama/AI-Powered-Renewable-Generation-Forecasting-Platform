@@ -3,7 +3,7 @@ from typing import List, Dict
 class MockScheduleOptimizer:
     """Mock schedule optimizer and battery dispatcher."""
     
-    def optimize_day_ahead(self, forecast_blocks: List[Dict], avc_mw: float, dsm_engine, ncd: float = 450.0, freq_hz: float = 50.0, asset_type: str = 'solar') -> Dict:
+    def optimize_day_ahead(self, forecast_blocks: List[Dict], avc_mw: float, dsm_engine, ncd: float = 450.0, freq_hz: float = 50.0, asset_type: str = 'solar', **kwargs) -> Dict:
         optimised_schedule = []
         naive_schedule = []
         battery_dispatch = []
