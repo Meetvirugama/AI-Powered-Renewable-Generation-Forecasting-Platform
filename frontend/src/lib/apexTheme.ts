@@ -1,4 +1,5 @@
 import type { ApexOptions } from "apexcharts";
+import { blockToIST } from "./format";
 
 // Shared ApexCharts defaults. Every chart in the app spreads these first, so the dark
 // ground, token colours and tabular figures are set in exactly one place.
@@ -19,11 +20,12 @@ export const TOKENS = {
   wind: "#5EC8C8",
 } as const;
 
-/** block_no is 1-indexed. Hourly labels on desktop, two-hourly under 768px. */
-export const blockLabel = (blockNo: number): string => {
-  const m = (blockNo - 1) * 15;
-  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-};
+/**
+ * Re-exported so chart code has one import path for chart concerns, but the actual
+ * block->HH:MM arithmetic lives in lib/format.ts exactly once. This used to be a
+ * second, independent implementation of the same formula.
+ */
+export const blockLabel = blockToIST;
 
 export const baseOptions: ApexOptions = {
   chart: {

@@ -21,18 +21,20 @@ Repo: `github.com/Meetvirugama/AI-Powered-Renewable-Generation-Forecasting-Platf
 backend/      FastAPI app — DONE (mocked ML behind a swappable factory)
 config/       DSM rule YAMLs (2024/2026/2031), plants.yaml
 docs/         planning docs; docs/openapi.json is the API contract
+              docs/frontend_developer_guide.md — as-built frontend reference
 tests/        pytest suite
-frontend/     DOES NOT EXIST YET — this is the current work
+frontend/     React 19 dashboard — Sprints 0–9 COMPLETE, Sprint 10 (polish) remaining
+              All 8 components, 5 pages, 11 hooks wired to the live API.
 ```
 
 ## Team ownership
 
-| Member | Scope |
-|---|---|
-| 1 | ML forecasting + DSM engine math |
-| 2 | Backend API, DB, pipeline |
-| 3 | **Frontend (this workstream)** |
-| 4 | Infra, Docker, AWS, RAG copilot |
+| Member | Name | Scope |
+|---|---|---|
+| 1 | **Meet Virugama** | ML forecasting + DSM engine math |
+| 2 | **Gaurav Rathod** | Backend API, DB, pipeline |
+| 3 | **Shane Christian** | **Frontend (this workstream)** |
+| 4 | **Madhav Thesiya** | Infra, Docker, AWS, RAG copilot |
 
 Agents working here are supporting Member 3. **Do not edit `backend/`, `config/`, or
 `docs/` without explicit instruction** — those belong to other members and

@@ -1,10 +1,9 @@
 # Roadmap — what is left, and the order to do it in
 
-**Audited against `main` @ PR #21 merged**, and against the running production API at
-`https://57.159.24.68.nip.io`. 290 tests passing, `ruff` clean, 0 CRLF-corrupted models.
+**Audited against `main` @ PR #11 merged.** 183 tests passing, `ruff` clean, 0 CRLF-corrupted models.
 
-Every claim below was verified against the tree or against the live system, not inferred from the
-plan. Percentages are scope-completion estimates, not confidence.
+Every "missing" below was verified against the tree, not inferred from the plan. Percentages are
+scope-completion estimates, not confidence.
 
 ---
 
@@ -12,170 +11,169 @@ plan. Percentages are scope-completion estimates, not confidence.
 
 | Track | Owner | Built | Demo-ready | Change |
 |---|---|---|---|---|
-| Backend / API / data | Member 2 | **99%** | ✅ yes | ↑ B2 fixed |
-| Frontend | Member 3 | **85%** | ✅ yes | — |
-| Infra / RAG copilot | Member 4 | **95%** | ✅ yes | ↑ corpus loaded, deployed |
-| ML / forecasting | Member 1 | **80%** | ✅ yes | **↑ models retrained and serving** |
+| Backend / API / data | Gaurav Rathod | **97%** | ✅ yes | — |
+| Frontend | Shane Christian | **85%** | ✅ yes | **↑ from 5%** |
+| Infra / RAG copilot | Madhav Thesiya | **95%** | ⚠️ corpus empty | — |
+| ML / forecasting | Meet Virugama | **58%** | ❌ models rejected | ↑ docs added |
 
-**Overall: ~92% built, ~90% demo-ready.**
+**Overall: ~84% built, ~70% demo-ready.** Up from 65% / 45% at the last audit.
 
-The forecast going real is the change since the last audit. `/health` now reports
-`serving_synthetic_data: []` — **nothing in the chain is mocked**.
+The frontend landing is the single biggest change — it was the critical-path blocker and it is now
+substantially done.
 
 Against the six-step value chain in the README:
 
 | Step | State |
 |---|---|
 | 1. Ingest weather | ✅ real (Open-Meteo → validator → `weather_forecasts`) |
-| 2. Forecast P05–P95 | ✅ **real** — LightGBM, +21.5% skill vs persistence, 85.9% band coverage |
+| 2. Forecast P05–P95 | ⚠️ mock (models trained but rejected by the physics gate) |
 | 3. Price in ₹ (CERC DSM) | ✅ real |
-| 4. Optimise schedule | ✅ real — **30.2%** reduction, measured on the real forecast |
+| 4. Optimise schedule | ✅ real — **23–28% reduction**, measured |
 | 5. Flag grid actions | ✅ real (derived from optimiser output) |
-| 6. Explain with citations | ✅ real — 179 chunks, 3 CERC documents, recall@5 = 0.73 |
-| — Portfolio pooling | ✅ real — **34.5%**, measured, correlation assumption declared |
-
-> Numbers moved when the forecast became real. The optimiser previously read 23–28% against a
-> mock forecast whose spread was chosen by hand; 30.2% is measured against a calibrated band.
+| 6. Explain with citations | ⚠️ engine works, no corpus loaded |
+| — Portfolio pooling | ✅ real — **~27%**, measured (was −11.5% before PR #10) |
 
 ---
 
-## 🔴 Remaining blockers
+## 🔴 Remaining blocker
 
-**None that stop a demo.** The two below limit answer quality, not availability.
+### B2. Block numbering is UTC, but Indian scheduling blocks are IST
 
-### R1. The regulation corpus is thin and skewed
+`resampler.py:33` computes `block_no` from UTC hours. CERC defines block 1 as 00:00–00:15 **IST**.
+Verified offset: **22 blocks**.
 
-179 chunks from 3 documents, and 149 of them (83%) are the *Statement of Reasons* — the
-Commission's commentary, not operative law. The principal regulations contribute 27 chunks, so
-BM25 surfaces commentary for questions whose answer is in the regulation.
+Weather sampled at dawn is currently labelled midnight. Latent while forecasts are mock (the mock
+ignores weather), but the ingestion pipeline is live, so the `weather_forecasts` rows being written
+today already carry the wrong block association.
 
-Measured: `recall@5 = 0.73` against a target of 0.70. Of the 4 misses, **3 expect documents that
-are not in the corpus at all** — `IEGC`, and `CERC_DSM_Amendment_2026` (which does not exist as a
-separate document; the 2026 X-trajectory is inside the 2024 principal regulations, so that
-expectation in `tests/rag_eval_questions.json` is itself wrong and should be corrected).
+**Fix:** shift to IST before computing `block_no`, plus a test asserting the resampler and
+`feature_builder` agree. ~20 minutes.
 
-**Fix:** add the IEGC PDF; correct the two eval questions. Requires a human to source the PDF.
-This is the single biggest lever on RAG quality.
-
-### R2. The indexed corpus predates the chunker fixes
-
-PR #21 fixed two defects — 33% of chunks began mid-word, and 72% carried a page number whose page
-does not contain their text. Those fixes are in the **chunker**; the rows already in Supabase were
-built by the old one. Until `scripts/build_index.py` is re-run, the live corpus still has both
-defects.
-
-**Fix:** re-run the index build. ~2 minutes, reversible, rewrites the live corpus.
+> **B1 (pooling correlation) — FIXED** in PR #10. Was −11.5%, now +26.8% at a conservative 0.70
+> correlation. README claims corrected from "30–65%" to the measured "~27%".
 
 ---
 
 ## Remaining work by owner
 
-### Member 3 — Frontend (~85%)
+### Shane Christian — Frontend (~85%) ✅ *was the critical path, no longer is*
 
-**Delivered:** all 8 planned components, 5 pages, 11 hooks, `api/client.ts`, layout shell,
-context, Tailwind, routing, ApexCharts, Leaflet. Deployed on Vercel, pointing at the Azure API.
+Real React + TypeScript application, wired to live endpoints via `axios`.
+
+**Delivered:** all 8 planned components (`ForecastFanChart`, `RiskHeatmap`, `ScheduleComparison`,
+`ActionCards`, `RAGCopilot`, `PlantMap`, `PoolingToggle`, plus `StatTile`/`BriefingCard`),
+5 pages, 11 hooks covering every API, `api/client.ts`, layout shell, context, Tailwind, routing,
+ApexCharts, Leaflet.
+
+**Endpoints wired:** `/plants`, `/plants/{id}`, `/forecast`, `/dsm`, `/optimize`, `/pooling`,
+`/rag/query`, `/rag/health`, `/health`.
+
+**Remaining:**
 
 | Item | Effort | Note |
 |---|---|---|
-| Surface `serving_synthetic_data` in the UI | 30m | `useHealth.ts` fetches `/health` but ignores `engines` and `serving_synthetic_data`. Now that the list is **empty**, showing it is a claim in your favour rather than a disclaimer. |
-| `/dashboard/{plant_id}` not used | — | The UI composes from individual endpoints. Fine, but the precomputed route is one request instead of five. |
+| Surface `serving_synthetic_data` in the UI | 30m | `useHealth.ts` fetches `/health` but ignores `engines` and `serving_synthetic_data`. **This is the honesty badge** — see the pitch note below. |
+| `/dashboard/{plant_id}` not used | — | The UI composes from individual endpoints instead. Fine, but the precomputed route exists and is cheaper. |
 | Loading / error states, mobile | 2–3h | Polish |
+| `.env.production` with the deployed API URL | 5m | Needed once deployed |
 
-> The UI reads block times from `block_no`, not from `ist_time`. Worth knowing: `ist_time` is a
-> bare `HH:MM` from the mock engine and a full ISO-8601 string from the production engine. Nothing
-> renders it today, so the inconsistency is harmless — but do not start rendering it without
-> normalising first.
+### Gaurav Rathod — Backend (~97%)
 
-### Member 2 — Backend (~99%)
+Essentially done. 11 endpoints, 10 tables + migrations, ingestion wired, `/pipeline/run` async
+with 202, API-key auth enforced, zero TODO markers.
 
-11 endpoints, 10 tables + migrations, ingestion wired, `/pipeline/run` async with 202, API-key
-auth enforced, zero TODO markers.
+**Remaining:** B2 (block numbering) only.
 
-**B2 (IST block numbering) — FIXED.** `resampler.py` derives `block_no` from the IST wall clock
-and the function carries the reasoning.
+### Madhav Thesiya — Infra + RAG (~95% code, ~60% operational)
 
-**Remaining:** nothing demo-critical.
+Code complete and tested. Blocked on inputs, not engineering.
 
-### Member 4 — Infra + RAG (~95%)
-
-Deployed and operational. Azure VM, systemd, Caddy, Let's Encrypt via `nip.io`, GitHub Actions
-CI/CD with host-key pinning, health gate and rollback.
-
-| Item | State |
+| Item | Blocker |
 |---|---|
-| Regulation PDFs | ✅ 3 loaded (`sources.json` has real deep links, 0 placeholders) |
-| Groq + Gemini keys | ✅ multi-key rotation, dual-provider failover |
-| Deploy | ✅ Azure, auto-deploys on green CI against `main` |
-| Corpus re-ingest after PR #21 | ⬜ **R2 above** |
-| IEGC PDF | ⬜ **R1 above** — needs a human |
-| `generate_briefing()` wiring | ⬜ deferred; needs a schema change |
+| Regulation PDFs | **human must download** from cercind.gov.in |
+| `sources.json` URLs | 6 `FILL_ME` placeholders; every citation badge renders one |
+| Groq API key | free at console.groq.com — required for a real copilot |
+| AWS deploy | 0 repo secrets; `main` CI red at `Configure AWS credentials` |
+| `generate_briefing()` wiring | deferred — needs a schema change, and the corpus is empty |
 
-> **Dense embeddings remain unbuilt, deliberately.** 179 chunks, 0 embeddings — retrieval is
-> BM25-only, and `recall@5 = 0.73` already clears the 0.70 target. Installing torch and a 2.2 GB
-> BGE-M3 model on the demo box would chase a metric that is passing, and **cannot** fix the misses,
-> which are missing documents (R1). Revisit after the corpus gap closes, not before.
+> **The 2.2 GB embedding model is optional.** BM25-only retrieval works — verified: real citations,
+> rule-year filter, and the ₹ guardrail all function without it. The trade-off is vocabulary
+> matching: *"what is the tolerance band for solar?"* retrieves fine, *"why was block 52
+> penalised?"* returns nothing.
 
-### Member 1 — ML (~80%)
+### Meet Virugama — ML (~58%)
 
-**Delivered:** the DSM engine (X-trajectory by date, frequency bands, seller-side rules, YAML for
-2024/2026/2031), and — new — a retrained, calibrated, serving forecast.
+**Delivered and good:** the DSM engine (`engine.py`, `config_loader.py`) — X-trajectory by date,
+frequency bands, seller-side rules, YAML-driven for 2024/2026/2031. 12 trained LightGBM boosters.
+`docs/ml_pipeline.md` (902 lines) added in PR #12.
 
-`prediction_bundle/models_v2/`, built by `scripts/train_forecast.py`:
+**Missing modules** (6 of 7 planned):
 
-| | |
-|---|---|
-| MAE | 0.0552 capacity factor |
-| Skill vs persistence | **+21.5%** |
-| P10–P90 coverage | **85.9%** (nominal 80%) |
-| Physics | non-negative, within capacity, ordered, zero at night |
+| File | Purpose | Needed for demo? |
+|---|---|---|
+| `features.py` | feature engineering | **yes** — retraining + `feature_builder` |
+| `physics.py` | pvlib solar + wind power curve | no |
+| `persistence.py` | baseline for skill scores | for evidence |
+| `calibration.py` | PICP, reliability diagrams | for evidence |
+| `ensemble.py` | model selection | no |
+| `chronos_model.py` | Chronos-2 wrapper | no — **drop it** |
+| `battery_lp.py` | PuLP/CBC 96-block LP | no |
 
-All six changes listed in the previous audit were made: leaking features dropped, `PLANT_ID`
-removed entirely rather than fixed, capacity-factor target, non-negativity enforced, chronological
-splits, conformal calibration rebuilt on a held-out window.
+**Model retraining** — six changes, detailed in `docs/model_integration.md`:
 
-**Known limits, recorded in `MANIFEST.json` rather than only here:**
+1. Drop `DC_POWER`, `DAILY_YIELD`, `TOTAL_YIELD` (leak; `DC_POWER` alone is ~25% of gain)
+2. Fix `PLANT_ID` — constant `none`, so models cannot serve 4 plants
+3. Predict in MW, or capacity factor (see below)
+4. Constrain non-negative (raw min is −1.43)
+5. Chronological splits — 373 test rows across all horizons implies one random split
+6. Rebuild conformal calibration on a held-out window
 
-- 2,774 rows / **29.9 days** / **1 plant**. Not enough for rolling-origin CV.
-- Cross-plant use is a **capacity-factor transfer from a reference site**, not a per-plant model.
-  Say so when presenting it.
-- **Only the 24h horizon** is retrained. 48h and 72h fall back to it — a worse forecast, where the
-  legacy boosters for those horizons would have been a dishonest one.
-- Forecasts depend on Open-Meteo being reachable. Verified 0.5 s from the VM; cached 15 min per
-  plant and date. `FORECAST_ENGINE_TYPE=mock` is the one-line rollback.
+> **Data limit, not an effort limit.** 2,774 rows / **29.9 days** / **1 plant**
+> (2020-05-16 → 2020-06-14, kW scale). Per-plant models for 4 Gujarat sites are impossible, as is
+> 5-fold rolling-origin CV.
+>
+> **Workaround:** train on **capacity factor** (`AC_POWER / capacity`, 0–1), multiply by each
+> plant's `avc_mw` at inference. Solves the scale mismatch *and* the single-plant problem.
+> Disclose as "trained on a reference plant, applied via capacity-factor normalisation."
 
-**Still missing** (none demo-critical): `physics.py`, `calibration.py`, `ensemble.py`,
-`battery_lp.py`, `test_physics.py`, all 10 notebooks — so there is no backtest harness or
-evaluation report beyond what `train_forecast.py` prints and the manifest records.
+**Missing tests:** `test_physics.py`, `test_optimizer.py`
+**Missing notebooks:** all 10 (`01`–`09`, `11`) — no backtest harness, no evaluation report
+**Missing handoffs:** `features_schema.json` (→ M2), `quantile_forecast_output.csv` (→ M3)
 
 ---
 
 ## Roadmap
 
-### Phase 0 — Demo-critical
-
-**Complete.** Every item from the previous audit is done: pooling correlation, frontend core,
-regulation PDFs, Groq key, block numbering, deploy.
+### Phase 0 — Demo-critical (remaining: ~4 hours of work)
 
 | # | Task | Owner | Time | Status |
 |---|---|---|---|---|
-| 1 | Re-ingest the corpus after PR #21 | M4 | 5m | ⬜ **R2** |
-| 2 | Surface `serving_synthetic_data` in the UI | M3 | 30m | ⬜ |
-| 3 | Demo script + failover rehearsal | all | 1h | ⬜ |
+| ~~1~~ | ~~Fix pooling correlation~~ | Madhav | — | ✅ PR #10 |
+| ~~5~~ | ~~Frontend core components~~ | Shane | — | ✅ PR #11 |
+| 2 | **Regulation PDFs + `sources.json`** | **human** | 1h | ⬜ |
+| 3 | **Groq key → `.env`** | **human** | 5m | ⬜ |
+| 4 | Fix block numbering (B2) | Madhav | 20m | ⬜ |
+| 6 | Surface `serving_synthetic_data` in UI | Shane | 30m | ⬜ |
+| 7 | Demo script + failover rehearsal | all | 1h | ⬜ |
+| 8 | Deploy, or rehearse the local fallback | Madhav | 2h | ⬜ |
 
-### Phase 1 — Raises answer quality (half a day)
+**Do not attempt in Phase 0:** model retraining, Chronos-2, battery LP, notebooks.
+
+### Phase 1 — Makes the ML real (3–5 days)
 
 | # | Task | Time |
 |---|---|---|
-| 4 | Source the IEGC PDF, ingest it | 1h + human |
-| 5 | Correct the two wrong expectations in `rag_eval_questions.json` | 15m |
-| 6 | Re-measure `recall@5` against the rebuilt corpus | 10m |
-| 7 | `persistence.py` + a backtest notebook — evidence beyond the manifest | 4h |
+| 9 | `features.py` — canonical feature builder | 2h |
+| 10 | Retrain on capacity factor, no leaking features | 4h |
+| 11 | `persistence.py` + backtest notebook (08) | 4h |
+| 12 | Flip `FORECAST_ENGINE_TYPE=production`, confirm the physics gate passes | 30m |
+| 13 | `quantile_forecast_output.csv` + `features_schema.json` | 30m |
 
 ### Phase 2 — Completes the plan (1–2 weeks)
 
-`physics.py`, `calibration.py`, `ensemble.py`, `battery_lp.py`, the notebooks,
-`test_physics.py`, `generate_briefing()` wired into the pipeline, `/dashboard/{plant_id}` adopted
-by the UI, dense embeddings **if** R1 is closed first.
+`physics.py`, `calibration.py`, `ensemble.py`, `battery_lp.py`, notebooks 01–07/09/11,
+`test_physics.py`, `test_optimizer.py`, Terraform apply, EventBridge unattended run,
+`generate_briefing()` wired into the pipeline, `/dashboard/{plant_id}` adopted by the UI.
 
 ### Explicitly descoped
 
@@ -187,20 +185,17 @@ greps for it.
 
 ## What you can honestly claim today
 
-✅ A forecast that is **real and measured** — +21.5% skill over persistence, 85.9% band coverage,
-   conformally calibrated, with its limits written into the model manifest
 ✅ CERC 2026 seller-side DSM pricing with X-trajectory — real, tested
-✅ Min-₹ schedule optimisation — **30.2%** reduction, measured against a calibrated band
-✅ Portfolio pooling — **34.5%**, measured, correlation assumption declared
-✅ Live weather ingestion — Open-Meteo → validation → 15-min IST blocks → DB
+✅ Min-₹ schedule optimisation — **23–28% reduction**, measured against your own engine
+✅ Portfolio pooling — **~27% reduction**, measured, with the correlation assumption declared
+✅ Live weather ingestion — Open-Meteo → validation → 15-min blocks → DB
 ✅ Action cards — each carrying a real rupee delta
 ✅ A copilot that **structurally cannot** invent a ₹ figure — guardrail enforced post-generation
-✅ A real React dashboard, deployed, wired to all of it
-✅ Engine transparency — `/health` reports `serving_synthetic_data`, and it is **empty**
+✅ A real React dashboard wired to all of it
+✅ Engine transparency — `/health` reports `serving_synthetic_data`
 
-⚠️ Trained on one plant over 29.9 days; applied to four via capacity-factor transfer
-⚠️ 24h horizon only; longer lead times fall back to it
-⚠️ Citations currently skew to the 2024 commentary document (R1)
+⚠️ Forecasts are synthetic (disclosed by the API itself)
+⚠️ Copilot cites nothing until the PDFs land
 
 ### The strongest honest framing
 
@@ -208,13 +203,11 @@ Don't present this as a forecasting project — everyone forecasts. Present the 
 pricing deviation in rupees under real CERC rules, optimising the schedule against it, netting it
 across a portfolio, and explaining it with citations that cannot fabricate money.
 
-And demo the refusals, because they are the part most teams will not have:
+And demo the rejection:
 
-> "Our first trained models were rejected by our own physics gate — 22× scale mismatch, and they
-> predicted solar generation at midnight. So we retrained without the three features that leak the
-> answer, and calibrated the band conformally because raw quantile regression only covered 71.5%
-> against a nominal 80%. `/health` will tell you which parts of this dashboard are synthetic.
-> Right now the list is empty."
+> "We connected our trained LightGBM models and the engine refused them — 22× scale mismatch, and
+> they predicted solar generation at midnight. We caught it before it reached the ₹ engine.
+> `/health` will tell you exactly which parts of this dashboard are synthetic."
 
-That is a stronger story than an accuracy number. It only works if the UI shows the badge — which
-is why item 2 above is worth its 30 minutes.
+That is a stronger story than a model accuracy number, and most teams will not have it. It only
+works if the UI actually shows the badge — which is why item 6 above is worth its 30 minutes.
