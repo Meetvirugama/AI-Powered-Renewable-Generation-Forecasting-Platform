@@ -30,3 +30,9 @@ langgraph==0.2.60            # copilot state machine
 # provides. Pin it here so CI is reproducible regardless of when the job runs.
 # The langsmith pytest11 plugin is also disabled via addopts in pyproject.toml.
 langsmith>=0.1.75,<0.3
+
+# ---- Forecasting (Member 1 models, served by Member 2's API) ----
+# In core requirements rather than requirements-ml.txt: the wheel is ~1.5 MB and
+# needs only numpy/scipy, which are already here. It is nothing like the torch
+# stack, and CI has to install it to test the production forecast engine at all.
+lightgbm==4.7.0              # loads prediction_bundle/models/*.txt boosters
