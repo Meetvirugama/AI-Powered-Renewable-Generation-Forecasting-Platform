@@ -1,0 +1,41 @@
+{
+  "plants": [
+    {
+      "id": "GJ_SOLAR_A",
+      "name": "Gujarat Solar A",
+      "type": "solar",
+      "lat": 23.2,
+      "lon": 71,
+      "avc_mw": 50,
+      "pool_id": "GJ_POOL_1"
+    },
+    {
+      "id": "GJ_SOLAR_B",
+      "name": "Gujarat Solar B",
+      "type": "solar",
+      "lat": 23.3,
+      "lon": 71.1,
+      "avc_mw": 75,
+      "pool_id": "GJ_POOL_1"
+    },
+    {
+      "id": "GJ_WIND_C",
+      "name": "Gujarat Wind C",
+      "type": "wind",
+      "lat": 23.1,
+      "lon": 70.9,
+      "avc_mw": 40,
+      "pool_id": "GJ_POOL_1"
+    },
+    {
+      "id": "GJ_SOLAR_D",
+      "name": "Gujarat Solar D",
+      "type": "solar",
+      "lat": 23.4,
+      "lon": 71.2,
+      "avc_mw": 30,
+      "pool_id": "GJ_POOL_2"
+    }
+  ],
+  "total": 4
+}
