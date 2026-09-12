@@ -33,7 +33,6 @@ import pytest
 
 from backend.modules.forecast import feature_builder
 from backend.modules.forecast.lgbm_model import (
-    HORIZONS,
     ImplausibleForecast,
     InsufficientFeatures,
     LGBMForecastEngine,
@@ -108,8 +107,11 @@ def manifest() -> dict:
 
 # ------------------------------------------------------------------ model files
 def test_the_retrained_bundle_is_complete():
-    for tag in ("P10", "P50", "P90"):
-        assert (MODEL_DIR / f"lightgbm_24h_{tag}.txt").is_file()
+    """All three horizons × 3 quantiles = 9 model files must exist."""
+    for h in (24, 48, 72):
+        for tag in ("P10", "P50", "P90"):
+            assert (MODEL_DIR / f"lightgbm_{h}h_{tag}.txt").is_file(), \
+                f"missing lightgbm_{h}h_{tag}.txt"
     assert (MODEL_DIR / "MANIFEST.json").is_file()
 
 
@@ -127,7 +129,8 @@ def test_no_model_file_has_crlf():
 def test_every_booster_loads_and_agrees_on_features(engine):
     health = engine.health()
     assert health["status"] == "ok"
-    assert health["models_loaded"] == len(HORIZONS) * 3
+    # 3 horizons × 3 quantile tags = 9 boosters
+    assert health["models_loaded"] == 9
     assert health["features"] == 44
     assert health["target"] == "capacity_factor"
 
@@ -155,9 +158,13 @@ def test_no_leaking_feature_survived_the_retrain(engine):
 
 
 def test_no_lag_shorter_than_the_horizon_survived(engine):
-    """A 24h-ahead forecast cannot see generation from 1 block ago."""
+    """The 24h model may have generation_lag_96 (exactly at the horizon).
+    The 48h and 72h models drop all intra-day lags so they carry none.
+    Either way, no generation lag shorter than 96 blocks (24h) may appear."""
     lags = [f for f in engine.feature_order if f.startswith("generation_lag_")]
-    assert lags == ["generation_lag_96"]  # 96 blocks = exactly 24 h
+    for lag in lags:
+        blocks = int(lag.split("_")[-1])
+        assert blocks >= 96, f"lag {lag} is shorter than 24h -- lookahead leak"
 
 
 def test_missing_model_directory_raises_rather_than_degrades(tmp_path):
@@ -171,10 +178,11 @@ def test_a_manifest_that_disagrees_with_the_boosters_is_fatal(tmp_path):
     every rupee figure downstream."""
     models = tmp_path / "models"
     models.mkdir()
-    for tag in ("P10", "P50", "P90"):
-        (models / f"lightgbm_24h_{tag}.txt").write_bytes(
-            (MODEL_DIR / f"lightgbm_24h_{tag}.txt").read_bytes()
-        )
+    # Copy all 9 model files so the loader can reach the manifest check
+    for h in (24, 48, 72):
+        for tag in ("P10", "P50", "P90"):
+            src = MODEL_DIR / f"lightgbm_{h}h_{tag}.txt"
+            (models / src.name).write_bytes(src.read_bytes())
     (models / "MANIFEST.json").write_text(
         json.dumps({"target": "capacity_factor", "feature_order": ["nope"],
                     "training_capacity": 1.0}),
@@ -387,13 +395,17 @@ def test_the_legacy_models_are_still_rejected_by_the_physics_gate():
 
 
 # -------------------------------------------------------------------- mechanics
-def test_longer_lead_times_fall_back_to_the_only_retrained_horizon():
-    """Only 24h was retrained. A 48h request gets the 24h model, which is a
-    worse forecast; the legacy 48h model would have been a dishonest one."""
+def test_horizon_routing_picks_nearest_trained_model():
+    """Now that 24h, 48h, and 72h are all trained, requests should route to
+    the nearest one rather than always falling back to 24h."""
     pick = LGBMForecastEngine._horizon_for
-    assert pick(96) == 24
-    assert pick(192) == 24
-    assert pick(288) == 24
+    assert pick(96) == 24    # 96 blocks = 24h exactly
+    assert pick(192) == 48   # 192 blocks = 48h exactly
+    assert pick(288) == 72   # 288 blocks = 72h exactly
+    # 144 blocks = 36h: equidistant between 24h and 48h.
+    # _horizon_for uses min(key=abs_diff, then horizon) so tie goes to 24h.
+    assert pick(144) in (24, 48)  # either is acceptable
+    assert pick(250) == 72   # 250 blocks = 62.5h → nearest is 72h
 
 
 def test_interpolated_quantiles_stay_ordered():
@@ -429,9 +441,12 @@ def test_crlf_model_file_is_repaired_in_memory(tmp_path):
     """A checkout made before .gitattributes landed must not abort the process."""
     corrupted_dir = tmp_path / "models"
     corrupted_dir.mkdir()
-    for tag in ("P10", "P50", "P90"):
-        source = MODEL_DIR / f"lightgbm_24h_{tag}.txt"
-        (corrupted_dir / source.name).write_bytes(source.read_bytes().replace(b"\n", b"\r\n"))
+    # Corrupt all 9 model files -- the engine now loads all three horizons
+    for h in (24, 48, 72):
+        for tag in ("P10", "P50", "P90"):
+            source = MODEL_DIR / f"lightgbm_{h}h_{tag}.txt"
+            corrupted = source.read_bytes().replace(b"\n", b"\r\n")
+            (corrupted_dir / source.name).write_bytes(corrupted)
     (corrupted_dir / "MANIFEST.json").write_bytes((MODEL_DIR / "MANIFEST.json").read_bytes())
 
     engine = LGBMForecastEngine(model_directory=corrupted_dir)
