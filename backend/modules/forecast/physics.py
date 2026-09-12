@@ -83,6 +83,16 @@ _PRESETS: dict[str, tuple[float, float, float, float]] = {
 # Hellmann exponent for open flat terrain (IEC/CIGRE standard)
 _ALPHA_OPEN_TERRAIN = 0.143
 
+# Open-Meteo reports wind speed in km/h unless a request sets wind_speed_unit=ms,
+# and neither fetcher does. The fetchers are left alone deliberately: the
+# LightGBM training data came from the same km/h feed, so switching them to m/s
+# would silently skew the solar model's wind feature. Convert here instead.
+_KMH_PER_MS = 3.6
+
+
+def _kmh_to_ms(value: float | None) -> float | None:
+    return None if value is None else float(value) / _KMH_PER_MS
+
 
 # ─────────────────────────────────────────────── physics primitives ──────────
 
@@ -285,9 +295,12 @@ class WindPhysicsEngine:
             block_no = row + 1
             bw = weather.get(block_no, {})
 
-            ws_10m  = bw.get("wind_speed_10m")
-            ws_80m  = bw.get("wind_speed_80m")
-            ws_120m = bw.get("wind_speed_120m")
+            # Weather arrives in Open-Meteo's native km/h; the power curve is m/s.
+            # Reading km/h as m/s saturates a 20 km/h breeze at nameplate and
+            # trips cut-out at 25 km/h -- which is exactly what production served.
+            ws_10m  = _kmh_to_ms(bw.get("wind_speed_10m"))
+            ws_80m  = _kmh_to_ms(bw.get("wind_speed_80m"))
+            ws_120m = _kmh_to_ms(bw.get("wind_speed_120m"))
 
             u_hub = hub_wind_speed(ws_10m, ws_80m, ws_120m, hub_h)
 
