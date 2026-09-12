@@ -61,8 +61,6 @@ import logging
 import math
 from typing import Any
 
-import numpy as np
-
 logger = logging.getLogger("renewable_platform")
 
 # IEC class IIA defaults (typical Gujarat onshore turbine, 130 m rotor)

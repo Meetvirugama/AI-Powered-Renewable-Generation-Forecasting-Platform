@@ -25,7 +25,6 @@ from backend.modules.forecast.physics import (
     swept_area_m2,
     _DEFAULT_CUT_IN_MS,
     _DEFAULT_RATED_MS,
-    _DEFAULT_CUT_OUT_MS,
 )
 
 AVC_MW = 40.0
