@@ -58,23 +58,22 @@ RUN pip install --upgrade pip \
 
 
 # ---------- model layer (changes never; skipped in CI via BAKE_MODELS=false) ----------
-FROM deps AS models-true
-# Both models are pinned by name in .env; changing either one invalidates this
-# layer on purpose, because a changed embedding model means the index must be
-# rebuilt anyway.
-RUN python -c "\
+# ARG before FROM so it is visible inside this stage's RUN.
+# BuildKit supports ARG values in RUN commands but NOT for selecting a named stage
+# with FROM stage-${ARG} -- that syntax is only valid for external base image tags.
+# The conditional shell if-statement is the correct portable pattern here.
+ARG BAKE_MODELS=true
+FROM deps AS models
+RUN if [ "$BAKE_MODELS" = "true" ]; then \
+      echo "BAKE_MODELS=true: downloading bge-m3 and bge-reranker-base" && \
+      python -c "\
 from huggingface_hub import snapshot_download; \
 snapshot_download('BAAI/bge-m3', cache_dir='/models'); \
-snapshot_download('BAAI/bge-reranker-base', cache_dir='/models')"
-
-# Thin alias used when BAKE_MODELS=false: identical to deps, no model weights.
-FROM deps AS models-false
-RUN mkdir -p /models
-
-# The ARG selects which stage to use. "true" is the safe default so a plain
-# `docker build .` produces a production-ready image without any extra flag.
-ARG BAKE_MODELS=true
-FROM models-${BAKE_MODELS} AS models
+snapshot_download('BAAI/bge-reranker-base', cache_dir='/models')"; \
+    else \
+      echo "BAKE_MODELS=false (CI): skipping model download, image will be ~500 MB"; \
+    fi \
+    && mkdir -p /models
 
 
 # ---------- application layer (changes constantly) ----------
