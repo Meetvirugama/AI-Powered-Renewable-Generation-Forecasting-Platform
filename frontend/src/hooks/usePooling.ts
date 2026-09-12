@@ -3,12 +3,14 @@ import { postPooling } from "../api/endpoints";
 import { PoolingResponse, PoolingRequest } from "../types/api";
 import dashboardMock from "../mocks/dashboard.json";
 
-export const usePooling = (body: PoolingRequest) => {
+/** `enabled: false` skips the fetch — for callers that don't yet know pool_id. */
+export const usePooling = (body: PoolingRequest, enabled: boolean = true) => {
   const [data, setData] = useState<PoolingResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(enabled);
   const [error, setError] = useState<unknown>(null);
 
   const fetchPooling = useCallback(async (signal?: AbortSignal) => {
+    if (!enabled) return;
     setLoading(true);
     setError(null);
     try {
@@ -26,13 +28,17 @@ export const usePooling = (body: PoolingRequest) => {
       if (!signal?.aborted) setLoading(false);
     }
   }, /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  [JSON.stringify(body)]);
+  [JSON.stringify(body), enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
     fetchPooling(controller.signal);
     return () => controller.abort();
-  }, [fetchPooling]);
+  }, [fetchPooling, enabled]);
 
   const refetch = () => fetchPooling();
 

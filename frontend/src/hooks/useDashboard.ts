@@ -12,6 +12,10 @@ export const useDashboard = (plantId: string, date?: string) => {
     if (!plantId) return;
     setLoading(true);
     setError(null);
+    // Clear the previous plant's response so consumers gated on `!data` show a
+    // skeleton during the refetch instead of the old plant's numbers under the
+    // new plant's name.
+    setData(null);
     try {
       if (import.meta.env.VITE_USE_MOCKS === "true") {
         setData(dashboardMock as DashboardResponse);

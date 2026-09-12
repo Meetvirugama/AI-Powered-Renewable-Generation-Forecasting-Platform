@@ -47,17 +47,29 @@ export default function RAGCopilot({ plantId, ruleYear, blockNo }: Props) {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Tracks the in-flight request so a second question (or an unmount) can cancel a
+  // slower first one — previously there was no cancellation at all, so a fast reply
+  // to question 2 could be silently overwritten when question 1's slower answer
+  // landed afterward.
+  const abortRef = useRef<AbortController | null>(null);
 
   // Auto-scroll on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // Cancel any in-flight request on unmount.
+  useEffect(() => () => abortRef.current?.abort(), []);
+
   // ------ send logic -------------------------------------------------------
 
   const send = useCallback(
     async (question: string) => {
       if (!question.trim() || loading) return;
+
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       setInput("");
       setMessages((prev) => [...prev, { role: "user", text: question }]);
@@ -76,14 +88,16 @@ export default function RAGCopilot({ plantId, ruleYear, blockNo }: Props) {
             ...(ruleYear != null ? { rule_year: ruleYear } : {}),
             ...(blockNo != null ? { block_no: blockNo } : {}),
           };
-          response = await postRagQuery(body);
+          response = await postRagQuery(body, controller.signal);
         }
 
+        if (controller.signal.aborted) return;
         setMessages((prev) => [
           ...prev,
           { role: "assistant", text: response.answer, response },
         ]);
       } catch (err: unknown) {
+        if (controller.signal.aborted) return;
         const msg =
           err instanceof Error
             ? err.message
@@ -95,8 +109,10 @@ export default function RAGCopilot({ plantId, ruleYear, blockNo }: Props) {
           { role: "assistant", text: "", error: msg },
         ]);
       } finally {
-        setLoading(false);
-        inputRef.current?.focus();
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          inputRef.current?.focus();
+        }
       }
     },
     [loading, plantId, ruleYear, blockNo],
@@ -288,6 +304,8 @@ export default function RAGCopilot({ plantId, ruleYear, blockNo }: Props) {
       <div className="shrink-0 pt-3 flex gap-2">
         <input
           ref={inputRef}
+          id="rag-copilot-question"
+          name="question"
           type="text"
           autoComplete="off"
           value={input}

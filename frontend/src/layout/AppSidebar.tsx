@@ -15,7 +15,7 @@ const AppSidebar: React.FC = () => {
     >
       <div className="flex items-center justify-between gap-2 px-6 py-5 lg:py-6 border-b border-border h-16">
         <Link to="/home" className="flex items-center gap-2 overflow-hidden">
-          {isExpanded ? (
+          {isExpanded || isMobileOpen ? (
             <h1 className="text-xl font-bold text-text truncate tracking-tight">Grid<span className="text-accent">Mind</span></h1>
           ) : (
             <h1 className="text-xl font-bold text-accent">G</h1>
@@ -48,7 +48,10 @@ const AppSidebar: React.FC = () => {
                   <svg className="w-5 h-5 shrink-0 fill-current" viewBox="0 0 24 24">
                     <path d={link.icon} />
                   </svg>
-                  <span className={`truncate transition-all duration-300 ${!isExpanded ? "hidden" : "block"}`}>
+                  {/* isExpanded is forced false on mobile viewports regardless of drawer
+                      state; when the drawer is fully open (isMobileOpen) it's rendered
+                      at full width, so labels must show even though isExpanded is false. */}
+                  <span className={`truncate transition-all duration-300 ${!isExpanded && !isMobileOpen ? "hidden" : "block"}`}>
                     {link.label}
                   </span>
                 </Link>

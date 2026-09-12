@@ -3,7 +3,7 @@ import Chart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { BlockDSMResult } from "../../types/api";
 import { baseOptions, TOKENS } from "../../lib/apexTheme";
-import { inr } from "../../lib/format";
+import { inr, blockToIST, blockNoFor } from "../../lib/format";
 
 interface Props {
   blocks: BlockDSMResult[];
@@ -24,7 +24,7 @@ export default function RiskHeatmap({ blocks }: Props) {
     const rows = [45, 30, 15, 0].map((offset) => ({
       name: `:${String(offset).padStart(2, "0")}`,
       data: Array.from({ length: 24 }, (_, hour) => {
-        const blockNo = hour * 4 + offset / 15 + 1;
+        const blockNo = blockNoFor(hour, offset);
         return {
           x: String(hour).padStart(2, "0"),
           y: Number((byBlock.get(blockNo)?.expected_penalty_inr ?? 0).toFixed(2)),
@@ -72,9 +72,9 @@ export default function RiskHeatmap({ blocks }: Props) {
         custom: ({ seriesIndex, dataPointIndex, w }) => {
           const offset = [45, 30, 15, 0][seriesIndex];
           const hour = dataPointIndex;
-          const blockNo = hour * 4 + offset / 15 + 1;
+          const blockNo = blockNoFor(hour, offset);
           const b = byBlock.get(blockNo);
-          const t = `${String(hour).padStart(2, "0")}:${String(offset).padStart(2, "0")}`;
+          const t = blockToIST(blockNo);
           void w;
           return `<div style="padding:8px 10px;font-family:Inter,sans-serif;font-size:12px">
             <div style="color:${TOKENS.textMuted}">Block ${blockNo} · ${t} IST</div>

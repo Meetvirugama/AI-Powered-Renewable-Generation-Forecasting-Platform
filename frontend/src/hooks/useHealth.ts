@@ -19,8 +19,8 @@ export const useHealth = () => {
         setData({ api: true, rag: true });
       } else {
         const [apiRes, ragRes] = await Promise.allSettled([
-          getHealth(),
-          getRagHealth(),
+          getHealth(signal),
+          getRagHealth(signal),
         ]);
         if (signal?.aborted) return;
         

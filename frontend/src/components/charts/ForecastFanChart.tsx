@@ -18,7 +18,12 @@ interface Props {
  */
 export default function ForecastFanChart({ blocks, optimisedSchedule, avcMw }: Props) {
   const { series, options } = useMemo(() => {
-    const x = (b: BlockForecast) => blockLabel(b.block_no);
+    // ist_time is a full ISO timestamp ("2026-06-15T17:45:00+05:30"), not "HH:MM" —
+    // the chart wants a short axis label. Slicing the fixed-width HH:MM substring
+    // still honours the backend's own field (no independent block_no arithmetic)
+    // without a Date-parsing/timezone round trip; block_no is only the fallback.
+    const x = (b: BlockForecast) =>
+      b.ist_time?.length >= 16 ? b.ist_time.slice(11, 16) : blockLabel(b.block_no);
 
     const band = (lo: keyof BlockForecast, hi: keyof BlockForecast) =>
       blocks.map((b) => ({ x: x(b), y: [b[lo] as number, b[hi] as number] }));

@@ -3,12 +3,19 @@ import { postDsm } from "../api/endpoints";
 import { DSMResponse, DSMRequest } from "../types/api";
 import dashboardMock from "../mocks/dashboard.json";
 
-export const useDSM = (body: DSMRequest) => {
+/**
+ * `enabled: false` skips the fetch entirely. Callers building `body.schedule_mw` from
+ * another in-flight request (the optimiser) should stay disabled until that schedule
+ * is real — otherwise this fires once with `schedule_mw: []` before firing again with
+ * the real schedule, wasting a request and briefly showing an all-zero heatmap.
+ */
+export const useDSM = (body: DSMRequest, enabled: boolean = true) => {
   const [data, setData] = useState<DSMResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(enabled);
   const [error, setError] = useState<unknown>(null);
 
   const fetchDsm = useCallback(async (signal?: AbortSignal) => {
+    if (!enabled) return;
     setLoading(true);
     setError(null);
     try {
@@ -26,13 +33,17 @@ export const useDSM = (body: DSMRequest) => {
       if (!signal?.aborted) setLoading(false);
     }
   }, /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  [JSON.stringify(body)]);
+  [JSON.stringify(body), enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
     fetchDsm(controller.signal);
     return () => controller.abort();
-  }, [fetchDsm]);
+  }, [fetchDsm, enabled]);
 
   const refetch = () => fetchDsm();
 
