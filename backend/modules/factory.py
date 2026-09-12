@@ -1,7 +1,7 @@
 import os
 import logging
 from functools import lru_cache
-from typing import Protocol, Optional, Any, List
+from typing import Protocol, Any
 
 from backend.modules.forecast.mock_engine import MockForecastEngine
 from backend.modules.optimize.mock_optimizer import MockScheduleOptimizer
@@ -10,13 +10,13 @@ from backend.modules.rag.mock_copilot import MockRAGCopilot
 logger = logging.getLogger('renewable_platform')
 
 class ForecastEngineProtocol(Protocol):
-    def generate_forecast(self, plant: dict, date_str: str, num_blocks: int = 96) -> List[dict]:
+    def generate_forecast(self, plant: dict, date_str: str, num_blocks: int = 96) -> list[dict]:
         ...
 
 class ScheduleOptimizerProtocol(Protocol):
     def optimize_day_ahead(
         self,
-        forecast_blocks: List[dict],
+        forecast_blocks: list[dict],
         avc_mw: float,
         dsm_engine: Any,
         ncd: float = 450.0,
@@ -29,10 +29,10 @@ class RAGCopilotProtocol(Protocol):
     def query(
         self,
         question: str,
-        plant_id: Optional[str] = None,
-        block_no: Optional[int] = None,
-        rule_year: Optional[int] = None,
-        context: Optional[dict] = None
+        plant_id: str | None = None,
+        block_no: int | None = None,
+        rule_year: int | None = None,
+        context: dict | None = None
     ) -> dict:
         ...
 
