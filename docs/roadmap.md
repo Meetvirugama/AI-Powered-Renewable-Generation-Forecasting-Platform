@@ -11,10 +11,10 @@ scope-completion estimates, not confidence.
 
 | Track | Owner | Built | Demo-ready | Change |
 |---|---|---|---|---|
-| Backend / API / data | Member 2 | **97%** | ✅ yes | — |
-| Frontend | Member 3 | **85%** | ✅ yes | **↑ from 5%** |
-| Infra / RAG copilot | Member 4 | **95%** | ⚠️ corpus empty | — |
-| ML / forecasting | Member 1 | **58%** | ❌ models rejected | ↑ docs added |
+| Backend / API / data | Gaurav Rathod | **97%** | ✅ yes | — |
+| Frontend | Shane Christian | **85%** | ✅ yes | **↑ from 5%** |
+| Infra / RAG copilot | Madhav Thesiya | **95%** | ⚠️ corpus empty | — |
+| ML / forecasting | Meet Virugama | **58%** | ❌ models rejected | ↑ docs added |
 
 **Overall: ~84% built, ~70% demo-ready.** Up from 65% / 45% at the last audit.
 
@@ -56,7 +56,7 @@ today already carry the wrong block association.
 
 ## Remaining work by owner
 
-### Member 3 — Frontend (~85%) ✅ *was the critical path, no longer is*
+### Shane Christian — Frontend (~85%) ✅ *was the critical path, no longer is*
 
 Real React + TypeScript application, wired to live endpoints via `axios`.
 
@@ -77,14 +77,14 @@ ApexCharts, Leaflet.
 | Loading / error states, mobile | 2–3h | Polish |
 | `.env.production` with the deployed API URL | 5m | Needed once deployed |
 
-### Member 2 — Backend (~97%)
+### Gaurav Rathod — Backend (~97%)
 
 Essentially done. 11 endpoints, 10 tables + migrations, ingestion wired, `/pipeline/run` async
 with 202, API-key auth enforced, zero TODO markers.
 
 **Remaining:** B2 (block numbering) only.
 
-### Member 4 — Infra + RAG (~95% code, ~60% operational)
+### Madhav Thesiya — Infra + RAG (~95% code, ~60% operational)
 
 Code complete and tested. Blocked on inputs, not engineering.
 
@@ -101,7 +101,7 @@ Code complete and tested. Blocked on inputs, not engineering.
 > matching: *"what is the tolerance band for solar?"* retrieves fine, *"why was block 52
 > penalised?"* returns nothing.
 
-### Member 1 — ML (~58%)
+### Meet Virugama — ML (~58%)
 
 **Delivered and good:** the DSM engine (`engine.py`, `config_loader.py`) — X-trajectory by date,
 frequency bands, seller-side rules, YAML-driven for 2024/2026/2031. 12 trained LightGBM boosters.
@@ -148,14 +148,14 @@ frequency bands, seller-side rules, YAML-driven for 2024/2026/2031. 12 trained L
 
 | # | Task | Owner | Time | Status |
 |---|---|---|---|---|
-| ~~1~~ | ~~Fix pooling correlation~~ | M4 | — | ✅ PR #10 |
-| ~~5~~ | ~~Frontend core components~~ | M3 | — | ✅ PR #11 |
+| ~~1~~ | ~~Fix pooling correlation~~ | Madhav | — | ✅ PR #10 |
+| ~~5~~ | ~~Frontend core components~~ | Shane | — | ✅ PR #11 |
 | 2 | **Regulation PDFs + `sources.json`** | **human** | 1h | ⬜ |
 | 3 | **Groq key → `.env`** | **human** | 5m | ⬜ |
-| 4 | Fix block numbering (B2) | M4 | 20m | ⬜ |
-| 6 | Surface `serving_synthetic_data` in UI | M3 | 30m | ⬜ |
+| 4 | Fix block numbering (B2) | Madhav | 20m | ⬜ |
+| 6 | Surface `serving_synthetic_data` in UI | Shane | 30m | ⬜ |
 | 7 | Demo script + failover rehearsal | all | 1h | ⬜ |
-| 8 | Deploy, or rehearse the local fallback | M4 | 2h | ⬜ |
+| 8 | Deploy, or rehearse the local fallback | Madhav | 2h | ⬜ |
 
 **Do not attempt in Phase 0:** model retraining, Chronos-2, battery LP, notebooks.
 

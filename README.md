@@ -48,7 +48,7 @@ graph LR
     end
 
     subgraph UI["4. SCADA UI"]
-        DASH["React 18 Dashboard<br/>Fan Chart | Risk Heatmap | What-If Slider"]
+        DASH["React 19 Dashboard<br/>Fan Chart | Risk Heatmap | What-If Slider"]
     end
 
     Inputs --> INGEST --> ML --> DSM --> OPT --> POOL
@@ -85,7 +85,7 @@ graph LR
 | **Data Ingestion & Quality** | `httpx` (async), `pandas`, 15-Minute Grid Resampling, IST Alignment |
 | **Database & Vector Store** | `PostgreSQL 15`, `pgvector` (1024-dim HNSW Cosine Index), `SQLite` (Test suite) |
 | **Regulatory RAG & LLM** | `BAAI/bge-m3`, `rank-bm25`, `LangGraph`, `LiteLLM` (`Groq Llama 3.3 70B` / `Gemini 1.5 Flash`) |
-| **Frontend Dashboard** | `React 18`, `Vite`, `Tailwind CSS`, `Recharts`, `Leaflet / react-leaflet`, `Lucide Icons` |
+| **Frontend Dashboard** | `React 19`, `Vite 6`, `Tailwind CSS v4`, `ApexCharts 4` (`react-apexcharts`), `Leaflet / react-leaflet` |
 | **Cloud Infrastructure** | `AWS EC2 (t3.large)`, `RDS PostgreSQL`, `S3`, `CloudFront`, `EventBridge`, `ALB` |
 | **CI/CD & Observability** | `GitHub Actions` (OIDC AWS auth), `pytest`, `ruff`, Structured JSON logging |
 
@@ -173,10 +173,12 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 ## 👥 Engineering Team & Ownership
 
-- **Member 1 (ML Engineer)**: Probabilistic forecasting models, physics simulation, feature engineering, backtest validation.
-- **Member 2 (Backend Engineer)**: FastAPI application, database schemas, data ingestion, 9-step daily pipeline, DSM pooling.
-- **Member 3 (Frontend Engineer)**: React 18 dashboard, Recharts fan charts, 96-block risk heatmap, regulatory slider.
-- **Member 4 (Infra + RAG Engineer)**: Docker containerization, AWS cloud architecture, CI/CD, pgvector + BM25 RAG copilot.
+| Role | Member | Scope |
+|---|---|---|
+| ML Engineer | **Meet Virugama** | Probabilistic forecasting models, physics simulation, feature engineering, backtest validation |
+| Backend Engineer | **Gaurav Rathod** | FastAPI application, database schemas, data ingestion, 9-step daily pipeline, DSM pooling |
+| Frontend Engineer | **Shane Christian** | React 19 dashboard, ApexCharts fan charts (P05–P95), 96-block risk heatmap, regulation slider, RAG copilot UI, plant map |
+| Infra + RAG Engineer | **Madhav Thesiya** | Docker containerization, AWS cloud architecture, CI/CD, pgvector + BM25 RAG copilot |
 
 ---
 
