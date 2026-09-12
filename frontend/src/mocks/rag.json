@@ -1,0 +1,34 @@
+{
+  "answer": "Under the CERC DSM Regulations 2026, a solar generator is settled against a tolerance band of ±10% of Available Capacity. Deviation beyond that band attracts a charge proportional to the Normal Rate of Charge for Deviation, scaled by the frequency slab at the time of the block. For block 54, the deviation is roughly 2.2% against a 41.0 MW schedule — inside the tolerance band, so only a small charge applies.",
+  "citations": [
+    {
+      "clause": "Regulation 7.2",
+      "page": 12,
+      "doc": "CERC_DSM_Amendment_2026.pdf",
+      "url": null,
+      "section": "Deviation charges for renewable generators",
+      "snippet": "Deviation in excess of the applicable tolerance band shall attract charges computed at the Normal Rate of Charge for Deviation..."
+    },
+    {
+      "clause": "Regulation 5.1",
+      "page": 8,
+      "doc": "CERC_DSM_Regulations_2024.pdf",
+      "url": null,
+      "section": "Tolerance bands",
+      "snippet": "For solar generating stations the permissible deviation shall be ten percent of the Available Capacity."
+    }
+  ],
+  "engine_values": {
+    "block_no": 54,
+    "expected_penalty_inr": 386,
+    "deviation_pct_at_p50": 2.176115317847504,
+    "schedule_mw": 41
+  },
+  "meta": {
+    "llm_model": "mock",
+    "cached": false,
+    "latency_ms": 180,
+    "retrieved_chunks": 2,
+    "guardrail": "pass"
+  }
+}
