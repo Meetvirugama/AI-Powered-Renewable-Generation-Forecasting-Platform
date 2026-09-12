@@ -1,6 +1,8 @@
 # AI-Powered Renewable Generation Forecasting — ML Pipeline
 
-> **Platform classification:** `HACKATHON_READY` · Evidence score **70 / 80 (87.5%)** · Forecast horizons: 24h / 48h / 72h · Champion model family: Hybrid P50
+> **Owner:** Meet Virugama (Member 1 — ML / Forecasting)  
+> **Platform classification:** `HACKATHON_READY` · Evidence score **70 / 80 (87.5%)** · Forecast horizons: 24h / 48h / 72h · Champion model family: Hybrid P50  
+> **Last updated:** 2026-09-12
 
 ## Document Status
 
@@ -12,18 +14,19 @@ For what is **actually built and committed**, see `docs/roadmap.md`.
 | Architecture Overview | ✅ Implemented | Matches the shipped backend |
 | Data Ingestion | ✅ Implemented | Open-Meteo live ingestion is live |
 | Data Quality Layer | ✅ Implemented | Validator + resampler committed |
-| Feature Engineering | ⚠️ Partial | `feature_builder.py` exists; `features.py` not yet |
-| LightGBM Quantile Models | ⚠️ Trained but blocked | Models fail physics gate — retraining needed. See `docs/model_integration.md` |
-| Persistence Baseline | ❌ Not built | Planned in Phase 1 |
+| Feature Engineering | ⚠️ Partial | `feature_builder.py` exists; `features.py` not yet written |
+| LightGBM Quantile Models | ⚠️ Trained but blocked | 22× scale mismatch + solar-at-midnight; retraining needed — see `docs/model_integration.md` |
+| Persistence Baseline | ❌ Not built | Planned in Phase 1 (`persistence.py`) |
 | DSM Cost Engine | ✅ Implemented | Tested, YAML-driven, 2024/2026/2031 |
-| Schedule Optimizer | ✅ Implemented | `schedule_optimizer.py`, 23–28% savings measured |
-| Battery LP | ❌ Not built | `battery_lp.py` planned, not yet implemented |
-| Portfolio Pooling | ✅ Implemented | Fix for correlation bug pending (B1 in `roadmap.md`) |
-| SHAP Explainability | ❌ **Descoped** | Removed from demo scope |
+| Schedule Optimizer | ✅ Implemented | `schedule_optimizer.py`, **23–28% savings measured** |
+| Battery LP | ❌ Not built | `battery_lp.py` planned Phase 2 — not needed for demo |
+| Portfolio Pooling | ✅ Implemented | Correlation bug **fixed in PR #10** — now **~27% reduction** at 0.70 correlation |
+| Block numbering (IST) | ⚠️ Bug open | `resampler.py:33` computes `block_no` from UTC — 22-block offset from IST. Fix: shift before block assignment. Owner: Gaurav Rathod |
+| SHAP Explainability | ❌ **Descoped** | Removed from demo scope; evidence files exist in `prediction_bundle/` |
 | Asset Anomaly Detection | ❌ **Descoped** | Removed from demo scope |
 | Chronos-2 | ❌ **Descoped** | Explicitly removed — see `roadmap.md` |
-| RAG Copilot Pipeline | ✅ Implemented | Corpus empty until PDFs loaded |
-| Production Daily Pipeline | ✅ Implemented | `/pipeline/run` async, EventBridge scheduled |
+| RAG Copilot Pipeline | ✅ Implemented | BM25 + bge-m3 code complete; **corpus empty** until CERC PDFs loaded + Groq key set |
+| Production Daily Pipeline | ✅ Implemented | `/pipeline/run` async, 202 response, EventBridge-ready |
 
 ---
 
@@ -542,6 +545,10 @@ All actions stored per 15-min block in PostgreSQL `Action` table with `run_id`, 
 
 ## 16. Asset Intelligence & Anomaly Detection
 
+> **DESCOPED** — Removed from Hackout 2026 demo. This module is not running in the
+> production API. Evidence files are preserved in `prediction_bundle/evidence/` for
+> post-hackathon work.
+
 ```text
 Hybrid P50 Expected Generation
          │
@@ -578,6 +585,9 @@ Evidence: `prediction_bundle/evidence/fault_localization_results.csv`
 ---
 
 ## 17. SHAP Explainability
+
+> **DESCOPED** — Removed from Hackout 2026 demo. SHAP evidence files are retained in
+> `prediction_bundle/evidence/` and can be reinstated in Phase 2 without API changes.
 
 ```text
 LightGBM Champion Model
@@ -871,34 +881,52 @@ Full report: `prediction_bundle/evidence/FINAL_EXECUTIVE_SUMMARY.md`
 
 ## 24. Known Limitations & Roadmap
 
-### Current Limitations
+### Current Limitations (synced with `docs/roadmap.md` @ 2026-09-12)
 
-| # | Limitation | Impact | Roadmap Fix |
-|---|-----------|--------|------------|
-| 1 | ~29-day dataset | Seasonal 72h claims limited | Add ≥ 12 months from Open-Meteo archive |
-| 2 | DC_POWER / DAILY_YIELD / TOTAL_YIELD in features | Optimistic test metrics (leakage) | Remove in v2 retraining |
-| 3 | Random split (not chronological) | Optimistic test metrics | Chronological 60/20/20 split |
-| 4 | Conformal not on strictly held-out set | Empirical only | Rebuild on dedicated calibration window |
-| 5 | Production API uses `mock_engine.py` | API serves sine waves not LightGBM | Create `backend/modules/forecast/lgbm_engine.py` |
-| 6 | No forecast-issue-time weather | Backtest leaks future weather | Integrate Open-Meteo historical forecast-run archive |
-| 7 | No `feature_builder.py` in backend | Manual feature contract | Create `feature_contract/feature_builder.py` |
-| 8 | Champion/challenger is notebook output | Manual process | Implement `backend/modules/forecast/registry.py` |
-| 9 | Extreme events are synthetic | Not empirical | Requires multi-year dataset |
+| # | Limitation | Impact | Status | Roadmap Fix |
+|---|-----------|--------|--------|------------|
+| 1 | ~29-day training dataset (2,774 rows / 1 plant) | Seasonal 72h claims limited; per-plant models for 4 Gujarat sites impossible | Open | Workaround: train on capacity factor (AC_POWER / AvC), apply per plant at inference |
+| 2 | `DC_POWER`, `DAILY_YIELD`, `TOTAL_YIELD` in features | Leakage — ~25% artificial gain; test metrics optimistic | Open | Drop in v2 retraining (Phase 1) |
+| 3 | `PLANT_ID` always `none` | All 12 models seeded identically — cannot serve 4 distinct plants | Open | Fix PLANT_ID encoding before retraining |
+| 4 | Models predict in kW (training scale) — API expects MW | 22× scale mismatch causes physics gate rejection | Open | Predict capacity factor or retrain in MW |
+| 5 | Random row-boundary split (not chronological) | Optimistic test metrics (future data seen in training) | Open | Chronological 60/20/20 split (Phase 2) |
+| 6 | Conformal calibration not on strictly held-out set | Empirical coverage only; not formally exchangeable | Open | Rebuild conformal on dedicated calibration window |
+| 7 | Production API uses `mock_engine.py` | API serves synthetic sine waves, not LightGBM output | Open | Create `lgbm_engine.py`, flip `FORECAST_ENGINE_TYPE=production` |
+| 8 | `block_no` computed from UTC in `resampler.py:33` | 22-block offset from true IST Block 1 | Open | Shift to IST before `block_no` assignment + add test (B2 in roadmap) |
+| 9 | `features.py` not yet written | No canonical feature builder at inference time | Open | Phase 1 — `features.py` is the critical path item |
+| 10 | No `feature_builder.py` in backend | Manual feature contract between training and inference | Open | `feature_contract/feature_builder.py` (Phase 5) |
+| 11 | Champion/challenger is notebook output | Manual promotion process | Open | `backend/modules/forecast/registry.py` (Phase 4) |
+| 12 | Extreme scenario evidence is synthetic | Not empirically validated | Low priority | Requires multi-year dataset |
+
+### What you can honestly claim today (ML track)
+
+✅ DSM pricing engine — real, tested, YAML-driven 2024/2026/2031  
+✅ Schedule optimiser — **23–28% penalty reduction**, measured  
+✅ Portfolio pooling — **~27% reduction**, measured (conservative 0.70 correlation)  
+✅ 12 trained LightGBM boosters — exist in `prediction_bundle/`  
+✅ Physics gate — rejected models loudly; `/health` discloses `serving_synthetic_data`  
+⚠️ Forecasts are synthetic (mock engine active; disclosed by API)  
+⚠️ Models trained but fail physics gate — retraining required  
 
 ### Roadmap Phases
 
 ```text
-Phase 0 — Critical blocker
-  Create backend/modules/forecast/lgbm_engine.py
-  Wire 12 LightGBM .txt models to production API
+Phase 0 — Demo-critical (remaining ~4h of work)
+  Human: download CERC PDFs + set Groq key in .env
+  Gaurav: fix block_no UTC→IST offset in resampler.py (B2) — 20 min
+  Shane: surface serving_synthetic_data badge in dashboard header — ✅ DONE (PR #13)
 
-Phase 1 — Data foundation
-  Open-Meteo forecast-run historical archive
-  Remove DC_POWER / DAILY_YIELD / TOTAL_YIELD
+Phase 1 — Makes the ML real (3–5 days)
+  Write features.py — canonical feature builder
+  Drop DC_POWER / DAILY_YIELD / TOTAL_YIELD
+  Fix PLANT_ID encoding
+  Retrain on capacity factor (0–1), multiply by AvC_MW at inference
+  Flip FORECAST_ENGINE_TYPE=production and confirm physics gate passes
+  Export quantile_forecast_output.csv + features_schema.json
 
 Phase 2 — Training rigour
   Chronological 60/20/20 train/calibrate/test
-  Rolling-origin cross-validation (needs ≥ 6 months)
+  Rolling-origin cross-validation (needs ≥ 6 months data)
 
 Phase 3 — Calibration integrity
   Conformal on dedicated calibration window
@@ -913,7 +941,7 @@ Phase 5 — Feature pipeline
   Canonical 61-feature ordering at inference
 
 Phase 6 — Monitoring
-  Wire PSI/KS/drift metrics to API endpoint
+  PSI / KS / drift metrics wired to API endpoint
   Data-freshness gate before inference
 
 Phase 7 — Resilience
@@ -923,4 +951,6 @@ Phase 7 — Resilience
 
 ---
 
-*Document grounded in codebase analysis of `prediction_bundle/`, `backend/`, `config/`, `tests/`, and `docs/` — generated 2026-09-12.*
+*Owner: Meet Virugama — ML forecasting + DSM engine math*  
+*Document grounded in codebase analysis of `prediction_bundle/`, `backend/`, `config/`, `tests/`, and `docs/`.*  
+*Last updated: 2026-09-12. Cross-reference: `docs/roadmap.md`, `docs/model_integration.md`.*

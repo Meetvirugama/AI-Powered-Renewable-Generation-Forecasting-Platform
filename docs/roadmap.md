@@ -153,7 +153,7 @@ frequency bands, seller-side rules, YAML-driven for 2024/2026/2031. 12 trained L
 | 2 | **Regulation PDFs + `sources.json`** | **human** | 1h | ⬜ |
 | 3 | **Groq key → `.env`** | **human** | 5m | ⬜ |
 | 4 | Fix block numbering (B2) | Madhav | 20m | ⬜ |
-| 6 | Surface `serving_synthetic_data` in UI | Shane | 30m | ⬜ |
+| 6 | Surface `serving_synthetic_data` in UI | Shane | 30m | ✅ PR #13 |
 | 7 | Demo script + failover rehearsal | all | 1h | ⬜ |
 | 8 | Deploy, or rehearse the local fallback | Madhav | 2h | ⬜ |
 
