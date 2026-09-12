@@ -38,3 +38,11 @@ filterwarnings = [
     "ignore::DeprecationWarning:starlette.*",
 ]
 asyncio_default_fixture_loop_scope = "function"
+# langgraph pulls in langsmith as a transitive dependency, and langsmith registers a
+# pytest11 entry point (langsmith/pytest_plugin.py) that loads at pytest startup.
+# That plugin imports langsmith.schemas → pydantic before any test is collected, so
+# a pydantic-core version skew (common when pip resolves a newer langsmith) kills
+# pytest before it runs a single test -- CI shows 0 collected, all red.
+# We do not use LangSmith tracing in this suite, so disabling the plugin is safe
+# and eliminates this entire fragile transitive-dep boot path.
+addopts = "-p no:langsmith"
