@@ -1,16 +1,54 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-import logging
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from backend.api import dashboard, dsm, forecast, optimize, pipeline, plants, pooling, rag
 from backend.core.config import get_cors_origins
-from backend.db.session import init_db, SessionLocal
 from backend.db.models import Base
 from backend.db.seed import seed_plants
-from backend.api import plants, forecast, dsm, optimize, pooling, dashboard, rag, pipeline
+from backend.db.session import SessionLocal, init_db
 
 logger = logging.getLogger("renewable_platform")
+
+def _warm_rag() -> None:
+    """Build the BM25 index and load the embedding model before the first request.
+
+    Both costs are paid once, at boot, rather than by whoever asks the first
+    question: BM25 is ~1 s over 2k chunks and the bge-m3 load is 8-15 s. This is
+    why the container healthcheck uses --start-period=90s; a shorter period marks
+    a still-loading container unhealthy and Docker restart-loops it.
+
+    Only runs for the production copilot. Nothing here is fatal: the forecasting
+    routes must still serve if the regulation corpus is missing.
+    """
+    if os.getenv("RAG_COPILOT_TYPE", "mock").lower() != "production":
+        return
+
+    from backend.modules.rag import embed, retriever
+
+    try:
+        with SessionLocal() as db:
+            chunks = retriever.build_bm25(db)
+            # A model mismatch between the corpus and this process returns
+            # plausible but meaningless neighbours, so fail loudly in prod.
+            embed.verify_corpus_model(db)
+        logger.info(f"RAG ready: {chunks} chunks indexed for sparse retrieval.")
+    except Exception as e:
+        logger.error(f"RAG warmup failed; copilot will degrade: {e}")
+        # In production a broken corpus means the copilot would cite nothing or,
+        # worse, cite against the wrong embedding space. Refuse to come up.
+        if os.getenv("APP_ENV", "development").lower() in {"prod", "production"}:
+            raise
+
+    try:
+        embed.warmup()
+    except Exception as e:
+        logger.warning(f"Embedding model warmup failed; first query will pay the load cost: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +60,8 @@ async def lifespan(app: FastAPI):
             logger.info(f"Initialized database and seeded {count} plants.")
     except Exception as e:
         logger.warning(f"Database initialization warning (e.g. running offline/sqlite): {e}")
+
+    _warm_rag()
     yield
 
 app = FastAPI(
