@@ -153,3 +153,49 @@ def test_get_pipeline_status_not_found(client: TestClient):
     response = client.get('/pipeline/status/NON_EXISTENT_RUN_UUID')
     assert response.status_code == 404
 
+
+
+# ------------------------------------------------------------------------------
+# Unknown ids must be refused, never priced.
+#
+# /dsm and /optimize used to substitute an invented 50 MW solar plant at 23.0, 72.0
+# for any id they did not recognise, and /pooling pooled the first two plants in the
+# table for any pool it did not recognise. A mistyped id therefore came back HTTP 200
+# with a confident rupee figure (₹190,521 on the live API) for a plant that does not
+# exist, and /dashboard returned an unhandled 500 for the same input.
+# ------------------------------------------------------------------------------
+UNKNOWN = "UNKNOWN_PLANT_XYZ"
+
+
+def test_dsm_refuses_an_unknown_plant(client: TestClient):
+    response = client.post(
+        "/dsm", json={"plant_id": UNKNOWN, "date": "2026-06-01", "schedule_mw": [25.0] * 96}
+    )
+    assert response.status_code == 404
+    assert UNKNOWN in response.json()["detail"]
+
+
+def test_optimize_refuses_an_unknown_plant(client: TestClient):
+    response = client.post("/optimize", json={"plant_id": UNKNOWN, "date": "2026-06-01", "avc_mw": 50})
+    assert response.status_code == 404
+
+
+def test_pooling_refuses_an_unknown_pool_rather_than_pooling_arbitrary_plants(client: TestClient):
+    response = client.post("/pooling", json={"pool_id": "UNKNOWN_POOL_XYZ", "date": "2026-06-01"})
+    assert response.status_code == 404
+    assert "UNKNOWN_POOL_XYZ" in response.json()["detail"]
+
+
+def test_dashboard_returns_404_not_500_for_an_unknown_plant(client: TestClient):
+    assert client.get(f"/dashboard/{UNKNOWN}").status_code == 404
+
+
+def test_forecast_still_refuses_an_unknown_plant(client: TestClient):
+    assert client.get(f"/forecast?plant_id={UNKNOWN}").status_code == 404
+
+
+def test_single_plant_and_list_agree(client: TestClient):
+    """/plants and /plants/{id} now share one resolver; every listed id must resolve."""
+    listed = client.get("/plants").json()["plants"]
+    for plant in listed:
+        assert client.get(f"/plants/{plant['id']}").status_code == 200

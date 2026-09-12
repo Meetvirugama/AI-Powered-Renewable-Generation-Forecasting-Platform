@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 from typing import Optional
 from datetime import datetime
 
 from backend.db.session import get_db
-from backend.db.models import Plant
 from backend.core.plants import find_plant
 from backend.modules.factory import get_forecast_engine
 from backend.schemas.forecast import ForecastResponse, BlockForecast
@@ -45,21 +43,9 @@ def get_forecast(
     target_date_str = date or datetime.utcnow().strftime("%Y-%m-%d")
     forecast_engine = get_forecast_engine()
     
+    # find_plant already checks the database before the YAML seeds, so the second
+    # database lookup that used to follow it here could never find anything new.
     plant_cfg = find_plant(plant_id, db)
-            
-    if not plant_cfg:
-        plant_db = db.execute(select(Plant).where(Plant.id == plant_id)).scalar_one_or_none()
-        if plant_db:
-            plant_cfg = {
-                "id": plant_db.id,
-                "name": plant_db.name,
-                "type": plant_db.type,
-                "lat": plant_db.lat,
-                "lon": plant_db.lon,
-                "avc_mw": plant_db.avc_mw,
-                "pool_id": plant_db.pool_id,
-            }
-            
     if not plant_cfg:
         raise HTTPException(status_code=404, detail=f"Plant '{plant_id}' not found")
         

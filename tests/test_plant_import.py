@@ -249,3 +249,38 @@ def test_a_null_pool_matches_nothing_rather_than_pooling_with_itself():
 def test_plants_are_grouped_by_their_declared_pool():
     db = _DB([_row("OSM_W1", pool="P1"), _row("OSM_W2", pool="P1"), _row("OSM_W3", pool="P2")])
     assert len(plant_resolver.plants_in_pool("P1", db)) == 2
+
+
+# ----------------------------------------------------------- hiding the seed plants
+def _seed_row(pid="GJ_SOLAR_A", pool="GJ_POOL_1"):
+    """A seed plant as it exists on the live database: written by the pipeline,
+    so it carries no import `source`."""
+    return _Row(id=pid, name="Gujarat Solar Plant A", type="solar", lat=23.2, lon=72.6,
+                avc_mw=50.0, pool_id=pool, metadata_json={})
+
+
+def test_seed_plants_are_hidden_from_the_list_once_real_plants_are_imported():
+    """Four invented plants were listed beside 101 real ones on the map."""
+    db = _DB([_seed_row(), _row("OSM_W1")])
+    assert [p["id"] for p in plant_resolver.list_plants(db)] == ["OSM_W1"]
+
+
+def test_seed_plants_are_listed_when_nothing_real_has_been_imported():
+    """A database holding only the pipeline's seed rows must still show them;
+    otherwise a fresh deployment would list nothing at all."""
+    db = _DB([_seed_row()])
+    assert [p["id"] for p in plant_resolver.list_plants(db)] == ["GJ_SOLAR_A"]
+
+
+def test_a_hidden_seed_plant_still_resolves_by_id():
+    """Pipeline history, bookmarks and tests reference GJ_SOLAR_A directly."""
+    db = _DB([_seed_row(), _row("OSM_W1")])
+    assert plant_resolver.find_plant("GJ_SOLAR_A", db)["id"] == "GJ_SOLAR_A"
+
+
+def test_hiding_a_seed_plant_does_not_remove_it_from_its_pool():
+    """Pool membership decides the settled rupee figure. A plant hidden from the
+    map is still connected to its pooling station."""
+    db = _DB([_seed_row(), _seed_row("GJ_SOLAR_B"), _row("OSM_W1")])
+    members = {p["id"] for p in plant_resolver.plants_in_pool("GJ_POOL_1", db)}
+    assert members == {"GJ_SOLAR_A", "GJ_SOLAR_B"}

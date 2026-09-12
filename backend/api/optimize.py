@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
@@ -21,8 +21,10 @@ def optimize_schedule(request: OptimizeRequest, db: Session = Depends(get_db)):
     plant_cfg = find_plant(request.plant_id, db)
             
     if not plant_cfg:
-        plant_cfg = {"id": request.plant_id, "type": "solar", "avc_mw": 50.0, "lat": 23.0, "lon": 72.0}
-        
+        # Previously an invented 50 MW plant was optimised in its place, returning a
+        # plausible savings percentage for an id that does not exist.
+        raise HTTPException(status_code=404, detail=f"Plant '{request.plant_id}' not found")
+
     avc_mw = float(plant_cfg.get("avc_mw", 50.0))
     asset_type = plant_cfg.get("type", "solar")
     target_date = datetime.strptime(request.date, "%Y-%m-%d").date()

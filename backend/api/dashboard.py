@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
@@ -37,8 +37,11 @@ def get_dashboard_data(
     plant_cfg = find_plant(plant_id, db)
             
     if not plant_cfg:
-        plant_cfg = {"id": plant_id, "name": plant_id, "type": "solar", "avc_mw": 50.0, "pool_id": "GJ_POOL_1"}
-        
+        # The invented stand-in plant here had no coordinates, so the weather fetch
+        # found nothing, the engine refused, and an unknown id surfaced as an
+        # unhandled 500 instead of a 404.
+        raise HTTPException(status_code=404, detail=f"Plant '{plant_id}' not found")
+
     avc_mw = float(plant_cfg.get("avc_mw", 50.0))
     asset_type = plant_cfg.get("type", "solar")
     plant_name = plant_cfg.get("name", plant_id)
@@ -122,7 +125,9 @@ def get_dashboard_data(
         for c in opt_result.get("action_cards", [])
     ]
     
-    pool_id = plant_cfg.get("pool_id", "GJ_POOL_1")
+    # No default pool. Defaulting to GJ_POOL_1 would settle a plant alongside
+    # three plants it is not connected to whenever the key was absent.
+    pool_id = plant_cfg.get("pool_id")
     pooling_resp = None
     try:
         pool_plants = plants_in_pool(pool_id, db)

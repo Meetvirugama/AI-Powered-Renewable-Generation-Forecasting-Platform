@@ -14,6 +14,11 @@ venv/
 env/
 .env
 *.env
+# Hand-made copies such as .env.bak or .env.pre-forecast-cutover hold the same
+# secrets as .env. A bare `.env` rule does not match them, so `git add .` on the
+# server would have committed live API keys. Only the template is tracked.
+.env.*
+!.env.example
 
 # Data & Models (too large for git — use S3)
 data/raw/
