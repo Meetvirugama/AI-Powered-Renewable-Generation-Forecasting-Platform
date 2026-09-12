@@ -1,0 +1,83 @@
+{
+  "engine": "True Future Production Forecast Engine",
+  "version": "1.0",
+  "timestamp_utc": "2026-09-12T00:17:41.113332+00:00",
+  "input": {
+    "training_dataset": "renewable_ml_dataset.csv",
+    "weather_source": "Open-Meteo / available forecast",
+    "last_observation": "2020-06-14 23:00:00"
+  },
+  "forecast": {
+    "horizons_hours": [
+      24,
+      48,
+      72
+    ],
+    "quantiles": [
+      "P10",
+      "P50",
+      "P90"
+    ],
+    "recursive_generation_state": true
+  },
+  "uncertainty": {
+    "method": "Conformal Prediction",
+    "interval": "P10-P90"
+  },
+  "decision_intelligence": {
+    "trust_score": true,
+    "ramp_risk": true,
+    "grid_risk": true,
+    "battery_risk": true,
+    "asset_risk": true,
+    "confidence_gate": true,
+    "action_queue": true
+  },
+  "models": [
+    {
+      "horizon": 24,
+      "quantile": "P10",
+      "path": "lightgbm_24h_P10.txt"
+    },
+    {
+      "horizon": 24,
+      "quantile": "P50",
+      "path": "lightgbm_24h_P50.txt"
+    },
+    {
+      "horizon": 24,
+      "quantile": "P90",
+      "path": "lightgbm_24h_P90.txt"
+    },
+    {
+      "horizon": 48,
+      "quantile": "P10",
+      "path": "lightgbm_48h_P10.txt"
+    },
+    {
+      "horizon": 48,
+      "quantile": "P50",
+      "path": "lightgbm_48h_P50.txt"
+    },
+    {
+      "horizon": 48,
+      "quantile": "P90",
+      "path": "lightgbm_48h_P90.txt"
+    },
+    {
+      "horizon": 72,
+      "quantile": "P10",
+      "path": "lightgbm_72h_P10.txt"
+    },
+    {
+      "horizon": 72,
+      "quantile": "P50",
+      "path": "lightgbm_72h_P50.txt"
+    },
+    {
+      "horizon": 72,
+      "quantile": "P90",
+      "path": "lightgbm_72h_P90.txt"
+    }
+  ]
+}

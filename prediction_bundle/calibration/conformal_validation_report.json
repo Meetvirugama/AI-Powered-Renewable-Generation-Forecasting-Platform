@@ -1,0 +1,203 @@
+{
+  "module": "Conformal Prediction + Trustworthy Uncertainty",
+  "status": "completed",
+  "base_model": "Physics-Informed Hybrid 2.0",
+  "horizons": [
+    "24h",
+    "48h",
+    "72h"
+  ],
+  "capacity": 1194.86071425,
+  "method": "Chronological empirical conformal calibration",
+  "calibration_fraction": 0.5,
+  "calibration_samples_minimum": 20,
+  "coverage_targets": {
+    "80": 0.8,
+    "90": 0.9,
+    "95": 0.95
+  },
+  "uncertainty_outputs": [
+    "Raw P10-P90",
+    "Conformal 80%",
+    "Conformal 90%",
+    "Conformal 95%"
+  ],
+  "trust_outputs": [
+    "Trust Score",
+    "Confidence Class",
+    "Decision Readiness",
+    "Uncertainty Action"
+  ],
+  "horizon_summary": [
+    {
+      "Horizon": "24h",
+      "Samples": 51,
+      "P50_MAE": 80.95757216034401,
+      "Raw_80_Coverage": 0.5882352941176471,
+      "Conformal_80_Coverage": 0.803921568627451,
+      "Conformal_90_Coverage": 0.8627450980392157,
+      "Conformal_95_Coverage": 0.9215686274509803,
+      "Raw_80_Width": 163.3437508664767,
+      "Conformal_80_Width": 234.4732838576805,
+      "Conformal_90_Width": 364.27501026675935,
+      "Conformal_95_Width": 454.23346360327486,
+      "Mean_Trust": 0.7878659925046032,
+      "Median_Trust": 0.9049607328533453
+    },
+    {
+      "Horizon": "48h",
+      "Samples": 49,
+      "P50_MAE": 105.28237872474018,
+      "Raw_80_Coverage": 0.7346938775510204,
+      "Conformal_80_Coverage": 0.7959183673469388,
+      "Conformal_90_Coverage": 0.8367346938775511,
+      "Conformal_95_Coverage": 0.8367346938775511,
+      "Raw_80_Width": 199.17857063333227,
+      "Conformal_80_Width": 273.63845965863027,
+      "Conformal_90_Width": 428.5636432016324,
+      "Conformal_95_Width": 457.5317757759566,
+      "Mean_Trust": 0.7615663219150403,
+      "Median_Trust": 0.8741457093658511
+    },
+    {
+      "Horizon": "72h",
+      "Samples": 47,
+      "P50_MAE": 95.5180551183669,
+      "Raw_80_Coverage": 0.723404255319149,
+      "Conformal_80_Coverage": 0.7659574468085106,
+      "Conformal_90_Coverage": 0.851063829787234,
+      "Conformal_95_Coverage": 0.9361702127659575,
+      "Raw_80_Width": 203.61448174630408,
+      "Conformal_80_Width": 260.38566733911466,
+      "Conformal_90_Width": 418.3629820883563,
+      "Conformal_95_Width": 536.1414634429866,
+      "Mean_Trust": 0.7644433158409604,
+      "Median_Trust": 0.8906990353426754
+    }
+  ],
+  "reliability": [
+    {
+      "Horizon": "24h",
+      "Nominal": 0.8,
+      "Observed": 0.803921568627451,
+      "Absolute_Calibration_Error": 0.0039215686274509665,
+      "Mean_Width": 234.4732838576805,
+      "Normalized_Width": 0.19623482558371386
+    },
+    {
+      "Horizon": "24h",
+      "Nominal": 0.9,
+      "Observed": 0.8627450980392157,
+      "Absolute_Calibration_Error": 0.03725490196078429,
+      "Mean_Width": 364.27501026675935,
+      "Normalized_Width": 0.30486817912949
+    },
+    {
+      "Horizon": "24h",
+      "Nominal": 0.95,
+      "Observed": 0.9215686274509803,
+      "Absolute_Calibration_Error": 0.028431372549019618,
+      "Mean_Width": 454.23346360327486,
+      "Normalized_Width": 0.38015599490890606
+    },
+    {
+      "Horizon": "48h",
+      "Nominal": 0.8,
+      "Observed": 0.7959183673469388,
+      "Absolute_Calibration_Error": 0.004081632653061273,
+      "Mean_Width": 273.63845965863027,
+      "Normalized_Width": 0.22901285178698833
+    },
+    {
+      "Horizon": "48h",
+      "Nominal": 0.9,
+      "Observed": 0.8367346938775511,
+      "Absolute_Calibration_Error": 0.06326530612244896,
+      "Mean_Width": 428.5636432016324,
+      "Normalized_Width": 0.3586724695946144
+    },
+    {
+      "Horizon": "48h",
+      "Nominal": 0.95,
+      "Observed": 0.8367346938775511,
+      "Absolute_Calibration_Error": 0.1132653061224489,
+      "Mean_Width": 457.5317757759566,
+      "Normalized_Width": 0.3829164105233336
+    },
+    {
+      "Horizon": "72h",
+      "Nominal": 0.8,
+      "Observed": 0.7659574468085106,
+      "Absolute_Calibration_Error": 0.03404255319148941,
+      "Mean_Width": 260.38566733911466,
+      "Normalized_Width": 0.21792135621644879
+    },
+    {
+      "Horizon": "72h",
+      "Nominal": 0.9,
+      "Observed": 0.851063829787234,
+      "Absolute_Calibration_Error": 0.04893617021276597,
+      "Mean_Width": 418.3629820883563,
+      "Normalized_Width": 0.35013535644692934
+    },
+    {
+      "Horizon": "72h",
+      "Nominal": 0.95,
+      "Observed": 0.9361702127659575,
+      "Absolute_Calibration_Error": 0.01382978723404249,
+      "Mean_Width": 536.1414634429866,
+      "Normalized_Width": 0.4487062442081513
+    }
+  ],
+  "trust_summary": [
+    {
+      "Horizon": "24h",
+      "Samples": 51,
+      "Mean_Trust_Score": 0.7878659925046032,
+      "Median_Trust_Score": 0.9049607328533453,
+      "Very_High_Confidence_pct": 66.66666666666666,
+      "High_Confidence_pct": 13.725490196078432,
+      "Medium_Confidence_pct": 5.88235294117647,
+      "Low_or_Worse_pct": 13.725490196078432,
+      "Automation_Ready_pct": 80.3921568627451
+    },
+    {
+      "Horizon": "48h",
+      "Samples": 49,
+      "Mean_Trust_Score": 0.7615663219150403,
+      "Median_Trust_Score": 0.8741457093658511,
+      "Very_High_Confidence_pct": 63.26530612244898,
+      "High_Confidence_pct": 16.3265306122449,
+      "Medium_Confidence_pct": 0.0,
+      "Low_or_Worse_pct": 20.408163265306122,
+      "Automation_Ready_pct": 79.59183673469387
+    },
+    {
+      "Horizon": "72h",
+      "Samples": 47,
+      "Mean_Trust_Score": 0.7644433158409604,
+      "Median_Trust_Score": 0.8906990353426754,
+      "Very_High_Confidence_pct": 68.08510638297872,
+      "High_Confidence_pct": 8.51063829787234,
+      "Medium_Confidence_pct": 8.51063829787234,
+      "Low_or_Worse_pct": 14.893617021276595,
+      "Automation_Ready_pct": 76.59574468085107
+    }
+  ],
+  "limitations": [
+    "Classical conformal prediction assumes exchangeability; time-series data can violate this assumption.",
+    "The reported coverage is empirical validation coverage, not a guaranteed future coverage level under distribution shift.",
+    "Calibration should be refreshed when the data distribution changes.",
+    "For production, adaptive or time-series conformal methods can be used.",
+    "Historical weather forecasts should be used for leakage-free operational backtesting.",
+    "Trust Score is a decision-support score and is not a probability of forecast correctness."
+  ],
+  "recommended_next_steps": [
+    "Adaptive rolling conformal calibration",
+    "Conformal calibration by weather regime",
+    "Conformal calibration by day/night",
+    "Conformal calibration for ramp events",
+    "Distribution-shift monitoring",
+    "Decision-aware confidence gating"
+  ]
+}

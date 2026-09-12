@@ -1,0 +1,33 @@
+{
+  "forecast_issue_time_utc": "2026-09-12T00:17:41.113332+00:00",
+  "last_observed_generation_time": "2020-06-14 23:00:00",
+  "future_weather_rows": 72,
+  "forecast_rows": 72,
+  "available_models": [
+    "24h_P10",
+    "24h_P50",
+    "24h_P90",
+    "48h_P10",
+    "48h_P50",
+    "48h_P90",
+    "72h_P10",
+    "72h_P50",
+    "72h_P90"
+  ],
+  "mean_primary_p50": 218.71321871131093,
+  "min_primary_p50": 1.2198143655207974,
+  "max_primary_p50": 769.714812433255,
+  "mean_uncertainty_width": 284.62676796089335,
+  "mean_trust_score": 38.226102102969456,
+  "minimum_trust_score": 9.090909090909092,
+  "maximum_overall_risk": 0.7582274535192751,
+  "critical_count": 1,
+  "high_count": 62,
+  "operator_review_count": 41,
+  "automation_ready_count": 0,
+  "recommended_actions": {
+    "INCREASE_RESERVE_MARGIN": 43,
+    "CONSERVATIVE_DISPATCH": 22,
+    "NORMAL_OPERATION": 7
+  }
+}
