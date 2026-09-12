@@ -29,9 +29,13 @@ Two things this does better than the coarse optimiser it replaces
    systematically misses it. This searches a fine grid over [0, AvC] with the
    quantiles included as exact candidates.
 
-Battery dispatch is reported as zeros, honestly: the 96-block battery LP
-(`battery_lp.py`, PuLP/CBC) is not implemented. Reporting a fabricated dispatch
-would be worse than reporting none.
+Battery storage
+---------------
+With `battery_capacity_mwh` > 0 the schedule is chosen together with a battery
+that responds to each forecast outcome -- see battery_recourse.py for the model
+and for why a battery plan fixed a day ahead cannot lower a DSM penalty. With no
+battery, dispatch is reported as zeros and `battery_modelled` is False, so the
+two cannot be mistaken for each other.
 """
 from __future__ import annotations
 
@@ -197,31 +201,39 @@ class ProductionScheduleOptimizer:
                     "naive_penalty_inr": round(naive_penalty, 2),
                     "optimised_penalty_inr": round(best_penalty, 2),
                     "saving_inr": round(naive_penalty - best_penalty, 2),
+                    "schedule_saving_inr": round(naive_penalty - best_penalty, 2),
+                    "battery_saving_inr": 0.0,
                 }
             )
 
-        savings_inr = naive_total - optimised_total
-        savings_pct = (savings_inr / naive_total * 100.0) if naive_total > 0 else 0.0
+        optimised_without_battery = optimised_total
 
-        # Battery LP: run after the per-block grid-search so the no-battery
-        # optimum serves as the linearisation point for the LP objective.
         battery_modelled = False
-        if float(battery_capacity_mwh or 0.0) > 0:
+        if float(battery_capacity_mwh or 0.0) > 0 and forecast_blocks:
             try:
-                from backend.modules.optimize.battery_lp import solve_battery_dispatch
-                battery_dispatch = solve_battery_dispatch(
+                from backend.modules.optimize.battery_recourse import optimise_with_battery
+
+                with_battery = optimise_with_battery(
                     forecast_blocks=forecast_blocks,
-                    optimised_schedules=optimised_schedule,
-                    dsm_engine=dsm_engine,
                     avc_mw=avc_mw,
-                    battery_capacity_mwh=float(battery_capacity_mwh),
+                    dsm_engine=dsm_engine,
+                    capacity_mwh=float(battery_capacity_mwh),
                     ncd=ncd,
                     freq_hz=freq_hz,
                     asset_type=asset_type,
                 )
+                optimised_schedule = with_battery["schedule"]
+                battery_dispatch = with_battery["dispatch"]
+                per_block = with_battery["per_block"]
+                optimised_total = with_battery["total_inr"]
                 battery_modelled = True
             except Exception as exc:  # noqa: BLE001
-                logger.warning("battery LP failed (%s); dispatch set to zeros", exc)
+                # The no-battery result is already complete and correct, so a
+                # failure degrades to it, visibly, rather than to a guess.
+                logger.warning("battery model failed (%s); reporting the no-battery optimum", exc)
+
+        savings_inr = naive_total - optimised_total
+        savings_pct = (savings_inr / naive_total * 100.0) if naive_total > 0 else 0.0
 
         logger.info(
             "optimiser: naive=%.2f optimised=%.2f saving=%.2f (%.1f%%) over %d blocks",
@@ -240,11 +252,15 @@ class ProductionScheduleOptimizer:
             "per_block": per_block,
             "method": (
                 f"grid_search_{GRID_POINTS}pt_probability_weighted"
-                + ("+battery_lp_highs" if battery_modelled else "")
+                + ("+battery_recourse" if battery_modelled else "")
             ),
-            # True when battery_capacity_mwh > 0 and the LP solved successfully.
-            # False (zero dispatch) otherwise — never mislead about what ran.
+            # True only when a battery was requested and modelled. False means the
+            # dispatch is zeros because there is no battery, not because one idled.
             "battery_modelled": battery_modelled,
+            # The optimum with no battery, so the battery's own contribution can be
+            # shown rather than folded silently into one total.
+            "optimised_without_battery_inr": optimised_without_battery,
+            "battery_saving_inr": max(optimised_without_battery - optimised_total, 0.0),
         }
 
     @staticmethod
@@ -262,7 +278,29 @@ class ProductionScheduleOptimizer:
         material = max(0.01 * avc_mw, 0.05)
 
         for row in per_block:
-            if row["saving_inr"] <= 0:
+            # A storage card claims only the battery's share of a block's saving,
+            # and a scheduling card only the schedule's, so the rupees on the cards
+            # never add up to more than the optimiser actually saved.
+            battery_saving = row.get("battery_saving_inr", 0.0)
+            battery_mw = max(row.get("charge_mw", 0.0), row.get("discharge_mw", 0.0))
+            if battery_saving > 0 and battery_mw >= material:
+                charging = row.get("charge_mw", 0.0) >= row.get("discharge_mw", 0.0)
+                cards.append(
+                    {
+                        "type": "storage_dispatch",
+                        "block_no": row["block_no"],
+                        "mw": battery_mw,
+                        "reason": (
+                            f"{'Charge' if charging else 'Discharge'} the battery by up to "
+                            f"{battery_mw:.2f} MW if output lands "
+                            f"{'above' if charging else 'below'} schedule, holding the "
+                            f"deviation at the edge of the tolerance band."
+                        ),
+                        "inr_impact": battery_saving,
+                    }
+                )
+
+            if row.get("schedule_saving_inr", row["saving_inr"]) <= 0:
                 continue
             shift = row["shift_mw"]
             if abs(shift) < material:
@@ -279,7 +317,7 @@ class ProductionScheduleOptimizer:
                             f"of the forecast band risks over-injection beyond the tolerance "
                             f"band; under-declaring keeps the deviation inside it."
                         ),
-                        "inr_impact": row["saving_inr"],
+                        "inr_impact": row.get("schedule_saving_inr", row["saving_inr"]),
                     }
                 )
             else:
@@ -293,7 +331,7 @@ class ProductionScheduleOptimizer:
                             f"the band is the costlier tail here, so a higher declaration "
                             f"lowers expected charges."
                         ),
-                        "inr_impact": row["saving_inr"],
+                        "inr_impact": row.get("schedule_saving_inr", row["saving_inr"]),
                     }
                 )
 

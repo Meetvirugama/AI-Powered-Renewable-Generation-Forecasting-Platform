@@ -4,7 +4,7 @@ from typing import Literal, Optional
 
 class ActionCard(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    type: Literal["curtailment", "reserve_flag", "high_risk_block"]
+    type: Literal["curtailment", "reserve_flag", "high_risk_block", "storage_dispatch"]
     block_no: int
     mw: float
     reason: str
@@ -40,3 +40,10 @@ class OptimizeResponse(BaseModel):
     naive_schedule: list[float]
     battery_dispatch: list[BatteryDispatchBlock]
     action_cards: list[ActionCard]
+    # Whether a battery was actually modelled. False means dispatch is zeros
+    # because none was requested, not because one sat idle.
+    battery_modelled: bool = False
+    # The optimum with no battery, and the difference the battery made, so the
+    # battery's contribution is visible rather than folded into one total.
+    optimised_without_battery_inr: Optional[float] = None
+    battery_saving_inr: Optional[float] = None

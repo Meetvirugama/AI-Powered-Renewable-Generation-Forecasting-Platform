@@ -189,3 +189,178 @@ def test_mock_forecast_band_is_wider_than_the_tolerance_band(blocks, engine):
         f"forecast band +/-{half_width:.1%} is inside the CERC tolerance band "
         f"+/-{engine.solar_band:.0%}; no block can ever incur a penalty"
     )
+
+
+# -------------------------------------------------------------- battery storage
+from backend.modules.optimize.battery_recourse import (  # noqa: E402
+    DT_HOURS,
+    DEFAULT_EFFICIENCY,
+    allowed_deviation_mw,
+    block_with_battery,
+)
+
+BATTERY_MWH = AVC  # one hour of plant capacity
+
+
+@pytest.fixture()
+def battery_result(engine, blocks):
+    return ProductionScheduleOptimizer().optimize_day_ahead(
+        blocks, avc_mw=AVC, dsm_engine=engine, ncd=NCD, freq_hz=FREQ,
+        asset_type="solar", battery_capacity_mwh=BATTERY_MWH,
+    )
+
+
+def test_a_fixed_battery_plan_is_the_same_as_declaring_a_different_schedule(engine):
+    """Why the old day-ahead battery LP saved nothing at any size.
+
+    With X = 1 a DSM penalty depends only on actual - schedule. Shifting every
+    outcome by s is therefore identical to declaring schedule - s, which the
+    schedule search already covers.
+    """
+    assert engine.x == pytest.approx(1.0)
+    quantiles = {0.05: 18.0, 0.25: 24.0, 0.50: 30.0, 0.75: 36.0, 0.95: 44.0}
+    for shift in (-6.0, -2.5, 3.0, 5.0):
+        shifted = {q: v + shift for q, v in quantiles.items()}
+        for schedule in (20.0, 30.0, 38.0):
+            assert expected_penalty(engine, shifted, schedule, AVC, FREQ, NCD, "solar") == pytest.approx(
+                expected_penalty(engine, quantiles, schedule - shift, AVC, FREQ, NCD, "solar")
+            )
+
+
+def test_the_battery_is_reported_as_modelled_when_requested(battery_result):
+    assert battery_result["battery_modelled"] is True
+    assert "battery_recourse" in battery_result["method"]
+
+
+def test_a_battery_never_increases_the_expected_penalty(result, battery_result):
+    """The guarantee: a correction only moves deviation toward the band."""
+    assert battery_result["optimised_total_inr"] <= result["optimised_total_inr"] + 1e-6
+    assert battery_result["optimised_without_battery_inr"] == pytest.approx(result["optimised_total_inr"])
+    assert battery_result["battery_saving_inr"] >= 0.0
+
+
+def test_a_battery_changes_the_rupee_figure(result, battery_result):
+    """The regression this change exists for: the old LP dispatched hundreds of
+    MWh and left optimised_total_inr identical at every battery size."""
+    assert battery_result["optimised_total_inr"] < result["optimised_total_inr"] - 1.0
+    assert battery_result["battery_saving_inr"] > 1.0
+
+
+def test_totals_reconcile(battery_result):
+    r = battery_result
+    assert r["savings_inr"] == pytest.approx(r["naive_total_inr"] - r["optimised_total_inr"])
+    assert r["battery_saving_inr"] == pytest.approx(
+        r["optimised_without_battery_inr"] - r["optimised_total_inr"]
+    )
+
+
+def test_dispatch_respects_power_and_energy_limits(battery_result):
+    power = BATTERY_MWH / 2.0
+    for row in battery_result["battery_dispatch"]:
+        assert 0.0 <= row["charge_mw"] <= power + 1e-6
+        assert 0.0 <= row["discharge_mw"] <= power + 1e-6
+        assert -1e-6 <= row["soc_mwh"] <= BATTERY_MWH + 1e-6
+
+
+def test_state_of_charge_moves_no_faster_than_the_battery_can(battery_result):
+    """Reported state of charge is the probability-weighted average of the scenario
+    paths, so it cannot be replayed from the expected dispatch -- but no path can
+    move faster than full power for one block."""
+    power = BATTERY_MWH / 2.0
+    max_step = DT_HOURS * max(DEFAULT_EFFICIENCY * power, power / DEFAULT_EFFICIENCY)
+    previous = 0.5 * BATTERY_MWH
+    for row in battery_result["battery_dispatch"]:
+        assert abs(row["soc_mwh"] - previous) <= max_step + 1e-6
+        previous = row["soc_mwh"]
+
+
+def test_a_sustained_shortfall_drains_the_battery_instead_of_being_covered_all_day(engine):
+    """The artefact this model exists to prevent.
+
+    A draft that tracked one expected state of charge let the battery absorb the
+    high outcomes and cover the low ones in the same block; in expectation they
+    cancelled, the battery never emptied, and a half-hour battery 'eliminated'
+    100% of a day's penalty. A real day that runs below forecast drains it.
+    """
+    from backend.modules.optimize.battery_recourse import optimise_with_battery
+
+    # Every block wants 30 MW, and the low path delivers only 5 -- a shortfall far
+    # outside the band, every block, all day.
+    day = [
+        {"block_no": i + 1, "p05": 5.0, "p10": 5.0, "p25": 30.0, "p50": 30.0,
+         "p75": 30.0, "p90": 30.0, "p95": 30.0}
+        for i in range(96)
+    ]
+    out = optimise_with_battery(day, avc_mw=AVC, dsm_engine=engine, capacity_mwh=12.5,
+                                ncd=NCD, freq_hz=FREQ, asset_type="solar")
+    late = [row["battery_saving_inr"] for row in out["per_block"][48:]]
+    early = [row["battery_saving_inr"] for row in out["per_block"][:4]]
+    assert max(early) > 0, "a charged battery should help at the start of the day"
+    assert max(late) == pytest.approx(0.0, abs=1e-6), "an emptied battery cannot keep helping"
+
+
+def test_storage_cards_carry_only_the_battery_share(battery_result):
+    """Card rupees must not add up to more than was actually saved."""
+    storage = [c for c in battery_result["action_cards"] if c["type"] == "storage_dispatch"]
+    assert storage, "a modelled battery that saves money should recommend dispatch"
+    for card in storage:
+        assert card["inr_impact"] > 0
+    assert sum(c["inr_impact"] for c in battery_result["action_cards"] if c["type"] != "high_risk_block") \
+        <= battery_result["savings_inr"] + 1e-6
+
+
+def test_no_battery_still_reports_zero_dispatch_and_no_storage_cards(result):
+    assert result["battery_saving_inr"] == 0.0
+    assert not any(c["type"] == "storage_dispatch" for c in result["action_cards"])
+
+
+# ----------------------------------------------------- the single-block response
+def _one(engine, actual, schedule, avc=100.0, freq=FREQ, charge_room=100.0, discharge_room=100.0):
+    return block_with_battery(
+        engine, {0.5: actual}, {0.5: 1.0}, schedule, avc, freq, NCD, "solar",
+        charge_room, discharge_room,
+    )
+
+
+def test_an_over_injection_is_absorbed_back_into_the_band(engine):
+    limit = allowed_deviation_mw(engine, 40.0, 100.0, "solar")
+    out = _one(engine, actual=70.0, schedule=40.0)
+    assert out["without"] > 0
+    assert out["with"] == 0.0
+    assert out["charge"] == pytest.approx(30.0 - limit, rel=1e-6)
+
+
+def test_a_shortfall_is_covered_back_into_the_band(engine):
+    out = _one(engine, actual=20.0, schedule=50.0)
+    assert out["without"] > 0 and out["with"] == 0.0
+    assert out["discharge"] > 0 and out["charge"] == 0.0
+
+
+def test_a_power_limited_battery_still_reduces_the_charge(engine):
+    """Beyond the band the charge is linear in the deviation, so a partial
+    correction is worth money even when it cannot reach the band."""
+    out = _one(engine, actual=70.0, schedule=40.0, charge_room=5.0)
+    assert out["charge"] == pytest.approx(5.0)
+    assert 0 < out["with"] < out["without"]
+
+
+def test_an_empty_battery_does_nothing(engine):
+    out = _one(engine, actual=20.0, schedule=50.0, discharge_room=0.0)
+    assert out["discharge"] == 0.0 and out["with"] == out["without"]
+
+
+def test_a_deviation_inside_the_band_spends_no_energy(engine):
+    out = _one(engine, actual=45.0, schedule=40.0)
+    assert out["without"] == 0.0 and out["charge"] == 0.0 and out["discharge"] == 0.0
+
+
+def test_unpriced_over_injection_at_high_frequency_is_not_absorbed(engine):
+    """Over-injection at >= 50.05 Hz carries no charge; absorbing it would drain
+    the battery for nothing."""
+    out = _one(engine, actual=70.0, schedule=40.0, freq=50.1)
+    assert out["without"] == 0.0 and out["charge"] == 0.0
+
+
+def test_a_correction_never_flips_the_direction_of_deviation(engine):
+    out = _one(engine, actual=70.0, schedule=40.0)
+    assert 70.0 - out["charge"] > 40.0
