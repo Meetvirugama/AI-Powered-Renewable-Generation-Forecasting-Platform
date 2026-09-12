@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { useDashboardContext } from "../context/DashboardContext";
 import { useDashboard } from "../hooks/useDashboard";
 import { useOptimize } from "../hooks/useOptimize";
@@ -7,6 +8,7 @@ import ScheduleComparison from "../components/charts/ScheduleComparison";
 import Panel from "../components/common/Panel";
 import { Skeleton, ErrorState } from "../components/common/States";
 import { todayIST } from "../lib/format";
+import type { DSMResponse } from "../types/api";
 
 export default function Risk() {
   const { plantId, ruleYear } = useDashboardContext();
@@ -14,8 +16,30 @@ export default function Risk() {
   const { data, loading, error, refetch } = useDashboard(plantId);
   const date = data?.date ?? todayIST();
 
-  const { data: opt } = useOptimize({ plant_id: plantId, date, rule_year: ruleYear });
-  const { dsm } = useDsmForPlant(plantId, ruleYear, date, data, opt);
+  // rule_year is forwarded to both the optimiser and the DSM re-fetch so that
+  // switching the CERC slider re-computes the heatmap under the new rule set.
+  const { data: opt, loading: optLoading } = useOptimize({
+    plant_id: plantId,
+    date,
+    rule_year: ruleYear,
+  });
+
+  const { dsm, loading: dsmLoading } = useDsmForPlant(
+    plantId,
+    ruleYear,
+    date,
+    data,
+    opt
+  );
+
+  // Persist the last non-null DSM so the heatmap never flashes "No deviation
+  // penalty" during the brief re-fetch triggered when the optimised schedule
+  // arrives or when the rule year changes.
+  const stableDsm = useRef<DSMResponse | null>(null);
+  useEffect(() => {
+    if (dsm) stableDsm.current = dsm;
+  }, [dsm]);
+  const displayDsm = dsm ?? stableDsm.current;
 
   if (loading && !data) {
     return (
@@ -29,7 +53,8 @@ export default function Risk() {
   if (error && !data) return <ErrorState onRetry={refetch} />;
   if (!data) return null;
 
-  const dsmBlocks = dsm?.blocks ?? [];
+  const dsmBlocks = displayDsm?.blocks ?? [];
+  const refetching = dsmLoading || optLoading;
 
   return (
     <div className="grid gap-[var(--gap-section)]">
@@ -38,20 +63,33 @@ export default function Risk() {
           {data.plant_name}
         </h1>
         <p className="mt-1 font-mono text-[13px] text-text-muted">
-          {data.date} · CERC {dsm?.rule_version ?? "—"} · X={dsm?.x_value?.toFixed(2) ?? "—"}
+          {data.date} · CERC {displayDsm?.rule_version ?? "—"} · X=
+          {displayDsm?.x_value?.toFixed(2) ?? "—"}
         </p>
       </header>
 
+      {/* ── risk heatmap ──────────────────────────────────────────────────── */}
       <Panel
         title="Risk heatmap"
         sub="Expected deviation charge per 15-minute block. Brighter is costlier."
         grid
       >
-        <RiskHeatmap blocks={dsmBlocks} />
+        {refetching && dsmBlocks.length === 0 ? (
+          <Skeleton h={200} />
+        ) : (
+          <RiskHeatmap blocks={dsmBlocks} />
+        )}
       </Panel>
 
-      <Panel title="Naive P50 vs optimised" sub="Expected deviation charge for the day." grid>
-        {opt ? (
+      {/* ── naive vs optimised ────────────────────────────────────────────── */}
+      <Panel
+        title="Naive P50 vs optimised"
+        sub={`Expected deviation charge for the day · rule set ${ruleYear}`}
+        grid
+      >
+        {optLoading && !opt ? (
+          <Skeleton h={220} />
+        ) : opt ? (
           <ScheduleComparison
             naiveTotalInr={opt.naive_total_inr}
             optimisedTotalInr={opt.optimised_total_inr}
