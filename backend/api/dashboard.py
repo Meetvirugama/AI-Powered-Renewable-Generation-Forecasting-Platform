@@ -15,6 +15,7 @@ from backend.schemas.forecast import ForecastResponse, BlockForecast
 from backend.schemas.dsm import DSMResponse, BlockDSMResult
 from backend.schemas.optimize import ActionCard
 from backend.schemas.pooling import PoolingResponse, PlantPoolAllocation
+from backend.modules.forecast.weather_provider import forecast_for
 
 logger = logging.getLogger("renewable_platform")
 
@@ -46,7 +47,7 @@ def get_dashboard_data(
     plant_name = plant_cfg.get("name", plant_id)
     
     dsm_engine = DSMEngine(config_path=settings.dsm_rule_config, rule_date=target_date)
-    raw_forecast = forecast_engine.generate_forecast(plant=plant_cfg, date_str=target_date_str, num_blocks=96)
+    raw_forecast = forecast_for(forecast_engine, plant_cfg, target_date_str)
     
     block_forecasts = [
         BlockForecast(
@@ -66,7 +67,10 @@ def get_dashboard_data(
     forecast_resp = ForecastResponse(
         plant_id=plant_id,
         date=target_date_str,
-        model_name="mock_lgbm",
+        # The engine names itself per block. Hardcoding "mock_lgbm" labelled a
+        # real LightGBM forecast as synthetic -- and would equally have labelled
+        # a synthetic one as real had the string said otherwise.
+        model_name=raw_forecast[0].get("model_name", "mock_lgbm") if raw_forecast else "mock_lgbm",
         blocks=block_forecasts,
     )
     
@@ -131,9 +135,7 @@ def get_dashboard_data(
             # call inflates the pool's AvC (and so its tolerance band) 96-fold,
             # which drove the pooled penalty to zero and reported a 100% saving.
             pool_forecasts = {
-                p["id"]: forecast_engine.generate_forecast(
-                    plant=p, date_str=target_date_str, num_blocks=96
-                )
+                p["id"]: forecast_for(forecast_engine, p, target_date_str)
                 for p in pool_plants
             }
             block_count = min((len(v) for v in pool_forecasts.values()), default=0)

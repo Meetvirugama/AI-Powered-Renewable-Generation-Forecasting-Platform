@@ -9,6 +9,7 @@ from backend.db.models import Plant
 from backend.core.config import load_plants_config
 from backend.modules.factory import get_forecast_engine
 from backend.schemas.forecast import ForecastResponse, BlockForecast
+from backend.modules.forecast.weather_provider import forecast_for
 
 router = APIRouter(prefix="/forecast", tags=["Forecast"])
 
@@ -43,7 +44,7 @@ def get_forecast(
     if not plant_cfg:
         raise HTTPException(status_code=404, detail=f"Plant '{plant_id}' not found")
         
-    raw_blocks = forecast_engine.generate_forecast(plant=plant_cfg, date_str=target_date_str, num_blocks=96)
+    raw_blocks = forecast_for(forecast_engine, plant_cfg, target_date_str)
     
     block_models = [
         BlockForecast(
@@ -64,6 +65,9 @@ def get_forecast(
     return ForecastResponse(
         plant_id=plant_id,
         date=target_date_str,
-        model_name="mock_lgbm",
+        # The engine names itself per block. Hardcoding "mock_lgbm" labelled a
+        # real LightGBM forecast as synthetic -- and would equally have labelled
+        # a synthetic one as real had the string said otherwise.
+        model_name=raw_blocks[0].get("model_name", "mock_lgbm") if raw_blocks else "mock_lgbm",
         blocks=block_models,
     )

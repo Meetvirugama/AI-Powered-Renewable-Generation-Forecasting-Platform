@@ -6,6 +6,7 @@ from backend.modules.factory import get_forecast_engine
 from backend.modules.dsm.engine import DSMEngine
 from backend.modules.dsm.pooling import compute_pooling_benefit_by_block, allocate_pool_savings
 from backend.schemas.pooling import PoolingRequest, PoolingResponse, PlantPoolAllocation
+from backend.modules.forecast.weather_provider import forecast_for
 
 router = APIRouter(prefix="/pooling", tags=["Pooling"])
 settings = get_settings()
@@ -31,9 +32,7 @@ def calculate_pooling(request: PoolingRequest):
     # plant as one flat pool inflates the pool's Available Capacity 96-fold,
     # widens the tolerance band with it, and reports a 100% saving.
     pool_forecasts = {
-        p["id"]: forecast_engine.generate_forecast(
-            plant=p, date_str=request.date, num_blocks=96
-        )
+        p["id"]: forecast_for(forecast_engine, p, request.date)
         for p in pool_plants
     }
     block_count = min((len(v) for v in pool_forecasts.values()), default=0)
