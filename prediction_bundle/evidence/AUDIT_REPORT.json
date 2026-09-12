@@ -1,0 +1,265 @@
+{
+  "audit_tool": "prediction_bundle/audit_and_fix.py",
+  "audited_at": "2026-09-12T07:17:21.932919Z",
+  "summary": {
+    "models_audited": 12,
+    "models_file_parsed_ok": 12,
+    "models_inference_pass": 12,
+    "models_inference_skipped": 0,
+    "models_inference_fail": 0
+  },
+  "issue_verdicts": [
+    {
+      "issue": "Booster.objective load_error",
+      "verdict": "FALSE_ALARM",
+      "explanation": "All model files parsed successfully. booster.objective not a Python attr in LightGBM >=4.x.",
+      "hackathon_impact": "NONE"
+    },
+    {
+      "issue": "feature_count_common: 0",
+      "verdict": "FIXED",
+      "explanation": "PLANT_ID vs AC_POWER one-column mismatch. All 12 models share identical 61-feature schema.",
+      "hackathon_impact": "LOW"
+    },
+    {
+      "issue": "conformal_validation_available: false",
+      "verdict": "CLARIFIED",
+      "explanation": "Misleading flag. Renamed to 3 honest fields. Empirical calibration data exists; formal guarantee disclaimed.",
+      "hackathon_impact": "NONE"
+    },
+    {
+      "issue": "Feature_Match: false",
+      "verdict": "FIXED",
+      "explanation": "Same root cause as feature_count_common: 0. Engine feature list corrected.",
+      "hackathon_impact": "LOW"
+    },
+    {
+      "issue": "2774-row dataset",
+      "verdict": "KNOWN_LIMITATION - NO CHANGE",
+      "explanation": "Scientific scope limitation already disclosed in executive summary.",
+      "hackathon_impact": "DISCLOSE"
+    }
+  ],
+  "model_audit_results": {
+    "lightgbm_24h": {
+      "model_id": "lightgbm_24h",
+      "file": "lightgbm_24h.txt",
+      "horizon": 24,
+      "quantile": "point",
+      "objective": "regression_l2",
+      "num_features": 61,
+      "num_trees": 85,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 453.7275847898528,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_24h_P10": {
+      "model_id": "lightgbm_24h_P10",
+      "file": "lightgbm_24h_P10.txt",
+      "horizon": 24,
+      "quantile": "P10",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 500,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 49.16952075690274,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_24h_P50": {
+      "model_id": "lightgbm_24h_P50",
+      "file": "lightgbm_24h_P50.txt",
+      "horizon": 24,
+      "quantile": "P50",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 113,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 231.56394954983452,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_24h_P90": {
+      "model_id": "lightgbm_24h_P90",
+      "file": "lightgbm_24h_P90.txt",
+      "horizon": 24,
+      "quantile": "P90",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 434,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 601.2463643802082,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_48h": {
+      "model_id": "lightgbm_48h",
+      "file": "lightgbm_48h.txt",
+      "horizon": 48,
+      "quantile": "point",
+      "objective": "regression_l2",
+      "num_features": 61,
+      "num_trees": 91,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 338.69342726725444,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_48h_P10": {
+      "model_id": "lightgbm_48h_P10",
+      "file": "lightgbm_48h_P10.txt",
+      "horizon": 48,
+      "quantile": "P10",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 321,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 11.082081057962181,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_48h_P50": {
+      "model_id": "lightgbm_48h_P50",
+      "file": "lightgbm_48h_P50.txt",
+      "horizon": 48,
+      "quantile": "P50",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 177,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 188.62734948374992,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_48h_P90": {
+      "model_id": "lightgbm_48h_P90",
+      "file": "lightgbm_48h_P90.txt",
+      "horizon": 48,
+      "quantile": "P90",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 337,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 456.9141137315476,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_72h": {
+      "model_id": "lightgbm_72h",
+      "file": "lightgbm_72h.txt",
+      "horizon": 72,
+      "quantile": "point",
+      "objective": "regression_l2",
+      "num_features": 61,
+      "num_trees": 56,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 224.28187954587685,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_72h_P10": {
+      "model_id": "lightgbm_72h_P10",
+      "file": "lightgbm_72h_P10.txt",
+      "horizon": 72,
+      "quantile": "P10",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 497,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 13.25464810040426,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_72h_P50": {
+      "model_id": "lightgbm_72h_P50",
+      "file": "lightgbm_72h_P50.txt",
+      "horizon": 72,
+      "quantile": "P50",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 69,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 210.23401947509188,
+        "predictions_finite": true
+      }
+    },
+    "lightgbm_72h_P90": {
+      "model_id": "lightgbm_72h_P90",
+      "file": "lightgbm_72h_P90.txt",
+      "horizon": 72,
+      "quantile": "P90",
+      "objective": "quantile",
+      "num_features": 61,
+      "num_trees": 165,
+      "load_error": null,
+      "inference": {
+        "status": "PASS",
+        "error": null,
+        "sample_prediction": 557.6700777767624,
+        "predictions_finite": true
+      }
+    }
+  },
+  "feature_schema": {
+    "all_models_same_schema": true,
+    "common_feature_count": 61,
+    "note": "All 12 models share identical 61-feature schema. See BUNDLE_MANIFEST for full feature list."
+  },
+  "quantile_monotonicity": [
+    {
+      "horizon_hours": 24,
+      "status": "PASS",
+      "p10_p50_violations": 0,
+      "p50_p90_violations": 0,
+      "samples": 20
+    },
+    {
+      "horizon_hours": 48,
+      "status": "PASS",
+      "p10_p50_violations": 0,
+      "p50_p90_violations": 0,
+      "samples": 20
+    },
+    {
+      "horizon_hours": 72,
+      "status": "PASS",
+      "p10_p50_violations": 0,
+      "p50_p90_violations": 0,
+      "samples": 20
+    }
+  ]
+}

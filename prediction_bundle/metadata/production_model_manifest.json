@@ -4,8 +4,8 @@
   "active_model_registry": "model_registry/model_registry.csv",
   "feature_count": 61,
   "features": [
+    "PLANT_ID",
     "DC_POWER",
-    "AC_POWER",
     "DAILY_YIELD",
     "TOTAL_YIELD",
     "hour",
@@ -85,7 +85,7 @@
       "Quantile": "P10",
       "Model_Path": "lightgbm_24h_P10.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -93,7 +93,7 @@
       "Quantile": "P50",
       "Model_Path": "lightgbm_24h_P50.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -101,7 +101,7 @@
       "Quantile": "P90",
       "Model_Path": "lightgbm_24h_P90.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -109,7 +109,7 @@
       "Quantile": "P10",
       "Model_Path": "lightgbm_48h_P10.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -117,7 +117,7 @@
       "Quantile": "P50",
       "Model_Path": "lightgbm_48h_P50.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -125,7 +125,7 @@
       "Quantile": "P90",
       "Model_Path": "lightgbm_48h_P90.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -133,7 +133,7 @@
       "Quantile": "P10",
       "Model_Path": "lightgbm_72h_P10.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -141,7 +141,7 @@
       "Quantile": "P50",
       "Model_Path": "lightgbm_72h_P50.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     },
     {
@@ -149,7 +149,7 @@
       "Quantile": "P90",
       "Model_Path": "lightgbm_72h_P90.txt",
       "Feature_Count": 61,
-      "Feature_Match": false,
+      "Feature_Match": true,
       "Model_Features": "PLANT_ID|DC_POWER|DAILY_YIELD|TOTAL_YIELD|hour|minute|day|month|day_of_week|day_of_year|hour_sin|hour_cos|day_sin|day_cos|temperature_2m|relative_humidity_2m|dew_point_2m|cloud_cover|cloud_cover_low|cloud_cover_mid|cloud_cover_high|shortwave_radiation|direct_radiation|diffuse_radiation|direct_normal_irradiance|global_tilted_irradiance|wind_speed_10m|wind_direction_10m|surface_pressure|precipitation|generation_lag_1|generation_lag_2|generation_lag_4|generation_lag_8|generation_lag_12|generation_lag_24|generation_lag_48|generation_lag_96|generation_rolling_mean_4|generation_rolling_mean_8|generation_rolling_mean_24|generation_rolling_std_24|generation_change_1|generation_change_4|temperature_2m_lag1|relative_humidity_2m_lag1|dew_point_2m_lag1|cloud_cover_lag1|cloud_cover_low_lag1|cloud_cover_mid_lag1|cloud_cover_high_lag1|shortwave_radiation_lag1|direct_radiation_lag1|diffuse_radiation_lag1|direct_normal_irradiance_lag1|global_tilted_irradiance_lag1|wind_speed_10m_lag1|wind_direction_10m_lag1|surface_pressure_lag1|precipitation_lag1|is_daytime"
     }
   ],
@@ -159,82 +159,84 @@
       "Quantile": "P10",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 24,
       "Quantile": "P50",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 24,
       "Quantile": "P90",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 48,
       "Quantile": "P10",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 48,
       "Quantile": "P50",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 48,
       "Quantile": "P90",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 72,
       "Quantile": "P10",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 72,
       "Quantile": "P50",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     },
     {
       "Horizon_Hours": 72,
       "Quantile": "P90",
       "Model_Feature_Count": 61,
       "Available_Feature_Count": 61,
-      "Missing_Features": "PLANT_ID",
-      "Extra_Features": "AC_POWER",
-      "Compatible": false
+      "Missing_Features": "NONE",
+      "Extra_Features": "NONE",
+      "Compatible": true
     }
   ],
-  "generated_at": "2026-09-12T00:15:48.734748"
+  "generated_at": "2026-09-12T00:15:48.734748",
+  "feature_note": "Corrected to model training features (PLANT_ID, not AC_POWER) at 2026-09-12T07:17:21.932919Z",
+  "audit_note": "Feature_Match corrected: PLANT_ID vs AC_POWER mismatch fixed at 2026-09-12T07:17:21.932919Z"
 }
