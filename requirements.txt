@@ -21,5 +21,7 @@ aiofiles==24.1.0
 # lets a teammate work on the API without a GPU-sized virtualenv.
 pymupdf==1.25.1              # PDF text + page extraction for the regulation corpus
 rank-bm25==0.2.2             # sparse half of hybrid retrieval
-litellm==1.57.0              # Groq primary -> Gemini fallback routing
+litellm==1.61.0              # Groq primary -> Gemini fallback routing; the floor
+                              # that resolves against httpx==0.28.1 above (1.57-1.60
+                              # pin httpx<0.28 and fail to install)
 langgraph==0.2.60            # copilot state machine

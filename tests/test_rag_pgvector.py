@@ -28,7 +28,15 @@ pytestmark = pytest.mark.skipif(
     reason="TEST_DATABASE_URL is not a PostgreSQL URL; pgvector tests skipped",
 )
 
-TABLE = "regulation_chunks_pgtest"
+# The retriever queries `regulation_chunks` unqualified, so these tests put a
+# table of exactly that name in a dedicated schema and point search_path at it.
+#
+# A view named `regulation_chunks` in `public` would be simpler but is wrong: it
+# collides with the real table on any database that has the actual schema
+# applied -- which is the normal case if someone points TEST_DATABASE_URL at
+# their local compose database. A schema isolates completely and cannot shadow
+# or damage real data.
+SCHEMA = "rag_pgtest"
 
 CORPUS = [
     (
@@ -49,7 +57,12 @@ CORPUS = [
 
 @pytest.fixture(scope="module")
 def pg_session():
-    engine = create_engine(TEST_DATABASE_URL)
+    # search_path is set on the engine, so every connection it hands out
+    # resolves an unqualified `regulation_chunks` to the test schema first.
+    engine = create_engine(
+        TEST_DATABASE_URL,
+        connect_args={"options": f"-csearch_path={SCHEMA},public"},
+    )
     try:
         with engine.connect() as conn:
             conn.execute(sql("SELECT 1"))
@@ -62,17 +75,18 @@ def pg_session():
 
     with engine.begin() as conn:
         try:
-            conn.execute(sql("CREATE EXTENSION IF NOT EXISTS vector"))
+            # The extension is schema-qualified to public so the `vector` type
+            # resolves regardless of where the table lives.
+            conn.execute(sql("CREATE EXTENSION IF NOT EXISTS vector SCHEMA public"))
         except Exception as exc:  # noqa: BLE001
             pytest.skip(f"pgvector extension unavailable: {exc}")
 
-        # A dedicated table, so these tests never touch a real corpus if someone
-        # points TEST_DATABASE_URL at a populated database.
-        conn.execute(sql(f"DROP TABLE IF EXISTS {TABLE}"))
+        conn.execute(sql(f"DROP SCHEMA IF EXISTS {SCHEMA} CASCADE"))
+        conn.execute(sql(f"CREATE SCHEMA {SCHEMA}"))
         conn.execute(
             sql(
                 f"""
-                CREATE TABLE {TABLE} (
+                CREATE TABLE {SCHEMA}.regulation_chunks (
                     id          BIGSERIAL PRIMARY KEY,
                     doc_name    VARCHAR,
                     section     VARCHAR,
@@ -81,7 +95,7 @@ def pg_session():
                     source_url  TEXT,
                     chunk_text  TEXT,
                     chunk_id    VARCHAR UNIQUE,
-                    embedding   VECTOR({embed.EMBED_DIM}),
+                    embedding   public.vector({embed.EMBED_DIM}),
                     embed_model VARCHAR
                 )
                 """
@@ -92,10 +106,11 @@ def pg_session():
         for (doc, clause, section, page, text), vector in zip(CORPUS, vectors, strict=True):
             conn.execute(
                 sql(
-                    f"INSERT INTO {TABLE} (doc_name, section, clause, page_no, source_url, "
-                    f"chunk_text, chunk_id, embedding, embed_model) VALUES "
-                    f"(:doc, :section, :clause, :page, :url, :text, :cid, "
-                    f"CAST(:emb AS vector), :model)"
+                    f"INSERT INTO {SCHEMA}.regulation_chunks "
+                    "(doc_name, section, clause, page_no, source_url, "
+                    " chunk_text, chunk_id, embedding, embed_model) VALUES "
+                    "(:doc, :section, :clause, :page, :url, :text, :cid, "
+                    " CAST(:emb AS public.vector), :model)"
                 ),
                 {
                     "doc": doc, "section": section, "clause": clause, "page": page,
@@ -109,23 +124,19 @@ def pg_session():
         # The ANN index is built after the rows exist, never before.
         conn.execute(
             sql(
-                f"CREATE INDEX IF NOT EXISTS ix_{TABLE}_hnsw ON {TABLE} "
-                f"USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)"
+                f"CREATE INDEX ix_pgtest_hnsw ON {SCHEMA}.regulation_chunks "
+                "USING hnsw (embedding public.vector_cosine_ops) "
+                "WITH (m = 16, ef_construction = 64)"
             )
         )
 
     session = sessionmaker(bind=engine)()
-    # The retriever queries `regulation_chunks` by name; point that at the test
-    # table for the duration of the module.
-    session.execute(sql(f"CREATE OR REPLACE VIEW regulation_chunks AS SELECT * FROM {TABLE}"))
-    session.commit()
-
     yield session
 
     session.close()
     with engine.begin() as conn:
-        conn.execute(sql("DROP VIEW IF EXISTS regulation_chunks"))
-        conn.execute(sql(f"DROP TABLE IF EXISTS {TABLE}"))
+        conn.execute(sql(f"DROP SCHEMA IF EXISTS {SCHEMA} CASCADE"))
+    engine.dispose()
     retriever.reset_bm25()
     embed.reset()
 
@@ -178,11 +189,11 @@ def test_stored_embedding_model_is_readable_for_the_startup_check(pg_session):
 
 def test_a_corpus_embedded_by_another_model_is_refused(pg_session):
     """The nastiest RAG bug class: no error, just confidently wrong neighbours."""
-    pg_session.execute(sql(f"UPDATE {TABLE} SET embed_model = 'some-other-model'"))
+    pg_session.execute(sql(f"UPDATE {SCHEMA}.regulation_chunks SET embed_model = 'some-other-model'"))
     pg_session.commit()
     try:
         with pytest.raises(embed.EmbedModelMismatch):
             embed.verify_corpus_model(pg_session, strict=True)
     finally:
-        pg_session.execute(sql(f"UPDATE {TABLE} SET embed_model = :m"), {"m": embed.model_name()})
+        pg_session.execute(sql(f"UPDATE {SCHEMA}.regulation_chunks SET embed_model = :m"), {"m": embed.model_name()})
         pg_session.commit()

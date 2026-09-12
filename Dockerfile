@@ -23,8 +23,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # coinor-cbc is the solver behind PuLP for the 96-block battery LP (Member 1).
 # curl is used by the healthcheck below.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
+#
+# build-essential is deliberately NOT installed. Every dependency in
+# requirements-ml.txt ships a manylinux wheel, so nothing needs a compiler --
+# and build-essential pulls gcc-14 and g++-14 (~35 MB of the slowest packages on
+# the Debian mirror, and the ones that timed out when this was first built).
+# Dropping it removes ~300 MB from the image and the flakiest step in the build.
+# If a future dependency needs to compile, add it back here rather than
+# wondering why the build suddenly fails.
+RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\n' \
+        > /etc/apt/apt.conf.d/80-retries \
+    && apt-get update && apt-get install -y --no-install-recommends \
         curl \
         coinor-cbc \
     && rm -rf /var/lib/apt/lists/*
@@ -34,7 +43,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS deps
 WORKDIR /app
 COPY requirements.txt requirements-ml.txt ./
-RUN pip install --upgrade pip && pip install -r requirements-ml.txt
+
+# torch comes from PyTorch's CPU wheel index, not PyPI. PyPI's default torch
+# wheel bundles the CUDA runtime and the nvidia-* packages -- ~2.5 GB installed,
+# every byte of it dead weight on a t3.large, which has no GPU. The +cpu build is
+# ~180 MB. Installing it first satisfies the pin in requirements-ml.txt before
+# pip resolves torch there, so it never pulls the CUDA build over the top.
+RUN pip install --upgrade pip \
+    && pip install --index-url https://download.pytorch.org/whl/cpu torch==2.5.1 \
+    && pip install -r requirements-ml.txt
 
 
 # ---------- model layer (changes never) ----------
