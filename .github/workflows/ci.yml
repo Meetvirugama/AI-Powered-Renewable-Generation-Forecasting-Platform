@@ -77,14 +77,28 @@ jobs:
         # -m "not slow" skips anything that needs real model weights.
         run: pytest tests/ -v --tb=short -m "not slow"
 
-  # Expensive job: the image bakes ~2.2 GB of model weights. Restricted to main
-  # and to pull requests targeting main, with buildx layer caching, so ordinary
-  # feature-branch pushes stay on the two-minute path above.
+  # Runs on every push once `test` passes, not just on main.
+  #
+  # It used to be gated on `github.ref == 'refs/heads/main' || github.base_ref
+  # == 'main'`, meant to also cover PRs targeting main. That never worked: for a
+  # PR whose head and base are in the same repo (the normal case here, not a
+  # fork), GitHub collapses the push and pull_request events for one commit into
+  # a single push-triggered run, and github.base_ref is only ever set on a
+  # pull_request-triggered run. So the condition was permanently false for every
+  # PR, and nobody's Dockerfile change was ever build-tested before it reached
+  # main -- a change that broke the image (as one did: an apt mirror timeout
+  # pulling build-essential, found only by building locally by hand) could sit
+  # green through review and only fail once merged.
+  #
+  # Now it always builds; buildx's GHA cache (below) makes every run after the
+  # first only re-pull the layers that changed, so this is not the 2.2 GB
+  # download on every push that it would be without the cache. ECR push and the
+  # AWS auth it needs stay restricted to main -- there is no reason to publish
+  # an image for every branch push, only to prove it builds.
   image:
     name: build + scan image
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
 
     steps:
       - uses: actions/checkout@v4
