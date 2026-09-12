@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
@@ -20,8 +20,12 @@ def calculate_dsm(request: DSMRequest, db: Session = Depends(get_db)):
     plant_cfg = find_plant(request.plant_id, db)
             
     if not plant_cfg:
-        plant_cfg = {"id": request.plant_id, "type": "solar", "avc_mw": 50.0, "lat": 23.0, "lon": 72.0}
-        
+        # This used to substitute an invented 50 MW solar plant at 23.0, 72.0 and
+        # price it -- so a mistyped id returned HTTP 200 and a confident ₹190,521
+        # penalty for a plant that does not exist. A DSM figure is only meaningful
+        # for a real plant; an unknown id is a client error.
+        raise HTTPException(status_code=404, detail=f"Plant '{request.plant_id}' not found")
+
     avc_mw = float(plant_cfg.get("avc_mw", 50.0))
     asset_type = plant_cfg.get("type", "solar")
     

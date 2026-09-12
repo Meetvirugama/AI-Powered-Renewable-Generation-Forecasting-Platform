@@ -61,9 +61,31 @@ def _db_plants(db) -> list[dict]:
     return [_from_row(r) for r in rows]
 
 
+# Sources written by scripts/import_plants.py. Their presence is what marks a
+# database as holding the real inventory rather than only the seed plants.
+_IMPORTED_SOURCES = frozenset({"openstreetmap", "wri_gppd"})
+
+
 def list_plants(db=None) -> list[dict]:
-    """Every known plant. Database if it has any, otherwise the YAML seeds."""
-    return _db_plants(db) or load_plants_config()
+    """Plants to *show*. Database if it has any, otherwise the YAML seeds.
+
+    Once the real inventory is imported, the four seed plants are left out. They
+    are invented -- "Gujarat Solar Plant A" has a made-up name and capacity -- and
+    listing them on a map of 101 real plants presents fiction beside fact. They
+    cannot simply be deleted: the daily pipeline wrote forecasts, DSM results
+    and actions against them, and those rows reference the plant by foreign key.
+
+    Hiding applies to listing only. find_plant still resolves seed ids, so
+    bookmarks, tests and demo scripts naming GJ_SOLAR_A keep working, and
+    plants_in_pool still sees them, so their pool keeps settling correctly.
+    """
+    db_plants = _db_plants(db)
+    if not db_plants:
+        return load_plants_config()
+    if any(p.get("source") in _IMPORTED_SOURCES for p in db_plants):
+        seed_ids = {p["id"] for p in load_plants_config()}
+        return [p for p in db_plants if p.get("id") not in seed_ids]
+    return db_plants
 
 
 def find_plant(plant_id: str, db=None) -> dict | None:
@@ -93,4 +115,7 @@ def plants_in_pool(pool_id: str, db=None) -> list[dict]:
     """
     if not pool_id:
         return []
-    return [p for p in list_plants(db) if p.get("pool_id") == pool_id]
+    # Membership reads every plant, not list_plants: a seed plant hidden from the
+    # map is still a real member of its pool for settlement.
+    every_plant = _db_plants(db) or load_plants_config()
+    return [p for p in every_plant if p.get("pool_id") == pool_id]
