@@ -51,6 +51,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--database-url", default=os.getenv("DATABASE_URL"))
     p.add_argument("--dry-run", action="store_true", help="chunk and report, write nothing")
     p.add_argument("--truncate", action="store_true", help="clear the table before inserting")
+    p.add_argument(
+        "--skip-embeddings",
+        action="store_true",
+        help="write chunks with a NULL embedding; retrieval stays BM25-only",
+    )
     p.add_argument("--jsonl", type=Path, default=None, help="also write chunks to this JSONL file")
     return p.parse_args()
 
@@ -102,8 +107,19 @@ def report(chunks: list[ingest.Chunk]) -> bool:
     return ok
 
 
-def write_chunks(engine, chunks: list[ingest.Chunk], truncate: bool) -> int:
-    model = embed.model_name()
+def write_chunks(
+    engine, chunks: list[ingest.Chunk], truncate: bool, skip_embeddings: bool = False
+) -> int:
+    """Write chunks, optionally without embedding them.
+
+    `skip_embeddings` exists because chunk *text* and chunk *page numbers* have
+    nothing to do with the vector index, and requiring a 2.2 GB model to correct
+    a wrong page number is a coupling that stops the correction happening. The
+    retriever already degrades to BM25 when a query cannot be embedded, so a
+    corpus with NULL embeddings is a state the system handles rather than a
+    broken one.
+    """
+    model = None if skip_embeddings else embed.model_name()
     is_postgres = engine.dialect.name == "postgresql"
 
     with engine.begin() as conn:
@@ -114,10 +130,14 @@ def write_chunks(engine, chunks: list[ingest.Chunk], truncate: bool) -> int:
         written = 0
         for start in range(0, len(chunks), BATCH):
             batch = chunks[start : start + BATCH]
-            vectors = embed.embed_passages([c.chunk_text for c in batch])
+            vectors = (
+                [None] * len(batch)
+                if skip_embeddings
+                else embed.embed_passages([c.chunk_text for c in batch])
+            )
 
             for chunk, vector in zip(batch, vectors, strict=True):
-                values = [float(x) for x in vector]
+                values = None if vector is None else [float(x) for x in vector]
                 conn.execute(
                     sql(
                         """
@@ -129,6 +149,14 @@ def write_chunks(engine, chunks: list[ingest.Chunk], truncate: bool) -> int:
                              :effective_date, :chunk_text, :chunk_id, :embedding, :embed_model)
                         ON CONFLICT (chunk_id) DO UPDATE SET
                             chunk_text = EXCLUDED.chunk_text,
+                            -- These three were missing, which made a re-ingest
+                            -- unable to fix the thing re-ingests are usually run
+                            -- to fix. Note that chunk_id embeds the page number,
+                            -- so a changed page inserts a new row rather than
+                            -- updating one: use --truncate for a real rebuild.
+                            page_no    = EXCLUDED.page_no,
+                            clause     = EXCLUDED.clause,
+                            section    = EXCLUDED.section,
                             embedding  = EXCLUDED.embedding,
                             embed_model = EXCLUDED.embed_model
                         """
@@ -154,16 +182,20 @@ def write_chunks(engine, chunks: list[ingest.Chunk], truncate: bool) -> int:
                         "chunk_id": chunk.stable_id(),
                         # pgvector accepts its text literal form; SQLite stores
                         # the same string and the retriever parses it back.
-                        "embedding": "[" + ",".join(f"{v:.6f}" for v in values) + "]"
-                        if is_postgres
-                        else __import__("json").dumps(values),
+                        "embedding": None
+                        if values is None
+                        else (
+                            "[" + ",".join(f"{v:.6f}" for v in values) + "]"
+                            if is_postgres
+                            else __import__("json").dumps(values)
+                        ),
                         "embed_model": model,
                     },
                 )
                 written += 1
             logger.info("embedded and wrote %d/%d", written, len(chunks))
 
-    if is_postgres:
+    if is_postgres and not skip_embeddings:
         # Index creation goes last, after the rows exist. See the module docstring.
         with engine.begin() as conn:
             conn.execute(
@@ -203,7 +235,13 @@ def main() -> int:
         logger.error("no DATABASE_URL: pass --database-url or set the environment variable")
         return 2
 
-    print(f"\nembedding with {embed.model_name()} (backend={embed.backend()})")
+    if args.skip_embeddings:
+        print(
+            "\nskipping embeddings: chunks are written with a NULL vector and "
+            "retrieval stays BM25-only"
+        )
+    else:
+        print(f"\nembedding with {embed.model_name()} (backend={embed.backend()})")
     if embed.backend() == "mock":
         logger.warning(
             "RAG_EMBED_BACKEND=mock produces hash vectors, not semantic ones. "
@@ -211,7 +249,9 @@ def main() -> int:
         )
 
     engine = create_engine(args.database_url)
-    written = write_chunks(engine, chunks, truncate=args.truncate)
+    written = write_chunks(
+        engine, chunks, truncate=args.truncate, skip_embeddings=args.skip_embeddings
+    )
 
     with engine.connect() as conn:
         rows = conn.execute(
