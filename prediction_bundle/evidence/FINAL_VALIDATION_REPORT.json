@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-09-12T00:28:25.928437",
+  "project": "AI-Powered Renewable Generation Forecasting Platform",
+  "validation_type": [
+    "historical_empirical_validation",
+    "probabilistic_validation",
+    "uncertainty_validation",
+    "synthetic_stress_testing",
+    "runtime_benchmarking"
+  ],
+  "horizons_evaluated": [
+    24,
+    48,
+    72
+  ],
+  "benchmark_rows": 9,
+  "probabilistic_rows": 3,
+  "stability_rows": 15,
+  "day_night_rows": 6,
+  "ramp_validation_available": true,
+  "conformal_validation_available": false,
+  "stress_testing_available": true,
+  "model_artifact_count": 34,
+  "latency_models_tested": 12,
+  "total_score": 70.0,
+  "max_score": 80.0,
+  "overall_percent": 87.5,
+  "readiness": "HACKATHON_READY",
+  "caveats": [
+    "Historical dataset duration is short for robust seasonal 72h claims.",
+    "Extreme-event results are synthetic stress scenarios, not empirical extreme-event accuracy.",
+    "Operational 24\u201372h accuracy should ideally be evaluated using weather forecasts available at issue time to avoid future-weather leakage.",
+    "Conformal coverage in the current artifact should be presented as empirical validation unless calibration is rebuilt on a strictly held-out calibration set."
+  ],
+  "best_model_by_horizon": {
+    "24": {
+      "model": "Hybrid_P50",
+      "MAE": 75.07237059327977,
+      "RMSE": 135.3261158781417,
+      "R2": 0.8571128749187255
+    },
+    "48": {
+      "model": "Hybrid_P50",
+      "MAE": 91.86146311696157,
+      "RMSE": 163.23490744574946,
+      "R2": 0.7956474712111931
+    },
+    "72": {
+      "model": "Hybrid_P50",
+      "MAE": 89.56869126732998,
+      "RMSE": 157.67743247701918,
+      "R2": 0.8116608589515557
+    }
+  }
+}

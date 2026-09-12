@@ -1,0 +1,23 @@
+{
+  "engine": "Unified Production Inference Engine",
+  "version": "1.0",
+  "issue_time": "2020-06-14T23:15:00",
+  "horizons": [
+    24,
+    48,
+    72
+  ],
+  "forecast_count": 3,
+  "mean_p50": 2.0766412967914847,
+  "mean_uncertainty": 32.276230918689116,
+  "mean_trust": 0.12866026420705978,
+  "mean_decision_confidence": 0.6415109213224963,
+  "max_overall_risk": 0.39365274267354955,
+  "action_queue_size": 3,
+  "highest_priority_action": "HUMAN_REVIEW_REQUIRED",
+  "highest_priority": "MEDIUM",
+  "model_count": 9,
+  "expected_model_count": 9,
+  "model_coverage": 1.0,
+  "generated_at": "2026-09-12T00:15:48.732310"
+}
