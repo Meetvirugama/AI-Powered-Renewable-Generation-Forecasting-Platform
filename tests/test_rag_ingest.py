@@ -35,8 +35,12 @@ def _body(text: str, times: int = 4) -> str:
     "line,expected",
     [
         ("Regulation 7(2)(b) Deviation charges for sellers", "Regulation 7(2)(b)"),
+        # CERC numbers its regulations bare; the prefix is added so a citation
+        # badge never reads just "7".
+        ("7. Normal Rate of Charges for Deviations", "Regulation 7"),
+        ("4. Scope", "Regulation 4"),
         ("Clause 5.1 Tolerance band", "Clause 5.1"),
-        ("7.2.1 Deviation Settlement", "7.2.1"),
+        ("7.2.1 Deviation Settlement", "Regulation 7.2.1"),
         ("CHAPTER IV - DEVIATION CHARGES", "CHAPTER IV"),
         ("SCHEDULE II Rates", "SCHEDULE II"),
     ],
