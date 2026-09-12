@@ -174,3 +174,58 @@ for its disk, a deallocated one does not:
 ```bash
 az vm deallocate --resource-group <rg> --name Hackout
 ```
+
+---
+
+## CI/CD
+
+The pipeline was originally written for AWS (ECR + EC2 + SSM). The deployment moved to Azure, so
+`deploy.yml` was rewritten and the AWS steps were removed from `ci.yml` — they were failing on
+every push to `main` at `Configure AWS credentials`, because the ARN rendered as
+`arn:aws:iam:::role/...` with an empty account id and no AWS secrets were ever set.
+
+| Workflow | Trigger | Does |
+|---|---|---|
+| `ci` → `test` | every push | ruff + pytest, ~2 min |
+| `ci` → `image` | every push | docker build + trivy scan. Publishes nothing — the live service runs from a git checkout under systemd, not from a registry image. Kept green because that image is the offline `docker compose up` fallback. |
+| `deploy` | `ci` green on `main`, or manual | SSH → `git reset --hard origin/main` → conditional `pip install` → `systemctl restart` → health gate → **automatic rollback on failure** |
+
+### Secrets to configure
+
+Repository → Settings → Secrets and variables → Actions:
+
+| Secret | Value |
+|---|---|
+| `AZURE_SSH_PRIVATE_KEY` | full contents of `Hackout_key.pem`, including the BEGIN/END lines |
+| `AZURE_VM_HOST` | `57.159.24.68` |
+| `AZURE_VM_USER` | `azureuser` |
+| `AZURE_PUBLIC_URL` | `https://57.159.24.68.nip.io` |
+
+Until `AZURE_SSH_PRIVATE_KEY` and `AZURE_VM_HOST` are set, the deploy job **skips cleanly with a
+notice** rather than failing. A fork or a fresh clone therefore does not get a red build for
+infrastructure it cannot reach.
+
+### What the deploy job does that a bare `git pull` does not
+
+- **Pins the host key** with `ssh-keyscan` instead of `StrictHostKeyChecking=no`, so the deploy
+  cannot be silently redirected to another host.
+- **Skips `pip install` when `requirements.txt` is unchanged**, which is most deploys — a full
+  install every time adds minutes for nothing.
+- **Gates on health** for up to two minutes, and on failure **resets to the previous commit,
+  restarts, and prints the failing release's journal**. A deploy that leaves the API down is worse
+  than one that never happened.
+- **Prints `serving_synthetic_data`** afterwards, so which engines a release served is recorded in
+  the run log rather than reconstructed later.
+
+### Manual deploy
+
+```bash
+gh workflow run deploy.yml
+```
+
+### The AWS scripts are retained
+
+`infra/aws/` and `infra/terraform/` still describe a complete, working AWS path — security-group
+chain, OIDC with a pinned `sub` claim, EventBridge, CloudWatch alarms. They are the alternative
+deployment, not dead code, and the design decisions in them still stand. `docs/deployment.md`
+documents that path; this file documents the one that is live.
