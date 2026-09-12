@@ -1,11 +1,13 @@
 # Frontend Implementation Plan
 
-Workstream: Member 3 (frontend), executed by the Antigravity agent, reviewed by Claude Code.
+Workstream: **Shane Christian** (Member 3, frontend), executed by the Antigravity agent, reviewed by Claude Code.
 Chain of command and handoff format: `.agents/skills/dual-agent-protocol/SKILL.md`.
 
-> **Build status as of PR #8 merge:** Sprints 0–9 scaffolded and committed to `frontend/`.
-> All components exist; browser verification and Sprint 10 hardening remain.
-> See `docs/roadmap.md` for the current completion picture.
+> **Build status as of PR #11 merge:** Sprints 0–9 complete and demo-ready.
+> All 8 components, 5 pages, and 11 hooks are built and wired to the live API.
+> See `docs/roadmap.md` for the current project-wide completion picture.
+> See `docs/frontend_developer_guide.md` for the detailed as-built reference (stack,
+> tokens, hooks, component props, honesty rules, Sprint 10 task list).
 
 
 ---
@@ -77,7 +79,7 @@ Nothing is merged on the executor's own judgement.
 | 7 | Regulation slider and pooling toggle | 6 | The two what-if interactions | ✅ Built |
 | 8 | Plant map | 2 | Gujarat map, 4 pins, click to select | ✅ Built |
 | 9 | RAG copilot | 2 | Chat panel with clause citations | ✅ Built |
-| 10 | Pages, responsive, demo hardening | all | PlantDetail, Backtest, 400px, error states | ⏳ Remaining |
+| 10 | Pages, responsive, demo hardening | all | `serving_synthetic_data` badge, 400px, error states | ⏳ Remaining |
 
 Sprints 8 and 9 depend only on Sprint 2, so they can run in parallel with 4–7.
 
