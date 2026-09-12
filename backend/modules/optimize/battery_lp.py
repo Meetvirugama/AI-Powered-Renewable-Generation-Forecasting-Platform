@@ -94,7 +94,7 @@ def _marginal_penalty_improvement(
     to its declared schedule). Negative means more generation increases penalty
     (plant is over-generating).
     """
-    from backend.modules.optimize.schedule_optimizer import expected_penalty, _WEIGHTS
+    from backend.modules.optimize.schedule_optimizer import expected_penalty
 
     def ep(gen_shift: float) -> float:
         shifted = {q: max(0.0, min(avc_mw, v + gen_shift)) for q, v in quantiles.items()}

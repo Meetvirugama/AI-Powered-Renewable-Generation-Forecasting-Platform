@@ -33,7 +33,6 @@ import pytest
 
 from backend.modules.forecast import feature_builder
 from backend.modules.forecast.lgbm_model import (
-    HORIZONS,
     ImplausibleForecast,
     InsufficientFeatures,
     LGBMForecastEngine,
