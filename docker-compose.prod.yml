@@ -13,7 +13,10 @@
 services:
   backend:
     image: ${ECR_REGISTRY}/renewable-backend:${IMAGE_TAG:-latest}
-    env_file: /opt/renewable/.env
+    # Relative on purpose: this file is deployed to /opt/renewable and compose is
+    # invoked from there, so this resolves to the same /opt/renewable/.env that
+    # fetch_secrets.sh writes -- while still validating on a laptop.
+    env_file: .env
     environment:
       APP_ENV: prod
       RAG_COPILOT_TYPE: production
