@@ -1849,29 +1849,50 @@
       "type": "curtailment",
       "block_no": 48,
       "mw": 4.82,
-      "reason": "High generation predicted; risk of over-injection beyond the 10% solar band.",
-      "inr_impact": 316
+      "reason": "Declare 4.82 MW below the P50 forecast. The upside of the forecast band risks over-injection beyond the tolerance band; under-declaring keeps the deviation inside it.",
+      "inr_impact": 475
     },
     {
       "type": "curtailment",
       "block_no": 52,
       "mw": 6.15,
-      "reason": "Peak irradiance with narrow forecast spread; over-injection likely at 50.05 Hz.",
-      "inr_impact": 475
+      "reason": "Declare 6.15 MW below the P50 forecast. The upside of the forecast band risks over-injection beyond the tolerance band; under-declaring keeps the deviation inside it.",
+      "inr_impact": 316
     },
     {
       "type": "reserve_flag",
       "block_no": 34,
-      "mw": 3.4,
-      "reason": "Morning cloud cover widens P05-P95; hold reserve against under-injection.",
-      "inr_impact": 296
+      "mw": 3.21,
+      "reason": "Declare 3.21 MW above the P50 forecast. The downside of the band is the costlier tail here, so a higher declaration lowers expected charges.",
+      "inr_impact": 284
     },
     {
       "type": "reserve_flag",
       "block_no": 66,
-      "mw": 2.95,
-      "reason": "Late-afternoon ramp-down uncertainty; reserve recommended.",
-      "inr_impact": 436
+      "mw": 2.78,
+      "reason": "Declare 2.78 MW above the P50 forecast. The downside of the band is the costlier tail here, so a higher declaration lowers expected charges.",
+      "inr_impact": 198
+    },
+    {
+      "type": "high_risk_block",
+      "block_no": 60,
+      "mw": 42.25,
+      "reason": "Highest residual exposure after optimisation. Forecast uncertainty here is too wide for scheduling alone to neutralise; battery or curtailment would be needed.",
+      "inr_impact": 638
+    },
+    {
+      "type": "high_risk_block",
+      "block_no": 59,
+      "mw": 40.0,
+      "reason": "Highest residual exposure after optimisation. Forecast uncertainty here is too wide for scheduling alone to neutralise; battery or curtailment would be needed.",
+      "inr_impact": 597
+    },
+    {
+      "type": "high_risk_block",
+      "block_no": 35,
+      "mw": 34.5,
+      "reason": "Highest residual exposure after optimisation. Forecast uncertainty here is too wide for scheduling alone to neutralise; battery or curtailment would be needed.",
+      "inr_impact": 541
     }
   ],
   "pooling_benefit": {
@@ -1903,8 +1924,8 @@
     ]
   },
   "briefing": {
-    "title": "Daily DSM Briefing — Gujarat Solar A",
-    "summary": "Optimised schedule saves ₹10,145.99 (31.0%) against a naive P50 submission under CERC 2026 rules.",
+    "title": "Daily DSM Briefing \u2014 Gujarat Solar A",
+    "summary": "Optimised schedule saves \u20b910,145.99 (31.0%) against a naive P50 submission under CERC 2026 rules.",
     "risk_level": "HIGH_SAVINGS_OPPORTUNITY",
     "total_expected_penalty_inr": 22583,
     "potential_savings_inr": 10145.99

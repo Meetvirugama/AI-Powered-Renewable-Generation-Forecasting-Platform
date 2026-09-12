@@ -1,13 +1,15 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Literal, Optional
+
 
 class ActionCard(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    type: str
+    type: Literal["curtailment", "reserve_flag", "high_risk_block"]
     block_no: int
     mw: float
     reason: str
     inr_impact: float
+
 
 class BatteryDispatchBlock(BaseModel):
     model_config = ConfigDict(from_attributes=True)
