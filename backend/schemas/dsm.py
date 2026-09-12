@@ -5,7 +5,7 @@ class DSMRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     plant_id: str
     date: str
-    schedule_mw: list[float]
+    schedule_mw: list[float] = []
     rule_year: Optional[int] = 2026
     freq_hz: Optional[float] = 50.0
     ncd_inr: Optional[float] = 450.0
