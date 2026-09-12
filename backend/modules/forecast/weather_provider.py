@@ -113,14 +113,19 @@ def _to_blocks(df: pd.DataFrame, date_str: str, num_blocks: int) -> dict[int, di
     out: dict[int, dict[str, float]] = {}
     for row, ts in enumerate(targets):
         values = resampled.iloc[row]
+        # Pass ALL numeric variables, not just the LightGBM feature subset.
+        # The LightGBM engine reads by name and ignores extras; the wind physics
+        # engine needs wind_speed_80m and wind_speed_120m which were previously
+        # silently dropped here because they are not in feature_builder.WEATHER_FEATURES.
         block = {
             name: float(values[name])
-            for name in feature_builder.WEATHER_FEATURES
-            if name in values and pd.notna(values[name])
+            for name in values.index
+            if pd.notna(values[name])
         }
         if block:
             out[row + 1] = block
     return out
+
 
 
 def _is_stale(date_str: str) -> bool:

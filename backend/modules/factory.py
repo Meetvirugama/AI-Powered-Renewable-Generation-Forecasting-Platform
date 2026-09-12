@@ -94,12 +94,44 @@ def active_engines() -> dict:
     }
 
 
+class CompositeEngine:
+    """Dispatches forecast requests by plant asset type.
+
+    Wind turbines are served by the physics-based WindPhysicsEngine regardless
+    of FORECAST_ENGINE_TYPE. This is correct because the LightGBM engine was
+    trained on a solar reference plant; applying it to a wind turbine produces a
+    bell curve shaped by irradiance, which is physically wrong. Wind output is
+    determined by the power curve and hub-height wind speed, not solar geometry.
+
+    All other plant types (solar) use the configured engine (mock or LightGBM).
+    """
+
+    def __init__(self, solar_engine, wind_engine) -> None:
+        self._solar = solar_engine
+        self._wind = wind_engine
+        # Expose requires_weather as the union of both engines.
+        # weather_provider.forecast_for() checks this flag.
+        self.requires_weather = getattr(solar_engine, "requires_weather", False) or \
+                                getattr(wind_engine, "requires_weather", False)
+
+    def generate_forecast(self, plant: dict, date_str: str, num_blocks: int = 96, **kwargs):
+        asset_type = str(plant.get("asset_type") or plant.get("type") or "solar").lower()
+        if asset_type == "wind":
+            return self._wind.generate_forecast(plant, date_str, num_blocks, **kwargs)
+        return self._solar.generate_forecast(plant, date_str, num_blocks, **kwargs)
+
+
 def get_forecast_engine() -> ForecastEngineProtocol:
-    def _production():
+    from backend.modules.forecast.physics import WindPhysicsEngine
+
+    def _production_solar():
         from backend.modules.forecast.lgbm_model import LGBMForecastEngine
         return LGBMForecastEngine()
 
-    return _resolve('forecast engine', 'FORECAST_ENGINE_TYPE', MockForecastEngine, _production)
+    solar = _resolve('forecast engine', 'FORECAST_ENGINE_TYPE', MockForecastEngine, _production_solar)
+    wind = WindPhysicsEngine()
+    return CompositeEngine(solar_engine=solar, wind_engine=wind)
+
 
 def get_schedule_optimizer() -> ScheduleOptimizerProtocol:
     def _production():

@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from backend.modules.factory import (
+    CompositeEngine,
     ProductionEngineUnavailable,
     active_engines,
     get_forecast_engine,
@@ -24,13 +25,19 @@ from backend.modules.optimize.mock_optimizer import MockScheduleOptimizer
 def test_default_is_mock_and_says_so(monkeypatch):
     monkeypatch.delenv("FORECAST_ENGINE_TYPE", raising=False)
     monkeypatch.delenv("OPTIMIZER_TYPE", raising=False)
-    assert isinstance(get_forecast_engine(), MockForecastEngine)
+    engine = get_forecast_engine()
+    # get_forecast_engine now returns a CompositeEngine that wraps the solar
+    # and wind engines. The solar engine must be the mock when unconfigured.
+    assert isinstance(engine, CompositeEngine), "expected CompositeEngine wrapper"
+    assert isinstance(engine._solar, MockForecastEngine)
     assert isinstance(get_schedule_optimizer(), MockScheduleOptimizer)
 
 
 def test_explicit_mock_is_honoured(monkeypatch):
     monkeypatch.setenv("FORECAST_ENGINE_TYPE", "mock")
-    assert isinstance(get_forecast_engine(), MockForecastEngine)
+    engine = get_forecast_engine()
+    assert isinstance(engine, CompositeEngine)
+    assert isinstance(engine._solar, MockForecastEngine)
 
 
 def test_production_optimizer_is_constructible(monkeypatch):
@@ -64,11 +71,14 @@ def test_a_broken_production_engine_still_raises_rather_than_mocking(monkeypatch
 
 
 def test_production_forecast_engine_is_constructible(monkeypatch):
-    """The adapter exists now, so this must no longer raise at construction."""
+    """The LightGBM engine must load without error; it becomes the solar branch
+    of the CompositeEngine that get_forecast_engine() returns."""
     monkeypatch.setenv("FORECAST_ENGINE_TYPE", "production")
     from backend.modules.forecast.lgbm_model import LGBMForecastEngine
 
-    assert isinstance(get_forecast_engine(), LGBMForecastEngine)
+    engine = get_forecast_engine()
+    assert isinstance(engine, CompositeEngine)
+    assert isinstance(engine._solar, LGBMForecastEngine)
 
 
 def test_active_engines_reports_configuration(monkeypatch):
