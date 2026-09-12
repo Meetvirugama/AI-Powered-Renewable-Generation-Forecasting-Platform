@@ -1,38 +1,71 @@
-# Forecast Model Integration — status, blockers, and what retraining needs
+# Forecast Model Integration — how the production forecast came to be real
 
 **Owner:** Member 4 (integration) / Member 1 (models)
-**Status:** adapter shipped and tested; **the models are not yet usable in production**
+**Status:** ✅ **resolved.** `FORECAST_ENGINE_TYPE=production` serves real forecasts.
 
-> [!CAUTION]
-> **Human action required before `FORECAST_ENGINE_TYPE=production` can serve.**
-> Three blockers exist in the trained models (target leakage, scale mismatch, negative predictions).
-> Until they are fixed, all forecasts are synthetic (mock sine-wave). The API reports this honestly
-> via `serving_synthetic_data` in `GET /health`.
+> [!NOTE]
+> **This document is now mostly history, and worth keeping as history.**
 >
-> **What needs doing (summary):**
-> 1. Member 1 retrains models on capacity factor, drops leaking features — see [What retraining has to change](#what-retraining-has-to-change).
-> 2. Re-run `tests/test_forecast_lgbm.py` — the physics gate must pass, not raise.
-> 3. Set `FORECAST_ENGINE_TYPE=production` and verify `GET /health` no longer lists `forecast` under `serving_synthetic_data`.
-
-This documents why `FORECAST_ENGINE_TYPE=production` currently refuses to serve, what was
-fixed to get that far, and exactly what has to change in training before it can be switched on.
-
+> It records why the original 12 boosters could not serve, what the physics gate refused and why,
+> and what retraining had to change. All three blockers are fixed. The live API reports
+> `serving_synthetic_data: []`.
+>
+> If you arrived here from an `ImplausibleForecast` error message, that error is the gate doing its
+> job — most likely on the **legacy** bundle in `prediction_bundle/models/`, which is deliberately
+> kept and still rejected. The models actually served are in `prediction_bundle/models_v2/`.
 
 ---
 
-## Summary
+## Current state
 
 | Thing | State |
 |---|---|
-| `prediction_bundle/models/*.txt` — 12 boosters | present, load correctly |
-| `backend/modules/forecast/lgbm_model.py` adapter | **built, 18 tests** |
-| `lightgbm` dependency | added to `requirements.txt` |
-| Factory silent fallback to mock | **fixed — now raises** |
-| `/health` disclosing synthetic engines | **added** |
-| Models producing a usable forecast | ❌ **blocked — retraining required** |
+| `prediction_bundle/models_v2/*.txt` — 3 boosters, 24h, 44 features | ✅ **serving** |
+| `prediction_bundle/models/*.txt` — 12 legacy boosters | kept; still rejected by the gate |
+| `backend/modules/forecast/lgbm_model.py` adapter | ✅ serves capacity factor → MW |
+| `backend/modules/forecast/weather_provider.py` | ✅ supplies the 33 weather features |
+| Factory silent fallback to mock | fixed — raises |
+| `/health` disclosing synthetic engines | reports `serving_synthetic_data: []` |
 
-The adapter is finished and correct. It refuses to serve because the models, as trained,
-cannot describe these plants. That refusal is the feature: the alternative is a flat line at
+Measured on a held-out chronological split, against persistence:
+
+| | |
+|---|---|
+| MAE | 0.0552 capacity factor |
+| Skill vs persistence | **+21.5%** |
+| P10–P90 coverage | **85.9%** (nominal 80%; 71.5% before conformal calibration) |
+| Physics | non-negative, within capacity, quantiles ordered, zero at night |
+
+`prediction_bundle/models_v2/MANIFEST.json` is the contract: feature order, training capacity,
+conformal delta, metrics, and the caveats. The adapter refuses to load if the manifest disagrees
+with the boosters, because it carries numbers that silently change every rupee figure downstream.
+
+### Limits that remain true
+
+- 2,774 rows / **29.9 days** / **one plant**. Not enough for rolling-origin CV.
+- Applying it to four Gujarat plants is a **capacity-factor transfer from a reference site**, not a
+  per-plant model. Say so when presenting it.
+- **Only the 24h horizon** was retrained. 48h and 72h fall back to it — worse, but honest; the
+  legacy boosters for those horizons were trained on features that do not exist that far ahead.
+- Forecasts now require Open-Meteo. Cached 15 minutes per plant and date;
+  `FORECAST_ENGINE_TYPE=mock` is the one-line rollback.
+
+### Why the legacy bundle is kept
+
+Deleting it would delete the evidence. The physics gate rejecting those 12 boosters — 22× scale
+mismatch, solar generation at midnight — is the reason the retrain happened, and
+`tests/test_forecast_lgbm.py` asserts that it still rejects them. A refusal you can demonstrate is
+worth more than a mistake you quietly removed.
+
+---
+
+## History: the adapter, and why it refused
+
+Everything below describes the state before the retrain. It is kept because the failure modes are
+the interesting part, and because the gate that caught them is still running.
+
+The adapter was finished and correct. It refused to serve because the models, as trained,
+could not describe these plants. That refusal was the feature: the alternative is a flat line at
 nameplate capacity that the DSM engine would price into confident, wrong rupee figures.
 
 ---
@@ -52,7 +85,7 @@ Windows checkout would have inherited the corrupted copies.
 
 **Fixed** by `.gitattributes` marking model and data artefacts `binary`. Verified: 2,345 CR
 bytes removed from one file alone; all 12 now load. `tests/test_forecast_lgbm.py::
-test_model_files_have_no_crlf` is the regression guard. The adapter also repairs CRLF in
+test_no_model_file_has_crlf` is the regression guard. The adapter also repairs CRLF in
 memory, with a warning, so a stale checkout degrades instead of killing the API.
 
 ### 2. `FORECAST_ENGINE_TYPE=production` silently served mock data
@@ -68,7 +101,7 @@ set to `production` and cannot be built. `/health` publishes `engines` and
 
 ---
 
-## Why the models still cannot serve
+## Why the original models could not serve
 
 Three independent problems, all confirmed against the actual boosters.
 
@@ -128,7 +161,7 @@ because the DSM engine will price *any* MW series it is handed, and the dashboar
 result without further checks — so a model problem has to fail at the model, loudly, before it
 becomes a financial claim.
 
-Current output on the real models:
+Output of the gate on the legacy bundle (still reproducible today):
 
 ```
 production forecast rejected as physically implausible:
@@ -140,31 +173,31 @@ production forecast rejected as physically implausible:
 
 ---
 
-## What retraining has to change
+## What retraining had to change — and what was done
 
-1. **Drop the leaking features.** Remove `DC_POWER`, `DAILY_YIELD`, `TOTAL_YIELD` from the
-   feature set entirely. Expect headline accuracy to fall — the previous figures were partly
-   measuring "given DC power, infer AC power", which is an inverter efficiency calculation,
-   not a forecast.
-2. **Train per plant, or make `PLANT_ID` a real categorical.** It is currently constant, so
-   the models cannot represent more than one site.
-3. **Predict in the platform's units.** Either train on MW or record an explicit scale factor
-   in `PREDICTION_CONTRACT.json` that the adapter can apply.
-4. **Constrain to non-negative.** Clip at training time or use an objective that cannot go
-   below zero.
-5. **Chronological splits, not random.** All three horizons report 373 test rows, which points
-   to one random `train_test_split`. For a time series that leaks future into past.
-6. **Rebuild conformal calibration on a held-out window.** `FINAL_VALIDATION_REPORT.json`
-   already caveats this.
+All six are implemented in `scripts/train_forecast.py`.
 
-Point 6 has a data constraint worth naming: the dataset is ~2,774 rows at 15-minute
-resolution, which is **≈29 days**, not the 34 sometimes quoted. Meaningful rolling-origin
-cross-validation needs months, so honest validation may require more data before it is
-possible at all.
+| # | Required | What was done |
+|---|---|---|
+| 1 | Drop `DC_POWER`, `DAILY_YIELD`, `TOTAL_YIELD` | ✅ excluded, along with 13 generation lags and rolling windows shorter than the horizon. Of the lags only `generation_lag_96` survives — 96 blocks is exactly 24 h. Headline accuracy did fall, as predicted. |
+| 2 | Fix `PLANT_ID` | ✅ **removed entirely** rather than fixed. Cross-plant transfer is handled by the capacity-factor target instead, which works with one plant's data; a categorical cannot. |
+| 3 | Predict in the platform's units | ✅ target is `AC_POWER / capacity` in [0, 1]; `MANIFEST.json` records the training capacity and the adapter multiplies by each plant's `avc_mw`. |
+| 4 | Constrain non-negative | ✅ clipped at training time and again at inference. |
+| 5 | Chronological splits | ✅ 60/20/20, never shuffled. |
+| 6 | Rebuild conformal calibration | ✅ conformalised quantile regression (Romano et al. 2019) on the middle split, which the boosters never saw. Raw coverage was 71.5% against a nominal 80%; calibrated, 85.9%. |
+
+One guard was added that the audit did not ask for: training **refuses to run** if any feature
+correlates above 0.98 with the label. The first run of the retrain script reported +93.7% skill,
+which turned out to be the target left in the feature matrix. The guard exists so that particular
+embarrassment cannot recur silently.
+
+The data constraint named in the original audit stands and is now recorded in the manifest: 2,774
+rows at 15-minute resolution is **29.9 days**, one plant. Rolling-origin cross-validation needs
+months, so it was not attempted rather than faked.
 
 ---
 
-## When the models are ready
+## Verifying it end to end
 
 ```bash
 pip install -r requirements.txt          # lightgbm included
@@ -172,10 +205,18 @@ export FORECAST_ENGINE_TYPE=production
 curl localhost:8000/health | jq '.engines, .serving_synthetic_data, .forecast_models'
 ```
 
-`serving_synthetic_data` should no longer list `forecast`, and `forecast_models.status` should
-be `ok`. Then revisit `tests/test_forecast_lgbm.py::test_rejects_output_that_violates_physics`
-— once the models are correct, a *passing* forecast is the expected outcome and that test
-should be inverted to assert plausibility instead.
+`serving_synthetic_data` should be `[]`, and `forecast_models.status` should be `ok` with
+`target: "capacity_factor"`.
+
+`tests/test_forecast_lgbm.py` was inverted as this section originally anticipated: a *passing*
+forecast is now the expected outcome, asserted in plant-scale MW with the band widened and the
+night clamped. The legacy bundle keeps a test of its own asserting that the gate still rejects it.
+
+> One trap worth knowing if you write a test here. Use a **day-ahead** date and give the fixture
+> zero irradiance outside 06:00–19:00 IST. A same-day request exercises a different weather window
+> (see PR #20), and a fixture claiming sunlight at midnight asks the model a question it never saw
+> in training — the night-time gate will correctly refuse the answer, and the test will look like a
+> model failure when it is a fixture failure.
 
 ---
 
