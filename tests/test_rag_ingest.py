@@ -172,3 +172,72 @@ def test_chunk_dataclass_round_trips_its_id():
         source_url="u", effective_date=None, chunk_text="t", chunk_index=3,
     )
     assert chunk.stable_id() == "D::Regulation 1::2::3"
+
+
+# ------------------------------------------------------- chunk start boundaries
+def test_no_chunk_begins_in_the_middle_of_a_word():
+    """The overlap used to rewind a fixed 200 characters with no regard for word
+    boundaries, so 33% of chunks began mid-word.
+
+    Two consequences, neither of which fails anything loudly: BM25 indexes
+    "ation" instead of "deviation", so the term the query actually contains is
+    missing from that chunk; and the citation snippet a judge clicks through to
+    reads "ly, the Commission is of the view".
+    """
+    sentence = "The Commission is of the view that deviation charges shall apply. "
+    text = "Regulation 8 Charges\n" + sentence * 120
+    chunks = chunk_pages([(1, text)], DOC_META)
+    assert len(chunks) > 1, "the fixture must be long enough to be split"
+
+    joined = " ".join(text.split())
+    for chunk in chunks:
+        head = chunk.chunk_text[:40]
+        position = joined.find(head)
+        if position > 0:
+            assert joined[position - 1].isspace(), (
+                f"chunk begins mid-word: {chunk.chunk_text[:50]!r}"
+            )
+
+
+def test_overlap_still_overlaps_after_snapping():
+    """Snapping forward must not cost so much that consecutive chunks stop
+    sharing text -- the overlap is what keeps a sentence split across a boundary
+    retrievable."""
+    sentence = "Deviation charges shall be payable by the seller at the normal rate. "
+    chunks = _window(sentence * 100)
+    assert len(chunks) > 1
+    tail_words = chunks[0].split()[-6:]
+    assert any(w in chunks[1] for w in tail_words), "consecutive chunks share nothing"
+
+
+def test_snapping_never_drops_text_between_chunks():
+    """Moving the start forward is safe only because the previous chunk already
+    contains the skipped characters."""
+    text = "Regulation 9 Pooling\n" + ("Generators may pool deviation across plants. " * 100)
+    chunks = chunk_pages([(1, text)], DOC_META)
+    recovered = " ".join(c.chunk_text for c in chunks)
+    for word in ("Generators", "pool", "deviation", "plants"):
+        assert word in recovered
+
+
+def test_a_single_unbroken_token_does_not_collapse_a_chunk():
+    """Degenerate input -- a long run with no whitespace -- must still produce
+    chunks rather than an empty list or an infinite loop."""
+    parts = _window("x" * (MAX_CHARS * 3))
+    assert parts
+    assert all(len(p) <= MAX_CHARS for p in parts)
+
+
+def test_snap_to_word_leaves_a_position_already_at_a_boundary():
+    from backend.modules.rag.ingest import _snap_to_word
+
+    text = "alpha beta gamma"
+    assert _snap_to_word(text, 6, len(text)) == 6   # already at "beta"
+    assert _snap_to_word(text, 0, len(text)) == 0   # start of text
+
+
+def test_snap_to_word_advances_out_of_a_word():
+    from backend.modules.rag.ingest import _snap_to_word
+
+    text = "alpha beta gamma"
+    assert _snap_to_word(text, 8, len(text)) == 11  # mid-"beta" -> start of "gamma"
