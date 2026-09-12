@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import hashlib
+import os
 from typing import List, Dict
 
 class MockForecastEngine:
@@ -32,8 +33,26 @@ class MockForecastEngine:
             noise = rng.normal(0, avc_mw * 0.05)
             p50 = max(0.0, min(avc_mw, base_mw + noise))
             
-            # Spread factor
-            spread_factor = 0.2 if asset_type == 'solar' else 0.4
+            # Forecast band width.
+            #
+            # These were 0.2 (solar) / 0.4 (wind), which put P05-P95 at only
+            # +/-9% and +/-18% of P50. The CERC solar tolerance band is +/-10%,
+            # so the entire solar forecast band fell INSIDE the band that
+            # triggers charges -- every block scored a zero penalty, the
+            # optimiser had nothing to save, and the dashboard's headline read
+            # "saves Rs 0 (0.0%)". The whole rupee value proposition was
+            # invisible, from the forecast being implausibly confident rather
+            # than from any fault in the DSM engine.
+            #
+            # Day-ahead solar P05-P95 is realistically +/-30-35% of P50 and wind
+            # is wider still, so a band narrower than the tolerance band is not
+            # a conservative choice -- it is a physically wrong one.
+            # val = p50 * (1 + spread_factor * (q - 0.5)), so the P95 offset is
+            # 0.45 * spread_factor.
+            spread_factor = float(os.getenv(
+                'MOCK_FORECAST_SPREAD',
+                '0.75' if asset_type == 'solar' else '1.10',
+            ))
             
             quantiles = {}
             for q in [0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95]:
