@@ -158,7 +158,17 @@ def compute_pooling_benefit(
     ncd: float,
     freq_hz: float,
 ) -> Dict:
-    """Compare settling each plant alone against settling the pool as one entity."""
+    """Compare settling each plant alone against settling the pool, **for one block**.
+
+    `plants_data` is the set of plants in the pool at a single instant -- one
+    entry per plant, never per plant-block. For a whole day, use
+    `compute_pooling_benefit_by_block`, which loops this over the 96 blocks.
+
+    Deviation is a per-block quantity under CERC: a shortfall at 09:00 does not
+    offset a surplus at 15:00, because they settle separately. Aggregating a
+    day into a single call is therefore not a shortcut, it is a different and
+    wrong calculation.
+    """
     empty = {
         "individual_total_inr": 0.0,
         "pooled_total_inr": 0.0,
@@ -168,6 +178,21 @@ def compute_pooling_benefit(
     }
     if not plants_data:
         return empty
+
+    # A plant cannot appear twice in one pool at one instant. When it does, the
+    # caller has flattened a time series into the plant axis -- which inflates
+    # pool_avc_mw by the number of blocks, widens the tolerance band by the same
+    # factor, and drives the pooled penalty to zero. Both API routes did exactly
+    # this and reported a 100% pooling saving on the dashboard.
+    seen = [p["plant_id"] for p in plants_data]
+    duplicates = {pid for pid in seen if seen.count(pid) > 1}
+    if duplicates:
+        raise ValueError(
+            f"compute_pooling_benefit received {len(seen)} entries covering only "
+            f"{len(set(seen))} plants -- {sorted(duplicates)} appear more than once. "
+            "This function settles ONE block; pass one entry per plant. For a full "
+            "day use compute_pooling_benefit_by_block()."
+        )
 
     individual_total_inr = 0.0
     per_plant = []
@@ -234,4 +259,59 @@ def allocate_pool_savings(
     return {
         plant_id: pooled_total * (penalty / sum_individual)
         for plant_id, penalty in individual_penalties.items()
+    }
+
+
+def compute_pooling_benefit_by_block(
+    blocks: List[List[Dict]],
+    dsm_engine,
+    ncd: float,
+    freq_hz: float,
+) -> Dict:
+    """Pooling benefit across a whole day, settled block by block.
+
+    `blocks` is one entry per time block, each holding the pool's plants at that
+    instant -- i.e. `blocks[b]` is what `compute_pooling_benefit` expects.
+
+    Summing per-block results is the only correct aggregation. Deviations settle
+    per block under CERC, so a shortfall at 09:00 cannot offset a surplus at
+    15:00, and collapsing the day into one call silently inflates the pool's
+    Available Capacity (and therefore its tolerance band) by the number of
+    blocks.
+    """
+    individual_total = 0.0
+    pooled_total = 0.0
+    per_plant: Dict[str, float] = {}
+    meta: Dict = {}
+
+    for block in blocks:
+        if not block:
+            continue
+        result = compute_pooling_benefit(block, dsm_engine, ncd, freq_hz)
+        individual_total += result["individual_total_inr"]
+        pooled_total += result["pooled_total_inr"]
+        for entry in result["per_plant"]:
+            per_plant[entry["plant_id"]] = per_plant.get(entry["plant_id"], 0.0) + entry["individual_inr"]
+        if not meta:
+            meta = {
+                "pool_size": result.get("pool_size", len(block)),
+                "pool_avc_mw": result.get("pool_avc_mw", 0.0),
+                "asset_type_used": result.get("asset_type_used", "solar"),
+                "correlation_assumed": result.get("correlation_assumed"),
+            }
+
+    delta = individual_total - pooled_total
+    savings_pct = (delta / individual_total * 100.0) if individual_total > 0 else 0.0
+
+    return {
+        "individual_total_inr": individual_total,
+        "pooled_total_inr": pooled_total,
+        "savings_inr": delta,
+        "savings_pct": savings_pct,
+        "per_plant": [
+            {"plant_id": pid, "individual_inr": value} for pid, value in per_plant.items()
+        ],
+        "blocks_settled": len([b for b in blocks if b]),
+        "beneficial": delta > 0,
+        **meta,
     }

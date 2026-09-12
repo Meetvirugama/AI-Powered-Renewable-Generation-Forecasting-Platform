@@ -206,3 +206,51 @@ def test_realised_deviation_nets_without_any_correlation_model():
         x=1.0,
     )
     assert deviation == pytest.approx(0.0), "opposite deviations must cancel exactly"
+
+
+# ------------------------------------------------- per-block settlement guard
+def test_passing_a_flattened_day_is_rejected(engine):
+    """The bug that put a 100% pooling saving on the dashboard.
+
+    Both API routes built one flat list of every (plant, block) pair and called
+    compute_pooling_benefit once. That treats 288 plant-blocks as 288
+    simultaneous plants, inflating pool AvC (and the tolerance band with it)
+    96-fold until the pooled penalty is trivially zero.
+    """
+    flattened = [_plant("A", 40.0, 50.0), _plant("A", 42.0, 50.0), _plant("B", 30.0, 40.0)]
+    with pytest.raises(ValueError) as exc:
+        pooling_module.compute_pooling_benefit(flattened, engine, 450.0, 50.0)
+    message = str(exc.value)
+    assert "more than once" in message
+    assert "compute_pooling_benefit_by_block" in message, "the error should name the fix"
+
+
+def test_day_level_helper_sums_per_block_results(engine):
+    block = [_plant("A", 40.0, 50.0), _plant("B", 55.0, 75.0)]
+    single = pooling_module.compute_pooling_benefit(block, engine, 450.0, 50.0)
+    day = pooling_module.compute_pooling_benefit_by_block([block] * 96, engine, 450.0, 50.0)
+
+    assert day["blocks_settled"] == 96
+    assert day["individual_total_inr"] == pytest.approx(single["individual_total_inr"] * 96)
+    assert day["pooled_total_inr"] == pytest.approx(single["pooled_total_inr"] * 96)
+    # The percentage is scale-invariant, so it must match the single block.
+    assert day["savings_pct"] == pytest.approx(single["savings_pct"])
+
+
+def test_day_level_helper_does_not_inflate_pool_capacity(engine):
+    """pool_avc_mw must describe the pool, not the pool times 96 blocks."""
+    block = [_plant("A", 40.0, 50.0), _plant("B", 55.0, 75.0)]
+    day = pooling_module.compute_pooling_benefit_by_block([block] * 96, engine, 450.0, 50.0)
+    assert day["pool_avc_mw"] == pytest.approx(125.0)
+
+
+def test_day_level_helper_tolerates_empty_blocks(engine):
+    block = [_plant("A", 40.0, 50.0), _plant("B", 55.0, 75.0)]
+    day = pooling_module.compute_pooling_benefit_by_block([block, [], block], engine, 450.0, 50.0)
+    assert day["blocks_settled"] == 2
+
+
+def test_day_level_helper_on_no_blocks(engine):
+    day = pooling_module.compute_pooling_benefit_by_block([], engine, 450.0, 50.0)
+    assert day["individual_total_inr"] == 0.0
+    assert day["savings_pct"] == 0.0
