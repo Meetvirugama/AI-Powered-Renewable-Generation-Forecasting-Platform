@@ -1165,682 +1165,682 @@
   "dsm_summary": {
     "plant_id": "GJ_SOLAR_A",
     "date": "2026-06-15",
-    "rule_version": "2026",
-    "x_value": 0.85,
-    "total_expected_penalty_inr": 22583,
-    "total_p50_penalty_inr": 17783,
+    "rule_version": "CERC_DSM_2026",
+    "x_value": 1.0,
+    "total_expected_penalty_inr": 30688.18,
+    "total_p50_penalty_inr": 13687.88,
     "blocks": [
       {
         "block_no": 1,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 2,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 3,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 4,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 5,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 6,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 7,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 8,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 9,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 10,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 11,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 12,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 13,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 14,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 15,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 16,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 17,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 18,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 19,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 20,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 21,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 22,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 23,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 24,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 25,
-        "expected_penalty_inr": 328,
-        "p50_penalty_inr": 278,
-        "schedule_mw": 4,
-        "deviation_pct_at_p50": 0.5130114273146811
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 26,
-        "expected_penalty_inr": 498,
-        "p50_penalty_inr": 448,
-        "schedule_mw": 6,
-        "deviation_pct_at_p50": 0.3561165957425585
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 3.14,
+        "deviation_pct_at_p50": 1.36
       },
       {
         "block_no": 27,
-        "expected_penalty_inr": 522,
-        "p50_penalty_inr": 472,
-        "schedule_mw": 9,
-        "deviation_pct_at_p50": 3.523843211609204
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 6.26,
+        "deviation_pct_at_p50": 2.94
       },
       {
         "block_no": 28,
-        "expected_penalty_inr": 429,
-        "p50_penalty_inr": 379,
-        "schedule_mw": 12,
-        "deviation_pct_at_p50": 4.10738934792349
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 9.36,
+        "deviation_pct_at_p50": 4.62
       },
       {
         "block_no": 29,
-        "expected_penalty_inr": 246,
-        "p50_penalty_inr": 196,
-        "schedule_mw": 14,
-        "deviation_pct_at_p50": -0.8647245229025042
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 12.42,
+        "deviation_pct_at_p50": 6.36
       },
       {
         "block_no": 30,
-        "expected_penalty_inr": 580,
-        "p50_penalty_inr": 530,
-        "schedule_mw": 17,
-        "deviation_pct_at_p50": -4.70873601343187
+        "expected_penalty_inr": 168.66,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 15.42,
+        "deviation_pct_at_p50": 8.0
       },
       {
         "block_no": 31,
-        "expected_penalty_inr": 635,
-        "p50_penalty_inr": 585,
-        "schedule_mw": 20,
-        "deviation_pct_at_p50": -0.8407343000886227
+        "expected_penalty_inr": 200.7,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 18.35,
+        "deviation_pct_at_p50": 9.5
       },
       {
         "block_no": 32,
-        "expected_penalty_inr": 589,
-        "p50_penalty_inr": 539,
-        "schedule_mw": 23,
-        "deviation_pct_at_p50": -2.156504628803665
+        "expected_penalty_inr": 397.5,
+        "p50_penalty_inr": 604.13,
+        "schedule_mw": 21.2,
+        "deviation_pct_at_p50": 10.74
       },
       {
         "block_no": 33,
-        "expected_penalty_inr": 366,
-        "p50_penalty_inr": 316,
-        "schedule_mw": 26,
-        "deviation_pct_at_p50": -2.952524763296236
+        "expected_penalty_inr": 449.06,
+        "p50_penalty_inr": 655.88,
+        "schedule_mw": 23.95,
+        "deviation_pct_at_p50": 11.66
       },
       {
         "block_no": 34,
-        "expected_penalty_inr": 296,
-        "p50_penalty_inr": 246,
-        "schedule_mw": 28,
-        "deviation_pct_at_p50": -4.08124565196691
+        "expected_penalty_inr": 498.75,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 26.6,
+        "deviation_pct_at_p50": 4.74
       },
       {
         "block_no": 35,
-        "expected_penalty_inr": 626,
-        "p50_penalty_inr": 576,
-        "schedule_mw": 30,
-        "deviation_pct_at_p50": -2.5910128374948282
+        "expected_penalty_inr": 546.19,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 29.13,
+        "deviation_pct_at_p50": 4.16
       },
       {
         "block_no": 36,
-        "expected_penalty_inr": 282,
-        "p50_penalty_inr": 232,
-        "schedule_mw": 32,
-        "deviation_pct_at_p50": -1.5301604476494548
+        "expected_penalty_inr": 591.19,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 31.53,
+        "deviation_pct_at_p50": 3.2
       },
       {
         "block_no": 37,
-        "expected_penalty_inr": 514,
-        "p50_penalty_inr": 464,
-        "schedule_mw": 34,
-        "deviation_pct_at_p50": 1.8528938751592685
+        "expected_penalty_inr": 791.72,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 33.78,
+        "deviation_pct_at_p50": 1.88
       },
       {
         "block_no": 38,
-        "expected_penalty_inr": 522,
-        "p50_penalty_inr": 472,
-        "schedule_mw": 35,
-        "deviation_pct_at_p50": -4.596940126979642
+        "expected_penalty_inr": 841.17,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 35.89,
+        "deviation_pct_at_p50": 0.3
       },
       {
         "block_no": 39,
-        "expected_penalty_inr": 168,
-        "p50_penalty_inr": 118,
-        "schedule_mw": 39,
-        "deviation_pct_at_p50": 4.270044802901236
+        "expected_penalty_inr": 869.94,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 37.84,
+        "deviation_pct_at_p50": -1.5
       },
       {
         "block_no": 40,
-        "expected_penalty_inr": 486,
-        "p50_penalty_inr": 436,
-        "schedule_mw": 40,
-        "deviation_pct_at_p50": 3.9699646764740866
+        "expected_penalty_inr": 1500.59,
+        "p50_penalty_inr": 993.37,
+        "schedule_mw": 39.62,
+        "deviation_pct_at_p50": -17.66
       },
       {
         "block_no": 41,
-        "expected_penalty_inr": 278,
-        "p50_penalty_inr": 228,
-        "schedule_mw": 42,
-        "deviation_pct_at_p50": 4.809710105355617
+        "expected_penalty_inr": 1466.54,
+        "p50_penalty_inr": 1134.0,
+        "schedule_mw": 41.22,
+        "deviation_pct_at_p50": -20.16
       },
       {
         "block_no": 42,
-        "expected_penalty_inr": 581,
-        "p50_penalty_inr": 531,
-        "schedule_mw": 41,
-        "deviation_pct_at_p50": -3.196359974114186
+        "expected_penalty_inr": 1436.53,
+        "p50_penalty_inr": 1262.25,
+        "schedule_mw": 42.63,
+        "deviation_pct_at_p50": -22.44
       },
       {
         "block_no": 43,
-        "expected_penalty_inr": 634,
-        "p50_penalty_inr": 584,
-        "schedule_mw": 42,
-        "deviation_pct_at_p50": 2.2781017715934766
+        "expected_penalty_inr": 1407.61,
+        "p50_penalty_inr": 1375.88,
+        "schedule_mw": 43.86,
+        "deviation_pct_at_p50": -24.46
       },
       {
         "block_no": 44,
-        "expected_penalty_inr": 296,
-        "p50_penalty_inr": 246,
-        "schedule_mw": 43,
-        "deviation_pct_at_p50": -1.109027812709804
+        "expected_penalty_inr": 1367.28,
+        "p50_penalty_inr": 1467.0,
+        "schedule_mw": 44.89,
+        "deviation_pct_at_p50": -26.08
       },
       {
         "block_no": 45,
-        "expected_penalty_inr": 385,
-        "p50_penalty_inr": 335,
-        "schedule_mw": 44,
-        "deviation_pct_at_p50": 1.8115434129283914
+        "expected_penalty_inr": 1067.28,
+        "p50_penalty_inr": 1530.0,
+        "schedule_mw": 45.72,
+        "deviation_pct_at_p50": -27.2
       },
       {
         "block_no": 46,
-        "expected_penalty_inr": 189,
-        "p50_penalty_inr": 139,
-        "schedule_mw": 46,
-        "deviation_pct_at_p50": 1.2330298517534244
+        "expected_penalty_inr": 1081.98,
+        "p50_penalty_inr": 1563.75,
+        "schedule_mw": 46.35,
+        "deviation_pct_at_p50": -27.8
       },
       {
         "block_no": 47,
-        "expected_penalty_inr": 258,
-        "p50_penalty_inr": 208,
-        "schedule_mw": 45,
-        "deviation_pct_at_p50": 4.064353664311117
+        "expected_penalty_inr": 1091.55,
+        "p50_penalty_inr": 1566.0,
+        "schedule_mw": 46.76,
+        "deviation_pct_at_p50": -27.84
       },
       {
         "block_no": 48,
-        "expected_penalty_inr": 316,
-        "p50_penalty_inr": 266,
-        "schedule_mw": 45,
-        "deviation_pct_at_p50": -0.36325446173488896
+        "expected_penalty_inr": 1096.46,
+        "p50_penalty_inr": 1535.62,
+        "schedule_mw": 46.97,
+        "deviation_pct_at_p50": -27.3
       },
       {
         "block_no": 49,
-        "expected_penalty_inr": 420,
-        "p50_penalty_inr": 370,
-        "schedule_mw": 45,
-        "deviation_pct_at_p50": -2.8219201984327844
+        "expected_penalty_inr": 1096.46,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 46.97,
+        "deviation_pct_at_p50": -9.3
       },
       {
         "block_no": 50,
-        "expected_penalty_inr": 502,
-        "p50_penalty_inr": 452,
-        "schedule_mw": 44,
-        "deviation_pct_at_p50": 2.389719664720049
+        "expected_penalty_inr": 1091.55,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 46.76,
+        "deviation_pct_at_p50": -7.82
       },
       {
         "block_no": 51,
-        "expected_penalty_inr": 153,
-        "p50_penalty_inr": 103,
-        "schedule_mw": 45,
-        "deviation_pct_at_p50": -4.013873503433416
+        "expected_penalty_inr": 1081.98,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 46.35,
+        "deviation_pct_at_p50": -6.0
       },
       {
         "block_no": 52,
-        "expected_penalty_inr": 475,
-        "p50_penalty_inr": 425,
-        "schedule_mw": 44,
-        "deviation_pct_at_p50": 1.2115652198715434
+        "expected_penalty_inr": 1067.28,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 45.72,
+        "deviation_pct_at_p50": -3.96
       },
       {
         "block_no": 53,
-        "expected_penalty_inr": 398,
-        "p50_penalty_inr": 348,
-        "schedule_mw": 44,
-        "deviation_pct_at_p50": -1.4945877618062542
+        "expected_penalty_inr": 765.59,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 44.89,
+        "deviation_pct_at_p50": -1.8
       },
       {
         "block_no": 54,
-        "expected_penalty_inr": 386,
-        "p50_penalty_inr": 336,
-        "schedule_mw": 41,
-        "deviation_pct_at_p50": 2.176115317847504
+        "expected_penalty_inr": 801.8,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 43.86,
+        "deviation_pct_at_p50": 0.34
       },
       {
         "block_no": 55,
-        "expected_penalty_inr": 331,
-        "p50_penalty_inr": 281,
-        "schedule_mw": 40,
-        "deviation_pct_at_p50": -3.035034683369424
+        "expected_penalty_inr": 829.8,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 42.63,
+        "deviation_pct_at_p50": 2.36
       },
       {
         "block_no": 56,
-        "expected_penalty_inr": 479,
-        "p50_penalty_inr": 429,
-        "schedule_mw": 40,
-        "deviation_pct_at_p50": -4.280831680584463
+        "expected_penalty_inr": 854.03,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 41.22,
+        "deviation_pct_at_p50": 4.16
       },
       {
         "block_no": 57,
-        "expected_penalty_inr": 432,
-        "p50_penalty_inr": 382,
-        "schedule_mw": 39,
-        "deviation_pct_at_p50": 2.1139916943162333
+        "expected_penalty_inr": 874.11,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 39.62,
+        "deviation_pct_at_p50": 5.64
       },
       {
         "block_no": 58,
-        "expected_penalty_inr": 585,
-        "p50_penalty_inr": 535,
-        "schedule_mw": 36,
-        "deviation_pct_at_p50": 4.299857246913245
+        "expected_penalty_inr": 869.94,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 37.84,
+        "deviation_pct_at_p50": 6.72
       },
       {
         "block_no": 59,
-        "expected_penalty_inr": 621,
-        "p50_penalty_inr": 571,
-        "schedule_mw": 35,
-        "deviation_pct_at_p50": -1.3275106973464688
+        "expected_penalty_inr": 841.17,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 35.89,
+        "deviation_pct_at_p50": 7.4
       },
       {
         "block_no": 60,
-        "expected_penalty_inr": 527,
-        "p50_penalty_inr": 477,
-        "schedule_mw": 32,
-        "deviation_pct_at_p50": -0.042309928090384474
+        "expected_penalty_inr": 791.72,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 33.78,
+        "deviation_pct_at_p50": 7.66
       },
       {
         "block_no": 61,
-        "expected_penalty_inr": 362,
-        "p50_penalty_inr": 312,
-        "schedule_mw": 29,
-        "deviation_pct_at_p50": -3.7409957709405406
+        "expected_penalty_inr": 591.19,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 31.53,
+        "deviation_pct_at_p50": 7.5
       },
       {
         "block_no": 62,
-        "expected_penalty_inr": 502,
-        "p50_penalty_inr": 452,
-        "schedule_mw": 29,
-        "deviation_pct_at_p50": 3.4724814947588616
+        "expected_penalty_inr": 546.19,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 29.13,
+        "deviation_pct_at_p50": 6.98
       },
       {
         "block_no": 63,
-        "expected_penalty_inr": 253,
-        "p50_penalty_inr": 203,
-        "schedule_mw": 26,
-        "deviation_pct_at_p50": 4.414080906174945
+        "expected_penalty_inr": 498.75,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 26.6,
+        "deviation_pct_at_p50": 6.16
       },
       {
         "block_no": 64,
-        "expected_penalty_inr": 511,
-        "p50_penalty_inr": 461,
-        "schedule_mw": 24,
-        "deviation_pct_at_p50": -1.6343603470112433
+        "expected_penalty_inr": 449.06,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 23.95,
+        "deviation_pct_at_p50": 5.14
       },
       {
         "block_no": 65,
-        "expected_penalty_inr": 179,
-        "p50_penalty_inr": 129,
-        "schedule_mw": 20,
-        "deviation_pct_at_p50": 1.2768241813414383
+        "expected_penalty_inr": 397.5,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 21.2,
+        "deviation_pct_at_p50": 4.0
       },
       {
         "block_no": 66,
-        "expected_penalty_inr": 436,
-        "p50_penalty_inr": 386,
-        "schedule_mw": 17,
-        "deviation_pct_at_p50": -3.115755604879109
+        "expected_penalty_inr": 200.7,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 18.35,
+        "deviation_pct_at_p50": 2.84
       },
       {
         "block_no": 67,
-        "expected_penalty_inr": 602,
-        "p50_penalty_inr": 552,
-        "schedule_mw": 14,
-        "deviation_pct_at_p50": 1.5821019725332475
+        "expected_penalty_inr": 168.66,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 15.42,
+        "deviation_pct_at_p50": 1.78
       },
       {
         "block_no": 68,
-        "expected_penalty_inr": 319,
-        "p50_penalty_inr": 269,
-        "schedule_mw": 12,
-        "deviation_pct_at_p50": -3.64200607891822
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 12.42,
+        "deviation_pct_at_p50": 0.88
       },
       {
         "block_no": 69,
-        "expected_penalty_inr": 498,
-        "p50_penalty_inr": 448,
-        "schedule_mw": 10,
-        "deviation_pct_at_p50": 2.3947832081743856
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 9.36,
+        "deviation_pct_at_p50": 0.22
       },
       {
         "block_no": 70,
-        "expected_penalty_inr": 517,
-        "p50_penalty_inr": 467,
-        "schedule_mw": 7,
-        "deviation_pct_at_p50": -4.0912711546224525
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 6.26,
+        "deviation_pct_at_p50": -0.14
       },
       {
         "block_no": 71,
-        "expected_penalty_inr": 621,
-        "p50_penalty_inr": 571,
-        "schedule_mw": 4,
-        "deviation_pct_at_p50": -0.06484569506625526
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 3.14,
+        "deviation_pct_at_p50": -0.22
       },
       {
         "block_no": 72,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": -0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 73,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 74,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 75,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 76,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 77,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 78,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 79,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 80,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 81,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 82,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 83,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 84,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 85,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 86,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 87,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 88,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 89,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 90,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 91,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 92,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 93,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 1,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 94,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 95,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       },
       {
         "block_no": 96,
-        "expected_penalty_inr": 50,
-        "p50_penalty_inr": 0,
-        "schedule_mw": 0,
-        "deviation_pct_at_p50": 0
+        "expected_penalty_inr": 0.0,
+        "p50_penalty_inr": 0.0,
+        "schedule_mw": 0.0,
+        "deviation_pct_at_p50": 0.0
       }
     ]
   },
@@ -1928,6 +1928,9 @@
     "summary": "Optimised schedule saves \u20b910,145.99 (31.0%) against a naive P50 submission under CERC 2026 rules.",
     "risk_level": "HIGH_SAVINGS_OPPORTUNITY",
     "total_expected_penalty_inr": 22583,
-    "potential_savings_inr": 10145.99
+    "potential_savings_inr": 10145.99,
+    "savings_inr": 10145.99,
+    "naive_total_inr": 32728.99,
+    "optimised_total_inr": 22583.0
   }
 }
