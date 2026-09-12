@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getDashboard } from "../api/endpoints";
 import { DashboardResponse } from "../types/api";
 import dashboardMock from "../mocks/dashboard.json";
+import plantsMock from "../mocks/plants.json";
 
 export const useDashboard = (plantId: string, date?: string) => {
   const [data, setData] = useState<DashboardResponse | null>(null);
@@ -18,7 +19,16 @@ export const useDashboard = (plantId: string, date?: string) => {
     setData(null);
     try {
       if (import.meta.env.VITE_USE_MOCKS === "true") {
-        setData(dashboardMock as DashboardResponse);
+        // Patch the single mock fixture with the selected plant's identity
+        // so the UI reflects the correct plant name/capacity when switching.
+        const plant = plantsMock.plants.find((p) => p.id === plantId);
+        const patched = {
+          ...dashboardMock,
+          plant_id: plantId,
+          plant_name: plant?.name ?? plantId,
+          avc_mw: plant?.avc_mw ?? dashboardMock.avc_mw,
+        } as DashboardResponse;
+        setData(patched);
       } else {
         const response = await getDashboard(plantId, date, signal);
         if (signal?.aborted) return;

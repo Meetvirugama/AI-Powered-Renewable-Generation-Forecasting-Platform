@@ -32,10 +32,11 @@ export const getPlant = async (id: string, signal?: AbortSignal): Promise<Plant>
 export const getForecast = async (
   plantId: string,
   date?: string,
+  hours: 24 | 48 | 72 = 24,
   signal?: AbortSignal
 ): Promise<ForecastResponse> => {
   const { data } = await apiClient.get<ForecastResponse>("/forecast", {
-    params: { plant_id: plantId, ...(date ? { date } : {}) },
+    params: { plant_id: plantId, hours, ...(date ? { date } : {}) },
     signal,
   });
   return data;
