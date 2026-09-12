@@ -10,7 +10,7 @@ from backend.modules.rag.mock_copilot import MockRAGCopilot
 logger = logging.getLogger('renewable_platform')
 
 class ForecastEngineProtocol(Protocol):
-    def generate_forecast(self, plant: dict, date_str: str, num_blocks: int = 96) -> list[dict]:
+    def generate_forecast(self, plant: dict, date_str: str, num_blocks: int = 96, **kwargs) -> list[dict]:
         ...
 
 class ScheduleOptimizerProtocol(Protocol):

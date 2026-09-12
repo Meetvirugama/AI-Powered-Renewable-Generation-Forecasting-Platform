@@ -1,8 +1,11 @@
+import asyncio
 import time
 import uuid
 import logging
 from datetime import date, datetime, timezone
-from typing import Optional
+from typing import Optional, Dict, Any, List
+import numpy as np
+import pandas as pd
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
@@ -15,12 +18,34 @@ from backend.db.models import (
     Action,
     PoolingResult,
     JobRun,
+    WeatherForecast,
 )
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
 from backend.modules.dsm.pooling import compute_pooling_benefit
+from backend.data.ingestion.openmeteo import fetch_weather_forecast
+from backend.data.quality.validator import validate_weather_data, zero_fill_nighttime_solar
+from backend.data.quality.resampler import (
+    resample_hourly_to_15min,
+    add_block_numbers,
+    add_ist_columns,
+)
 
 logger = logging.getLogger("renewable_platform")
+
+
+def _run_async(coro):
+    """Safely execute an async coroutine across sync threads and running event loops."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    if loop and loop.is_running():
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            return executor.submit(asyncio.run, coro).result()
+    else:
+        return asyncio.run(coro)
 
 
 class DailyPipelineOrchestrator:
@@ -33,26 +58,132 @@ class DailyPipelineOrchestrator:
         self.optimizer = optimizer or get_schedule_optimizer()
         self.settings = get_settings()
 
+    def _ingest_weather(
+        self, plants_cfg: List[Dict[str, Any]], target_date: date, db: Session
+    ) -> Dict[str, Dict[int, Dict[str, float]]]:
+        """
+        Fetch, validate, resample, persist weather forecasts and format for feature builder.
+        Returns mapping: plant_id -> {block_no -> {feature_name: value}}
+        """
+        weather_by_plant: Dict[str, Dict[int, Dict[str, float]]] = {}
+        issue_time = datetime.now(timezone.utc)
+        target_date_str = target_date.strftime("%Y-%m-%d")
+
+        for plant in plants_cfg:
+            plant_id = str(plant.get("id"))
+            lat = plant.get("lat")
+            lon = plant.get("lon")
+            asset_type = str(plant.get("type", "solar")).lower()
+
+            if lat is None or lon is None:
+                logger.warning(f"Skipping weather ingestion for {plant_id}: missing coordinates.")
+                continue
+
+            try:
+                raw_df = _run_async(fetch_weather_forecast(lat=float(lat), lon=float(lon), forecast_days=3))
+            except Exception as exc:
+                logger.warning(f"Failed to fetch Open-Meteo weather for plant {plant_id}: {exc}")
+                raw_df = pd.DataFrame()
+
+            if raw_df is None or raw_df.empty:
+                logger.info(f"No weather data available for plant {plant_id}; continuing without live weather.")
+                weather_by_plant[plant_id] = {}
+                continue
+
+            # Quality validation and cleaning
+            cleaned_df, _ = validate_weather_data(raw_df)
+            if asset_type == "solar":
+                cleaned_df = zero_fill_nighttime_solar(cleaned_df)
+
+            # 15-minute grid block alignment
+            resampled_df = resample_hourly_to_15min(cleaned_df, time_col="timestamp")
+            resampled_df = add_block_numbers(resampled_df, time_col="timestamp")
+            resampled_df = add_ist_columns(resampled_df, utc_col="timestamp")
+
+            # Filter for target date in IST/UTC context
+            # We match the 96 blocks for target date
+            plant_blocks_weather: Dict[int, Dict[str, float]] = {}
+
+            # Filter rows for target date
+            resampled_df["date_str"] = resampled_df["timestamp"].dt.strftime("%Y-%m-%d")
+            day_df = resampled_df[resampled_df["date_str"] == target_date_str]
+            if day_df.empty:
+                # If target date isn't exact UTC date match, take first 96 blocks available
+                day_df = resampled_df.head(96)
+
+            for _, row in day_df.iterrows():
+                block_no = int(row.get("block_no", 1))
+                valid_dt = row["timestamp"].to_pydatetime()
+                if valid_dt.tzinfo is None:
+                    valid_dt = valid_dt.replace(tzinfo=timezone.utc)
+
+                # Persist to WeatherForecast table
+                wf_record = WeatherForecast(
+                    plant_id=plant_id,
+                    issue_time=issue_time,
+                    valid_time=valid_dt,
+                    ghi_w_m2=float(row["shortwave_radiation"]) if "shortwave_radiation" in row and pd.notna(row["shortwave_radiation"]) else None,
+                    dni_w_m2=float(row["direct_normal_irradiance"]) if "direct_normal_irradiance" in row and pd.notna(row["direct_normal_irradiance"]) else None,
+                    dhi_w_m2=float(row["diffuse_radiation"]) if "diffuse_radiation" in row and pd.notna(row["diffuse_radiation"]) else None,
+                    wind_10m=float(row["wind_speed_10m"]) if "wind_speed_10m" in row and pd.notna(row["wind_speed_10m"]) else None,
+                    wind_80m=float(row["wind_speed_80m"]) if "wind_speed_80m" in row and pd.notna(row["wind_speed_80m"]) else None,
+                    wind_120m=float(row["wind_speed_120m"]) if "wind_speed_120m" in row and pd.notna(row["wind_speed_120m"]) else None,
+                    temp_c=float(row["temperature_2m"]) if "temperature_2m" in row and pd.notna(row["temperature_2m"]) else None,
+                    humidity_pct=float(row["relative_humidity_2m"]) if "relative_humidity_2m" in row and pd.notna(row["relative_humidity_2m"]) else None,
+                    cloud_cover=float(row["cloud_cover"]) if "cloud_cover" in row and pd.notna(row["cloud_cover"]) else None,
+                    source="open-meteo",
+                )
+                db.add(wf_record)
+
+                # Weather feature dict for feature_builder / LGBM
+                feature_vals = {}
+                for col in row.index:
+                    if pd.notna(row[col]) and isinstance(row[col], (int, float, np.number)):
+                        feature_vals[col] = float(row[col])
+                plant_blocks_weather[block_no] = feature_vals
+
+            weather_by_plant[plant_id] = plant_blocks_weather
+
+        db.flush()
+        return weather_by_plant
+
     def run_pipeline(
-        self, db: Session, target_date: Optional[date] = None
+        self, db: Session, target_date: Optional[date] = None, run_id: Optional[str] = None
     ) -> JobRun:
         if target_date is None:
             target_date = date.today()
 
-        run_id = str(uuid.uuid4())
+        if run_id is None:
+            run_id = str(uuid.uuid4())
+            job_run = JobRun(
+                id=run_id,
+                run_time=datetime.now(timezone.utc),
+                status="running",
+                plants_processed=0,
+                duration_s=0.0,
+                error_msg=None,
+            )
+            db.add(job_run)
+            db.commit()
+        else:
+            job_run = db.execute(select(JobRun).where(JobRun.id == run_id)).scalar_one_or_none()
+            if job_run:
+                job_run.status = "running"
+                db.commit()
+            else:
+                job_run = JobRun(
+                    id=run_id,
+                    run_time=datetime.now(timezone.utc),
+                    status="running",
+                    plants_processed=0,
+                    duration_s=0.0,
+                    error_msg=None,
+                )
+                db.add(job_run)
+                db.commit()
+
         date_str = target_date.strftime("%Y-%m-%d")
         start_time = time.time()
-
-        job_run = JobRun(
-            id=run_id,
-            run_time=datetime.now(timezone.utc),
-            status="running",
-            plants_processed=0,
-            duration_s=0.0,
-            error_msg=None,
-        )
-        db.add(job_run)
-        db.commit()
 
         logger.info(f"Starting Daily Pipeline run_id={run_id} for date={date_str}")
 
@@ -77,6 +208,9 @@ class DailyPipelineOrchestrator:
                 config_path=self.settings.dsm_rule_config, rule_date=target_date
             )
 
+            # Step 0: Ingest & validate live weather forecasts
+            weather_by_plant = self._ingest_weather(plants_cfg=plants_cfg, target_date=target_date, db=db)
+
             all_forecasts_by_plant: dict[str, list[dict]] = {}
             all_schedules_by_plant: dict[str, list[float]] = {}
             all_plants_meta: dict[str, dict] = {}
@@ -88,7 +222,10 @@ class DailyPipelineOrchestrator:
                 all_plants_meta[plant_id] = plant
 
                 forecast_blocks = self.forecast_engine.generate_forecast(
-                    plant=plant, date_str=date_str, num_blocks=96
+                    plant=plant,
+                    date_str=date_str,
+                    num_blocks=96,
+                    weather=weather_by_plant.get(plant_id),
                 )
                 all_forecasts_by_plant[plant_id] = forecast_blocks
 
