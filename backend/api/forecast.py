@@ -6,7 +6,7 @@ from datetime import datetime
 
 from backend.db.session import get_db
 from backend.db.models import Plant
-from backend.core.plants import find_plant, list_plants, plants_in_pool
+from backend.core.plants import find_plant
 from backend.modules.factory import get_forecast_engine
 from backend.schemas.forecast import ForecastResponse, BlockForecast
 from backend.modules.forecast.weather_provider import forecast_for

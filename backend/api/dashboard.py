@@ -7,7 +7,7 @@ from datetime import datetime
 
 from backend.db.session import get_db
 from backend.core.config import get_settings
-from backend.core.plants import find_plant, list_plants, plants_in_pool
+from backend.core.plants import find_plant, plants_in_pool
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
 from backend.modules.dsm.pooling import compute_pooling_benefit_by_block, allocate_pool_savings
