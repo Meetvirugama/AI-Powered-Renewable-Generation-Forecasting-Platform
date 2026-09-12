@@ -1,7 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from backend.db.session import get_db
 from datetime import datetime
 
-from backend.core.config import load_plants_config, get_settings
+from backend.core.config import get_settings
+from backend.core.plants import list_plants, plants_in_pool
 from backend.modules.factory import get_forecast_engine
 from backend.modules.dsm.engine import DSMEngine
 from backend.modules.dsm.pooling import compute_pooling_benefit_by_block, allocate_pool_savings
@@ -12,10 +16,10 @@ router = APIRouter(prefix="/pooling", tags=["Pooling"])
 settings = get_settings()
 
 @router.post("", response_model=PoolingResponse)
-def calculate_pooling(request: PoolingRequest):
+def calculate_pooling(request: PoolingRequest, db: Session = Depends(get_db)):
     forecast_engine = get_forecast_engine()
-    all_plants = load_plants_config()
-    pool_plants = [p for p in all_plants if p.get("pool_id") == request.pool_id]
+    all_plants = list_plants(db)
+    pool_plants = plants_in_pool(request.pool_id, db)
     
     if not pool_plants:
         pool_plants = all_plants[:2]

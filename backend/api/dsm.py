@@ -1,7 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from backend.db.session import get_db
 from datetime import datetime
 
-from backend.core.config import load_plants_config, get_settings
+from backend.core.config import get_settings
+from backend.core.plants import find_plant
 from backend.modules.factory import get_forecast_engine
 from backend.modules.dsm.engine import DSMEngine
 from backend.schemas.dsm import DSMRequest, DSMResponse, BlockDSMResult
@@ -11,13 +15,9 @@ router = APIRouter(prefix="/dsm", tags=["DSM"])
 settings = get_settings()
 
 @router.post("", response_model=DSMResponse)
-def calculate_dsm(request: DSMRequest):
+def calculate_dsm(request: DSMRequest, db: Session = Depends(get_db)):
     forecast_engine = get_forecast_engine()
-    plant_cfg = None
-    for p in load_plants_config():
-        if p["id"] == request.plant_id:
-            plant_cfg = p
-            break
+    plant_cfg = find_plant(request.plant_id, db)
             
     if not plant_cfg:
         plant_cfg = {"id": request.plant_id, "type": "solar", "avc_mw": 50.0, "lat": 23.0, "lon": 72.0}
