@@ -355,6 +355,26 @@
         }
       }
     },
+    "/rag/health": {
+      "get": {
+        "tags": [
+          "RAG Copilot"
+        ],
+        "summary": "Rag Health",
+        "description": "Corpus and provider readiness.\n\nWorth checking before a demo rather than during one: it surfaces an empty\ncorpus, an embed-model mismatch between the index and this process, and a\nmissing LLM API key, each of which produces confident nonsense rather than\nan obvious error.",
+        "operationId": "rag_health_rag_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/pipeline/run": {
       "post": {
         "tags": [
@@ -366,9 +386,16 @@
           {
             "name": "x-api-key",
             "in": "header",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "X-Api-Key"
             }
           }
@@ -384,7 +411,7 @@
           }
         },
         "responses": {
-          "200": {
+          "202": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -452,6 +479,7 @@
     "/health": {
       "get": {
         "summary": "Health Check",
+        "description": "Liveness, plus which engine backs each capability.\n\n`engines` is here so that \"are these numbers real?\" is answerable from the\nAPI itself. A mock forecast is priced by the real DSM engine into\nreal-looking rupee figures, and nothing downstream distinguishes them, so\nthe distinction has to be published at the source.",
         "operationId": "health_check_health_get",
         "responses": {
           "200": {
@@ -668,6 +696,28 @@
             ],
             "title": "Url",
             "default": ""
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "snippet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snippet"
           }
         },
         "type": "object",
@@ -1412,10 +1462,55 @@
         ],
         "title": "PoolingResponse"
       },
+      "RAGMeta": {
+        "properties": {
+          "llm_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "default": false
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "retrieved_chunks": {
+            "type": "integer",
+            "title": "Retrieved Chunks",
+            "default": 0
+          },
+          "guardrail": {
+            "type": "string",
+            "title": "Guardrail",
+            "default": "pass"
+          }
+        },
+        "type": "object",
+        "title": "RAGMeta"
+      },
       "RAGQueryRequest": {
         "properties": {
           "question": {
             "type": "string",
+            "maxLength": 1000,
+            "minLength": 3,
             "title": "Question"
           },
           "plant_id": {
@@ -1432,13 +1527,39 @@
           "block_no": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "maximum": 288.0,
+                "minimum": 1.0
               },
               {
                 "type": "null"
               }
             ],
             "title": "Block No"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "rule_year": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2031.0,
+                "minimum": 2024.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Year"
           },
           "context": {
             "anyOf": [
@@ -1481,6 +1602,14 @@
               }
             ],
             "title": "Engine Values"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RAGMeta",
+            "default": {
+              "cached": false,
+              "retrieved_chunks": 0,
+              "guardrail": "pass"
+            }
           }
         },
         "type": "object",
