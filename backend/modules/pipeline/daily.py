@@ -22,7 +22,7 @@ from backend.db.models import (
 )
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
-from backend.modules.dsm.pooling import compute_pooling_benefit
+from backend.modules.dsm.pooling import compute_pooling_benefit_by_block
 from backend.data.ingestion.openmeteo import fetch_weather_forecast
 from backend.data.quality.validator import validate_weather_data, zero_fill_nighttime_solar
 from backend.data.quality.resampler import (
@@ -351,34 +351,38 @@ class DailyPipelineOrchestrator:
                 pools.setdefault(pid, []).append(plant)
 
             for pool_id, pool_plants in pools.items():
-                pooling_input = []
-                for p in pool_plants:
-                    p_id = p["id"]
-                    fbs = all_forecasts_by_plant[p_id]
-                    schs = all_schedules_by_plant[p_id]
-                    for blk_idx in range(96):
-                        fb = fbs[blk_idx]
-                        q_dict = {
-                            0.05: fb["p05"],
-                            0.10: fb["p10"],
-                            0.25: fb["p25"],
-                            0.50: fb["p50"],
-                            0.75: fb["p75"],
-                            0.90: fb["p90"],
-                            0.95: fb["p95"],
-                        }
-                        pooling_input.append(
+                # One entry per block, each holding the pool's plants at that
+                # instant. Deviation settles per block under CERC, so a flat
+                # list of every plant-block would inflate the pool's Available
+                # Capacity (and its tolerance band) 96-fold and report a
+                # meaningless saving.
+                pool_blocks = []
+                for blk_idx in range(96):
+                    entries = []
+                    for p in pool_plants:
+                        p_id = p["id"]
+                        fb = all_forecasts_by_plant[p_id][blk_idx]
+                        entries.append(
                             {
                                 "plant_id": p_id,
                                 "asset_type": p.get("type", "solar"),
                                 "avc_mw": float(p.get("avc_mw", 50.0)),
-                                "quantile_forecasts": q_dict,
-                                "schedule_mw": schs[blk_idx],
+                                "quantile_forecasts": {
+                                    0.05: fb["p05"],
+                                    0.10: fb["p10"],
+                                    0.25: fb["p25"],
+                                    0.50: fb["p50"],
+                                    0.75: fb["p75"],
+                                    0.90: fb["p90"],
+                                    0.95: fb["p95"],
+                                },
+                                "schedule_mw": all_schedules_by_plant[p_id][blk_idx],
                             }
                         )
+                    pool_blocks.append(entries)
 
-                pool_res = compute_pooling_benefit(
-                    plants_data=pooling_input,
+                pool_res = compute_pooling_benefit_by_block(
+                    blocks=pool_blocks,
                     dsm_engine=dsm_engine,
                     ncd=450.0,
                     freq_hz=50.0,

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -7,12 +9,14 @@ from backend.db.session import get_db
 from backend.core.config import load_plants_config, get_settings
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
-from backend.modules.dsm.pooling import compute_pooling_benefit, allocate_pool_savings
+from backend.modules.dsm.pooling import compute_pooling_benefit_by_block, allocate_pool_savings
 from backend.schemas.dashboard import DashboardResponse, DashboardBriefing
 from backend.schemas.forecast import ForecastResponse, BlockForecast
 from backend.schemas.dsm import DSMResponse, BlockDSMResult
 from backend.schemas.optimize import ActionCard
 from backend.schemas.pooling import PoolingResponse, PlantPoolAllocation
+
+logger = logging.getLogger("renewable_platform")
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 settings = get_settings()
@@ -122,22 +126,36 @@ def get_dashboard_data(
     try:
         pool_plants = [p for p in load_plants_config() if p.get("pool_id") == pool_id]
         if pool_plants:
-            pdata = []
-            for p in pool_plants:
-                pfbs = forecast_engine.generate_forecast(plant=p, date_str=target_date_str, num_blocks=96)
-                for fb in pfbs:
-                    q_dict = {
-                        0.05: fb["p05"], 0.10: fb["p10"], 0.25: fb["p25"],
-                        0.50: fb["p50"], 0.75: fb["p75"], 0.90: fb["p90"], 0.95: fb["p95"]
-                    }
-                    pdata.append({
+            # Settled per block, not as one flat list of plant-blocks. Deviation
+            # settles per block under CERC, and collapsing the day into a single
+            # call inflates the pool's AvC (and so its tolerance band) 96-fold,
+            # which drove the pooled penalty to zero and reported a 100% saving.
+            pool_forecasts = {
+                p["id"]: forecast_engine.generate_forecast(
+                    plant=p, date_str=target_date_str, num_blocks=96
+                )
+                for p in pool_plants
+            }
+            block_count = min((len(v) for v in pool_forecasts.values()), default=0)
+
+            pool_blocks = []
+            for b in range(block_count):
+                entries = []
+                for p in pool_plants:
+                    fb = pool_forecasts[p["id"]][b]
+                    entries.append({
                         "plant_id": p["id"],
                         "asset_type": p.get("type", "solar"),
                         "avc_mw": float(p.get("avc_mw", 50.0)),
-                        "quantile_forecasts": q_dict,
+                        "quantile_forecasts": {
+                            0.05: fb["p05"], 0.10: fb["p10"], 0.25: fb["p25"],
+                            0.50: fb["p50"], 0.75: fb["p75"], 0.90: fb["p90"], 0.95: fb["p95"],
+                        },
                         "schedule_mw": fb["p50"],
                     })
-            pres = compute_pooling_benefit(pdata, dsm_engine, 450.0, 50.0)
+                pool_blocks.append(entries)
+
+            pres = compute_pooling_benefit_by_block(pool_blocks, dsm_engine, 450.0, 50.0)
             ind_penalties = {p["plant_id"]: p["individual_inr"] for p in pres.get("per_plant", [])}
             allocs = allocate_pool_savings(ind_penalties, pres["pooled_total_inr"])
             alloc_models = [
@@ -158,9 +176,12 @@ def get_dashboard_data(
                 savings_pct=round(pres["savings_pct"], 2),
                 allocations=alloc_models,
             )
-    except Exception:
-        pass
-        
+    except Exception as exc:
+        # Pooling is supplementary to the dashboard, so a failure here must not
+        # take the whole page down -- but it must not vanish either. Silently
+        # swallowing this is how a 100% pooling saving stayed on screen.
+        logger.warning("pooling benefit unavailable for pool %s: %s", pool_id, exc)
+
     risk_lvl = "MODERATE"
     if opt_result["savings_pct"] > 30:
         risk_lvl = "HIGH_SAVINGS_OPPORTUNITY"

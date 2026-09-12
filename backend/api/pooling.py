@@ -4,7 +4,7 @@ from datetime import datetime
 from backend.core.config import load_plants_config, get_settings
 from backend.modules.factory import get_forecast_engine
 from backend.modules.dsm.engine import DSMEngine
-from backend.modules.dsm.pooling import compute_pooling_benefit, allocate_pool_savings
+from backend.modules.dsm.pooling import compute_pooling_benefit_by_block, allocate_pool_savings
 from backend.schemas.pooling import PoolingRequest, PoolingResponse, PlantPoolAllocation
 
 router = APIRouter(prefix="/pooling", tags=["Pooling"])
@@ -26,31 +26,44 @@ def calculate_pooling(request: PoolingRequest):
     except Exception:
         dsm_engine = DSMEngine(config_path=settings.dsm_rule_config, rule_date=target_date)
         
-    plants_data = []
-    for p in pool_plants:
-        fbs = forecast_engine.generate_forecast(plant=p, date_str=request.date, num_blocks=96)
-        for fb in fbs:
-            q_dict = {
-                0.05: fb["p05"],
-                0.10: fb["p10"],
-                0.25: fb["p25"],
-                0.50: fb["p50"],
-                0.75: fb["p75"],
-                0.90: fb["p90"],
-                0.95: fb["p95"],
-            }
-            plants_data.append(
+    # Settled per block. Deviation settles per block under CERC, so a shortfall
+    # at 09:00 cannot offset a surplus at 15:00. Passing all 96 blocks of every
+    # plant as one flat pool inflates the pool's Available Capacity 96-fold,
+    # widens the tolerance band with it, and reports a 100% saving.
+    pool_forecasts = {
+        p["id"]: forecast_engine.generate_forecast(
+            plant=p, date_str=request.date, num_blocks=96
+        )
+        for p in pool_plants
+    }
+    block_count = min((len(v) for v in pool_forecasts.values()), default=0)
+
+    pool_blocks = []
+    for b in range(block_count):
+        entries = []
+        for p in pool_plants:
+            fb = pool_forecasts[p["id"]][b]
+            entries.append(
                 {
                     "plant_id": p["id"],
                     "asset_type": p.get("type", "solar"),
                     "avc_mw": float(p.get("avc_mw", 50.0)),
-                    "quantile_forecasts": q_dict,
+                    "quantile_forecasts": {
+                        0.05: fb["p05"],
+                        0.10: fb["p10"],
+                        0.25: fb["p25"],
+                        0.50: fb["p50"],
+                        0.75: fb["p75"],
+                        0.90: fb["p90"],
+                        0.95: fb["p95"],
+                    },
                     "schedule_mw": fb["p50"],
                 }
             )
-            
-    pool_res = compute_pooling_benefit(
-        plants_data=plants_data,
+        pool_blocks.append(entries)
+
+    pool_res = compute_pooling_benefit_by_block(
+        blocks=pool_blocks,
         dsm_engine=dsm_engine,
         ncd=request.ncd_inr or 450.0,
         freq_hz=request.freq_hz or 50.0,
