@@ -11,8 +11,9 @@
 | **Request field** | `context` (alias: `engine_context`) |
 | **₹ figures** | Always render from `engine_values`, never from `answer` prose |
 | **Guardrail values** | `pass` / `numbers_stripped` / `fallback_template` |
-| **LLM primary** | `groq/llama-3.3-70b-versatile` |
-| **LLM fallback** | `gemini/gemini-1.5-flash` |
+| **LLM primary** | `groq/openai/gpt-oss-120b` |
+| **LLM fallback** | `gemini/gemini-3.6-flash` |
+| **API keys** | Several per provider via `GROQ_API_KEYS` / `GEMINI_API_KEYS`; rotated on quota errors |
 | **Total LLM outage** | Returns `200` with `guardrail: "fallback_template"` — not a 502 |
 
 ---
@@ -73,7 +74,7 @@ rather than a curated subset — an omitted field is a figure the answer cannot 
   // a plausible link to a clause we never read is worse than no link at all.
   "citations": [
     {
-      "doc": "CERC_DSM_Amendment_2026",
+      "doc": "CERC_DSM_Regulations_2024",
       "clause": "Regulation 7(2)(b)",
       "section": "Deviation charges for sellers",
       "page": 14,
@@ -89,7 +90,7 @@ rather than a curated subset — an omitted field is a figure the answer cannot 
   },
 
   "meta": {
-    "llm_model": "groq/llama-3.3-70b-versatile",
+    "llm_model": "groq/openai/gpt-oss-120b",
     "cached": false,
     "latency_ms": 1840,
     "retrieved_chunks": 5,
@@ -132,27 +133,30 @@ These are what make "the LLM never computes money" true rather than merely claim
 3. **Show `meta.guardrail` when it is not `pass`.** A stripped answer is a feature to
    demonstrate, not a failure to hide.
 4. **Pass `rule_year` whenever the regulation slider is not at its default.** Without it the
-   copilot may cite the 2026 amendment while the slider reads 2024, and the demo visibly
+   copilot may cite a later amendment while the slider reads 2024, and the demo visibly
    contradicts itself.
 
 ---
 
 ## `GET /rag/health`
 
-Operational readiness, not liveness. Check this before a demo, not during one.
+Operational readiness, not liveness. Check this before a demo, not during one. Production on
+13 September 2026:
 
 ```jsonc
 {
   "copilot_type": "production",
-  "chunks": 1487,
-  "embed_models": ["BAAI/bge-m3"],
+  "chunks": 179,
+  "embed_models": [],                    // no stored embeddings: BM25-only retrieval
   "live_embed_model": "BAAI/bge-m3",
   "bm25_loaded": true,
-  "cache": { "entries": 12, "ttl_s": 3600, "hits": 40, "misses": 12, "hit_rate": 0.769 },
+  "cache": { "entries": 2, "ttl_s": 3600, "hits": 0, "misses": 2, "hit_rate": 0.0 },
   "llm": {
-    "primary": "groq/llama-3.3-70b-versatile",
-    "fallback": "gemini/gemini-1.5-flash",
-    "usable": ["groq/llama-3.3-70b-versatile"]
+    "primary": "groq/openai/gpt-oss-120b",
+    "fallback": "gemini/gemini-3.6-flash",
+    "usable": ["groq/openai/gpt-oss-120b", "gemini/gemini-3.6-flash"],
+    "redundancy": "dual_provider",
+    "keys_per_model": { "groq/openai/gpt-oss-120b": 7, "gemini/gemini-3.6-flash": 5 }
   }
 }
 ```
@@ -164,6 +168,8 @@ What to look for:
   with. Retrieval results are meaningless until the index is rebuilt. This failure is silent
   everywhere else: it returns confident, well-formatted, wrong citations.
 - `usable: []` — no LLM provider has an API key. Every answer will be `fallback_template`.
+- `embed_models: []` — no stored embeddings, so retrieval runs on BM25 alone. That is the current
+  production configuration, not a fault.
 - `bm25_loaded: false` — sparse retrieval is off; the hybrid is running on dense alone.
 
 ---
@@ -180,7 +186,7 @@ Recorded here so nobody "fixes" them back.
 
 ---
 
-## Python usage (Member 2, pipeline step 8)
+## Python usage (pipeline briefings, not yet wired)
 
 ```python
 from backend.modules.rag.copilot import generate_briefing

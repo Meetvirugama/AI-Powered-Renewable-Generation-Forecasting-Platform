@@ -20,7 +20,7 @@
 
 | Thing | State |
 |---|---|
-| `prediction_bundle/models_v2/*.txt` — 3 boosters, 24h, 44 features | ✅ **serving** |
+| `prediction_bundle/models_v2/*.txt` — 9 boosters: P10 · P50 · P90 at 24, 48 and 72 h | ✅ **serving** |
 | `prediction_bundle/models/*.txt` — 12 legacy boosters | kept; still rejected by the gate |
 | `backend/modules/forecast/lgbm_model.py` adapter | ✅ serves capacity factor → MW |
 | `backend/modules/forecast/weather_provider.py` | ✅ supplies the 33 weather features |
@@ -29,12 +29,14 @@
 
 Measured on a held-out chronological split, against persistence:
 
-| | |
-|---|---|
-| MAE | 0.0552 capacity factor |
-| Skill vs persistence | **+21.5%** |
-| P10–P90 coverage | **85.9%** (nominal 80%; 71.5% before conformal calibration) |
-| Physics | non-negative, within capacity, quantiles ordered, zero at night |
+| | 24 h | 48 h | 72 h |
+|---|---|---|---|
+| MAE (capacity factor) | 0.0552 | 0.0575 | 0.0575 |
+| Skill vs persistence | **+21.5%** | **+26.9%** | **+32.5%** |
+| P10–P90 coverage | **85.9%** | 86.8% | 86.8% |
+
+Nominal coverage is 80%; the 24 h band covered 71.5% before conformal calibration. All horizons
+pass the physics checks: non-negative, within capacity, quantiles ordered, zero at night.
 
 `prediction_bundle/models_v2/MANIFEST.json` is the contract: feature order, training capacity,
 conformal delta, metrics, and the caveats. The adapter refuses to load if the manifest disagrees
@@ -45,8 +47,9 @@ with the boosters, because it carries numbers that silently change every rupee f
 - 2,774 rows / **29.9 days** / **one plant**. Not enough for rolling-origin CV.
 - Applying it to four Gujarat plants is a **capacity-factor transfer from a reference site**, not a
   per-plant model. Say so when presenting it.
-- **Only the 24h horizon** was retrained. 48h and 72h fall back to it — worse, but honest; the
-  legacy boosters for those horizons were trained on features that do not exist that far ahead.
+- The 48 h and 72 h models were retrained after the 24 h one. They drop every generation lag
+  shorter than the horizon, since those would not exist at issue time, and keep the weather and
+  clock features.
 - Forecasts now require Open-Meteo. Cached 15 minutes per plant and date;
   `FORECAST_ENGINE_TYPE=mock` is the one-line rollback.
 
