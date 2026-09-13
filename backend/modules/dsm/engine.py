@@ -1,6 +1,25 @@
 from datetime import date
 from .config_loader import DSMRuleConfig
 
+
+def quantile_weights(levels) -> dict[float, float]:
+    """Probability mass each forecast quantile stands for (midpoint rule).
+
+    The sample at level q_i represents the interval halfway to its neighbours,
+    with 0 and 1 as the outer edges, normalised to sum to 1. P50 therefore
+    carries far more weight than P05, which is what makes the result a true
+    expected rupee value rather than an average of seven penalties.
+    """
+    ordered = sorted(float(q) for q in levels)
+    weights: dict[float, float] = {}
+    for i, q in enumerate(ordered):
+        lower = ordered[i - 1] if i > 0 else 0.0
+        upper = ordered[i + 1] if i + 1 < len(ordered) else 1.0
+        weights[q] = (upper - lower) / 2.0
+    total = sum(weights.values()) or 1.0
+    return {q: w / total for q, w in weights.items()}
+
+
 class DSMEngine:
     """CERC DSM calculation engine (Seller-Side, Renewable Generator)."""
     
@@ -18,10 +37,16 @@ class DSMEngine:
             return 0.0
         return 100.0 * (actual_mw - schedule_mw) / denom
 
-    def compute_block_penalty(self, actual_mw: float, schedule_mw: float, avc_mw: float, freq_hz: float, ncd_inr_per_mwh: float, asset_type: str) -> float:
-        """Compute penalty for a single block (in INR)."""
+    def compute_block_penalty(self, actual_mw: float, schedule_mw: float, avc_mw: float, freq_hz: float, ncd_inr_per_mwh: float, asset_type: str, band: float | None = None) -> float:
+        """Compute penalty for a single block (in INR).
+
+        `band` overrides the tolerance band normally chosen from `asset_type`.
+        A pool mixing solar and wind has no single technology, so pooling passes
+        a capacity-weighted band here rather than labelling the pool as one type.
+        """
         dev_pct = self.compute_deviation_pct(actual_mw, schedule_mw, avc_mw)
-        band = self.solar_band if asset_type.lower() == 'solar' else self.wind_band
+        if band is None:
+            band = self.solar_band if asset_type.lower() == 'solar' else self.wind_band
         
         # Within tolerance band
         if abs(dev_pct) <= band * 100.0:
@@ -42,16 +67,23 @@ class DSMEngine:
         
         return penalty
 
-    def compute_expected_penalty(self, quantile_forecasts: dict[float, float], schedule_mw: float, avc_mw: float, freq_hz: float, ncd: float, asset_type: str) -> float:
-        """Compute expected penalty across quantile forecasts."""
-        penalties = []
-        for q, actual_mw in quantile_forecasts.items():
-            penal_val = self.compute_block_penalty(actual_mw, schedule_mw, avc_mw, freq_hz, ncd, asset_type)
-            penalties.append(penal_val)
-            
-        if not penalties:
+    def compute_expected_penalty(self, quantile_forecasts: dict[float, float], schedule_mw: float, avc_mw: float, freq_hz: float, ncd: float, asset_type: str, band: float | None = None) -> float:
+        """Probability-weighted expected penalty across quantile forecasts.
+
+        This used to be a plain average of the per-quantile penalties. P05 and
+        P50 are not equally likely outcomes, so equal weighting roughly tripled
+        the influence of the tails -- and the schedule optimiser, which weights
+        by probability, disagreed with every other caller. The Actions page
+        showed the same plant's penalty as ₹1,53,452 in one panel and ₹2,86,619
+        in the next. Every caller now gets the same expectation.
+        """
+        if not quantile_forecasts:
             return 0.0
-        return sum(penalties) / len(penalties)
+        weights = quantile_weights(quantile_forecasts.keys())
+        return sum(
+            weights[float(q)] * self.compute_block_penalty(actual_mw, schedule_mw, avc_mw, freq_hz, ncd, asset_type, band)
+            for q, actual_mw in quantile_forecasts.items()
+        )
 
     def compute_day_penalties(self, block_quantiles: list[dict[float, float]], schedule_per_block: list[float], avc_mw: float, freq_hz: float, ncd: float, asset_type: str) -> list[dict]:
         """Compute penalties for the whole day (96 blocks)."""

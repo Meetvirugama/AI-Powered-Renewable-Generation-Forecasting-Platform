@@ -470,10 +470,16 @@ def cluster_pools(plants: list[dict], grid_deg: float = 0.5) -> None:
     settled rupee figure -- so every plant grouped this way is labelled in its
     metadata as assumed, and the default is not to do this at all.
     """
+    # Grouped by technology as well as by location. Pools that mixed solar with
+    # wind reported a 100% saving on the live data: the pooled tolerance band is
+    # a share of the whole pool's capacity, so seven near-idle wind farms widened
+    # it enough to swallow three solar plants' deviations entirely. That is what
+    # the formula does, but for a pool this script invented, it is an artefact of
+    # the grouping rather than a saving anyone could realise.
     for plant in plants:
         cell_lat = int(plant["lat"] / grid_deg)
         cell_lon = int(plant["lon"] / grid_deg)
-        plant["pool_id"] = f"OSM_POOL_{cell_lat}_{cell_lon}"
+        plant["pool_id"] = f"OSM_POOL_{plant['type'].upper()}_{cell_lat}_{cell_lon}"
         plant["metadata_json"]["pool_assignment"] = (
             f"assumed: {grid_deg} degree proximity grid, not a declared pooling station"
         )

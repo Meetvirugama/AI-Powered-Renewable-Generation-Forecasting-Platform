@@ -26,6 +26,21 @@ const PoolingToggle: React.FC<PoolingToggleProps> = ({ pooling, isPooled, onTogg
     );
   }
 
+  // A pool of one plant has nothing to net against. It used to render as
+  // "settled as one pool · 0.0% saved", which reads as pooling that failed
+  // rather than a plant that simply is not pooled.
+  const poolSize = pooling.pool_size ?? pooling.allocations.length;
+  if (poolSize <= 1) {
+    const only = pooling.allocations[0];
+    return (
+      <Panel title="Pooling benefit">
+        <EmptyState
+          message={`${only?.plant_name ?? only?.plant_id ?? "This plant"} is the only plant in its pool, so there is no other plant to net its deviation against. It settles individually.`}
+        />
+      </Panel>
+    );
+  }
+
   const headlineTotal = isPooled ? pooling.pooled_total_inr : pooling.individual_total_inr;
 
   return (
@@ -90,7 +105,9 @@ const PoolingToggle: React.FC<PoolingToggleProps> = ({ pooling, isPooled, onTogg
               className="flex items-center justify-between font-mono text-[13px]"
               style={{ fontVariantNumeric: "tabular-nums" }}
             >
-              <span className="text-text">{alloc.plant_id}</span>
+              <span className="truncate text-text" title={alloc.plant_id}>
+                {alloc.plant_name ?? alloc.plant_id}
+              </span>
               <div className="flex items-center gap-3">
                 <span className="text-text-muted">
                   {inr(isPooled ? alloc.allocated_penalty_inr : alloc.individual_penalty_inr)}

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Literal, Optional
+
+from backend.core.dates import validate_iso_date
 
 
 class ActionCard(BaseModel):
@@ -25,7 +27,11 @@ class OptimizeRequest(BaseModel):
     rule_year: Optional[int] = 2026
     freq_hz: Optional[float] = 50.0
     ncd_inr: Optional[float] = 450.0
-    battery_capacity_mwh: Optional[float] = None
+    # ge=0: a negative size used to be silently treated as "no battery", so a
+    # client bug returned a plausible result instead of an error.
+    battery_capacity_mwh: Optional[float] = Field(None, ge=0)
+
+    _date = field_validator("date")(validate_iso_date)
 
 class OptimizeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

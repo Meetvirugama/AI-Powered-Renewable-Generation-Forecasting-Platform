@@ -133,6 +133,8 @@ export interface OptimizeRequest {
 
 export interface PlantPoolAllocation {
   plant_id: string;
+  /** Display name; plant_id is an OpenStreetMap id for imported plants. */
+  plant_name?: string | null;
   individual_penalty_inr: number;
   allocated_penalty_inr: number;
   savings_inr: number;
@@ -146,6 +148,8 @@ export interface PoolingResponse {
   savings_inr: number;
   savings_pct: number;
   allocations: PlantPoolAllocation[];
+  /** Plants sharing the pool. 1 means there is nothing to net against. */
+  pool_size?: number;
 }
 
 export interface PoolingRequest {
