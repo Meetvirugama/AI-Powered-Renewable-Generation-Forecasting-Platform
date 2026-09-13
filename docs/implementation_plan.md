@@ -1,5 +1,5 @@
 # End-to-End Implementation Plan
-## AI-Powered Renewable Generation Forecasting Platform
+## VidyutVaani — AI-Powered Renewable Generation Forecasting Platform
 ### Hackathon Edition — Predict → Price in ₹ → Optimise → Act → Explain
 
 ---
@@ -1127,7 +1127,7 @@ Principle: DSM rules live in versioned YAML in the repo.
 
 config/settings.yaml:
   app:
-    name: "Renewable Forecasting Platform"
+    name: "VidyutVaani"
     version: "1.0.0"
     timezone: "Asia/Kolkata"
   forecast:

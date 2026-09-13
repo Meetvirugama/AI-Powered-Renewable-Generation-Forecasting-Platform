@@ -288,7 +288,7 @@ export default function Home() {
       {/* ── mini top bar ───────────────────────────────────────────────── */}
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-border/40">
         <span className="text-[17px] font-bold tracking-tight">
-          Grid<span className="text-accent">Mind</span>
+          Vidyut<span className="text-accent">Vaani</span>
         </span>
         <Link
           to="/"
@@ -342,9 +342,9 @@ export default function Home() {
           }}
           className="text-[64px] font-bold leading-none tracking-[-0.04em] sm:text-[88px]"
         >
-          Grid<span className="text-accent" style={{
+          Vidyut<span className="text-accent" style={{
             textShadow: "0 0 40px rgba(207,242,69,0.35), 0 0 80px rgba(207,242,69,0.15)",
-          }}>Mind</span>
+          }}>Vaani</span>
         </h1>
 
         {/* Tagline */}
@@ -431,7 +431,7 @@ export default function Home() {
       {/* ── footer ─────────────────────────────────────────────────────── */}
       <footer className="relative z-10 border-t border-border/40 px-6 py-5 text-center">
         <p className="font-mono text-[11px] text-text-muted">
-          Grid<span className="text-accent">Mind</span> · Hackout 2026 ·{" "}
+          Vidyut<span className="text-accent">Vaani</span> · Hackout 2026 ·{" "}
           <a
             href="https://github.com/Meetvirugama/AI-Powered-Renewable-Generation-Forecasting-Platform"
             target="_blank"
