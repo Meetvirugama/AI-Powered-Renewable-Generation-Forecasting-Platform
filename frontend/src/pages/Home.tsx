@@ -6,7 +6,7 @@ export default function Home() {
       {/* Hero Section */}
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <h1 className="text-5xl font-bold tracking-tight sm:text-7xl">
-          Grid<span className="text-accent">Mind</span>
+          Vidyut<span className="text-accent">Vaani</span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted sm:text-xl">
           AI-Powered Renewable Generation Forecasting & Deviation Settlement Management. 

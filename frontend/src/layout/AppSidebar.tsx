@@ -16,9 +16,9 @@ const AppSidebar: React.FC = () => {
       <div className="flex items-center justify-between gap-2 px-6 py-5 lg:py-6 border-b border-border h-16">
         <Link to="/home" className="flex items-center gap-2 overflow-hidden">
           {isExpanded || isMobileOpen ? (
-            <h1 className="text-xl font-bold text-text truncate tracking-tight">Grid<span className="text-accent">Mind</span></h1>
+            <h1 className="text-xl font-bold text-text truncate tracking-tight">Vidyut<span className="text-accent">Vaani</span></h1>
           ) : (
-            <h1 className="text-xl font-bold text-accent">G</h1>
+            <h1 className="text-xl font-bold text-accent">V</h1>
           )}
         </Link>
         <button
