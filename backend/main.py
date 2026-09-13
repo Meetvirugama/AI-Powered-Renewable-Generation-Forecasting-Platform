@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="AI-Powered Renewable Generation Forecasting Platform API",
+    title="VidyutVaani API",
     version="1.0.0",
     description="REST API for Probabilistic Renewable Generation Forecasting, CERC DSM Settlement & Schedule Optimization",
     lifespan=lifespan
@@ -125,6 +125,6 @@ def health_check():
 @app.get("/")
 def root():
     return {
-        "message": "AI-Powered Renewable Generation Forecasting Platform API",
+        "message": "VidyutVaani API",
         "docs": "/docs"
     }
