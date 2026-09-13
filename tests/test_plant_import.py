@@ -284,3 +284,17 @@ def test_hiding_a_seed_plant_does_not_remove_it_from_its_pool():
     db = _DB([_seed_row(), _seed_row("GJ_SOLAR_B"), _row("OSM_W1")])
     members = {p["id"] for p in plant_resolver.plants_in_pool("GJ_POOL_1", db)}
     assert members == {"GJ_SOLAR_A", "GJ_SOLAR_B"}
+
+
+def test_clustered_pools_never_mix_solar_and_wind():
+    """A mixed proximity pool reported a 100% saving: near-idle wind capacity
+    widened the pooled tolerance band enough to absorb the solar plants'
+    deviations. Pools this script invents stay within one technology."""
+    plants, _ = import_plants.to_plants(
+        [_osm(1, "solar", "25 MW", lat=23.1, lon=71.1), _osm(2, "wind", "30 MW", lat=23.2, lon=71.2)],
+        min_mw=1.0,
+    )
+    import_plants.cluster_pools(plants)
+    solar, wind = sorted(plants, key=lambda p: p["type"])
+    assert solar["pool_id"] != wind["pool_id"]
+    assert "SOLAR" in solar["pool_id"] and "WIND" in wind["pool_id"]

@@ -47,5 +47,15 @@ export const useDSM = (body: DSMRequest, enabled: boolean = true) => {
 
   const refetch = () => fetchDsm();
 
-  return { data, loading, error, refetch };
+  // Only return a result for the plant and date requested. When a plant change
+  // disables this hook until the new schedule arrives, the old plant's heatmap
+  // would otherwise remain in state and be shown under the new plant's name.
+  const current =
+    data &&
+    (import.meta.env.VITE_USE_MOCKS === "true" ||
+      (data.plant_id === body.plant_id && (!body.date || data.date === body.date)))
+      ? data
+      : null;
+
+  return { data: current, loading, error, refetch };
 };

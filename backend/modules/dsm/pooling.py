@@ -135,13 +135,35 @@ def pool_quantiles(plants_data: List[Dict]) -> Dict[float, float]:
     return pooled
 
 
+def _capacity_weighted_band(plants_data: List[Dict], dsm_engine) -> float:
+    """The pool's tolerance band: each plant's own band, weighted by its capacity.
+
+    A mixed pool has no single correct band under the regulations as written.
+    This previously took the band of the dominant technology and applied it to
+    the whole pool, so a pool of 7 wind and 3 solar plants settled its solar
+    output on the wider +/-15% wind band. On the live data that one pool reported
+    a 100% saving (₹53,557 individually, ₹0 pooled). Weighting by capacity gives
+    each plant's deviation the tolerance it would have had on its own, in
+    proportion to how much of the pool it is.
+    """
+    total = 0.0
+    weighted = 0.0
+    for plant in plants_data:
+        avc = float(plant.get("avc_mw", 0.0) or 0.0)
+        kind = str(plant.get("asset_type", "solar")).lower()
+        band = dsm_engine.solar_band if kind == "solar" else dsm_engine.wind_band
+        weighted += avc * band
+        total += avc
+    if total <= 0:
+        return dsm_engine.solar_band
+    return weighted / total
+
+
 def _dominant_asset_type(plants_data: List[Dict]) -> str:
     """The technology carrying the most capacity in the pool.
 
-    The engine selects a tolerance band from asset type, and a mixed pool has no
-    single correct band under the regulations as written. Weighting by capacity
-    is the least-wrong choice available and is surfaced in the result so the
-    assumption is visible rather than buried.
+    Reported for information only. The tolerance band applied to the pool is
+    `_capacity_weighted_band`, not the dominant technology's band.
     """
     by_type: Dict[str, float] = {}
     for plant in plants_data:
@@ -213,9 +235,10 @@ def compute_pooling_benefit(
     pool_schedule_mw = sum(float(p.get("schedule_mw", 0.0) or 0.0) for p in plants_data)
     pooled_fan = pool_quantiles(plants_data)
     asset_type = _dominant_asset_type(plants_data)
+    band = _capacity_weighted_band(plants_data, dsm_engine)
 
     pooled_total_inr = dsm_engine.compute_expected_penalty(
-        pooled_fan, pool_schedule_mw, pool_avc_mw, freq_hz, ncd, asset_type
+        pooled_fan, pool_schedule_mw, pool_avc_mw, freq_hz, ncd, asset_type, band=band
     )
 
     # Reported without clamping. A single-plant "pool" saves nothing by
@@ -236,6 +259,7 @@ def compute_pooling_benefit(
         "pool_size": len(plants_data),
         "pool_avc_mw": pool_avc_mw,
         "asset_type_used": asset_type,
+        "tolerance_band_used": band,
         "correlation_assumed": _rho(same_type),
         "beneficial": delta > 0,
     }
@@ -297,6 +321,7 @@ def compute_pooling_benefit_by_block(
                 "pool_size": result.get("pool_size", len(block)),
                 "pool_avc_mw": result.get("pool_avc_mw", 0.0),
                 "asset_type_used": result.get("asset_type_used", "solar"),
+                "tolerance_band_used": result.get("tolerance_band_used"),
                 "correlation_assumed": result.get("correlation_assumed"),
             }
 

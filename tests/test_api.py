@@ -199,3 +199,68 @@ def test_single_plant_and_list_agree(client: TestClient):
     listed = client.get("/plants").json()["plants"]
     for plant in listed:
         assert client.get(f"/plants/{plant['id']}").status_code == 200
+
+
+# ------------------------------------------------------------------------------
+# Malformed input is a client error, not a server fault.
+#
+# Five routes called strptime directly, so `date=13-09-2026` raised inside the
+# handler and returned an unhandled 500 with a traceback in the server log.
+# ------------------------------------------------------------------------------
+import pytest  # noqa: E402
+
+BAD_DATES = ["13-09-2026", "garbage", "2026-02-30", "2026/09/13"]
+
+
+@pytest.mark.parametrize("bad", BAD_DATES)
+def test_dsm_rejects_a_malformed_date(client: TestClient, bad):
+    body = {"plant_id": "GJ_SOLAR_A", "date": bad, "schedule_mw": [25.0] * 96}
+    assert client.post("/dsm", json=body).status_code == 422
+
+
+@pytest.mark.parametrize("bad", BAD_DATES)
+def test_optimize_rejects_a_malformed_date(client: TestClient, bad):
+    assert client.post("/optimize", json={"plant_id": "GJ_SOLAR_A", "date": bad}).status_code == 422
+
+
+@pytest.mark.parametrize("bad", BAD_DATES)
+def test_pooling_rejects_a_malformed_date(client: TestClient, bad):
+    assert client.post("/pooling", json={"pool_id": "GJ_POOL_1", "date": bad}).status_code == 422
+
+
+@pytest.mark.parametrize("bad", BAD_DATES)
+def test_dashboard_rejects_a_malformed_date(client: TestClient, bad):
+    assert client.get(f"/dashboard/GJ_SOLAR_A?date={bad}").status_code == 422
+
+
+@pytest.mark.parametrize("bad", BAD_DATES)
+def test_forecast_rejects_a_malformed_date(client: TestClient, bad):
+    assert client.get(f"/forecast?plant_id=GJ_SOLAR_A&date={bad}").status_code == 422
+
+
+@pytest.mark.parametrize("length", [0, 1, 95, 97])
+def test_dsm_rejects_a_schedule_that_is_not_one_value_per_block(client: TestClient, length):
+    """A short schedule was padded with 0 MW for every missing block, pricing
+    blocks nobody declared into a large, confident penalty."""
+    body = {"plant_id": "GJ_SOLAR_A", "date": "2026-06-01", "schedule_mw": [25.0] * length}
+    response = client.post("/dsm", json=body)
+    assert response.status_code == 422
+    assert "96" in response.text
+
+
+def test_dsm_rejects_a_negative_schedule(client: TestClient):
+    body = {"plant_id": "GJ_SOLAR_A", "date": "2026-06-01", "schedule_mw": [25.0] * 95 + [-1.0]}
+    assert client.post("/dsm", json=body).status_code == 422
+
+
+def test_optimize_rejects_a_negative_battery(client: TestClient):
+    body = {"plant_id": "GJ_SOLAR_A", "date": "2026-06-01", "battery_capacity_mwh": -50}
+    assert client.post("/optimize", json=body).status_code == 422
+
+
+def test_pooling_reports_pool_size_and_plant_names(client: TestClient):
+    """The panel printed plant_id, an OpenStreetMap id for imported plants, and
+    could not tell a pool of one from a pool that saved nothing."""
+    data = client.post("/pooling", json={"pool_id": "GJ_POOL_1", "date": "2026-06-01"}).json()
+    assert data["pool_size"] == len(data["allocations"]) >= 2
+    assert all(a["plant_name"] for a in data["allocations"])

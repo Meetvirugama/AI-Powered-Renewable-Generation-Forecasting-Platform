@@ -38,5 +38,18 @@ export const useOptimize = (body: OptimizeRequest) => {
 
   const refetch = () => fetchOptimize();
 
-  return { data, loading, error, refetch };
+  // Only hand back a result for the plant and date actually requested. The
+  // previous plant's response otherwise stays in state while the new request is
+  // in flight, so every page rendered the old plant's action cards and battery
+  // figures under the new plant's name -- and the Risk page priced the new plant
+  // against the old plant's schedule. Mock mode serves one fixture for every
+  // plant, so it is exempt.
+  const current =
+    data &&
+    (import.meta.env.VITE_USE_MOCKS === "true" ||
+      (data.plant_id === body.plant_id && (!body.date || data.date === body.date)))
+      ? data
+      : null;
+
+  return { data: current, loading, error, refetch };
 };

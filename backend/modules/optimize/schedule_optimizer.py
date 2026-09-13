@@ -14,13 +14,11 @@ actually occurs in it. So optimising each block independently is not a heuristic
 
 Two things this does better than the coarse optimiser it replaces
 -----------------------------------------------------------------
-1. **Probability-weighted expectation.** `DSMEngine.compute_expected_penalty`
-   averages the per-quantile penalties with equal weight, but P05 and P50 are
-   not equally likely outcomes -- equal weighting triples the influence of the
-   tails. This module weights each quantile by the probability mass it actually
-   represents (midpoint rule) and sums, using the engine's own
-   `compute_block_penalty` as the per-scenario primitive. The engine is left
-   untouched; only the aggregation here is corrected.
+1. **Probability-weighted expectation.** Each quantile is weighted by the
+   probability mass it actually represents (midpoint rule). The weights come
+   from `backend.modules.dsm.engine.quantile_weights`, which
+   `DSMEngine.compute_expected_penalty` also uses, so the optimiser, the DSM
+   route, the dashboard and pooling all report the same expected penalty.
 
 2. **A real search.** The previous version tried five candidates, all of them
    forecast quantiles. The penalty curve is piecewise-linear in the declared
@@ -57,19 +55,12 @@ QUANTILE_LEVELS = (0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95)
 def quantile_weights(levels: tuple[float, ...] = QUANTILE_LEVELS) -> dict[float, float]:
     """Probability mass to attribute to each quantile sample.
 
-    Midpoint rule: the sample at level q_i stands for the interval halfway to
-    its neighbours, with 0 and 1 as the outer edges. Weights are normalised so
-    they sum to exactly 1, which makes the result a true expected rupee value
-    rather than an average of penalties.
+    Defined once, in the DSM engine, so the optimiser and every other penalty
+    calculation weight quantiles identically.
     """
-    ordered = sorted(levels)
-    weights: dict[float, float] = {}
-    for i, q in enumerate(ordered):
-        lower = ordered[i - 1] if i > 0 else 0.0
-        upper = ordered[i + 1] if i + 1 < len(ordered) else 1.0
-        weights[q] = (upper - lower) / 2.0
-    total = sum(weights.values()) or 1.0
-    return {q: w / total for q, w in weights.items()}
+    from backend.modules.dsm.engine import quantile_weights as _engine_weights
+
+    return _engine_weights(levels)
 
 
 _WEIGHTS = quantile_weights()

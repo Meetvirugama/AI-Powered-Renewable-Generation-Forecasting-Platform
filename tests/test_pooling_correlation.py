@@ -254,3 +254,31 @@ def test_day_level_helper_on_no_blocks(engine):
     day = pooling_module.compute_pooling_benefit_by_block([], engine, 450.0, 50.0)
     assert day["individual_total_inr"] == 0.0
     assert day["savings_pct"] == 0.0
+
+
+# ------------------------------------------------------ mixed-technology band
+def test_a_mixed_pool_uses_a_capacity_weighted_band_not_the_dominant_one(engine):
+    """A pool of 7 wind and 3 solar plants settled its solar output on the wider
+    wind band and reported a 100% saving on the live data. Each plant's band now
+    counts in proportion to its capacity."""
+    plants = [
+        _plant("solar", 30.0, 100.0, "solar"),
+        _plant("wind", 30.0, 300.0, "wind"),
+    ]
+    result = pooling_module.compute_pooling_benefit(plants, engine, 450.0, 50.0)
+    expected_band = (100.0 * engine.solar_band + 300.0 * engine.wind_band) / 400.0
+    assert result["tolerance_band_used"] == pytest.approx(expected_band)
+    assert engine.solar_band < result["tolerance_band_used"] < engine.wind_band
+    assert result["asset_type_used"] == "wind"  # still reported, no longer applied
+
+
+def test_a_single_technology_pool_keeps_its_own_band(engine):
+    plants = [_plant("A", 40.0, 50.0, "solar"), _plant("B", 45.0, 60.0, "solar")]
+    result = pooling_module.compute_pooling_benefit(plants, engine, 450.0, 50.0)
+    assert result["tolerance_band_used"] == pytest.approx(engine.solar_band)
+
+
+def test_the_day_level_helper_reports_the_band_it_used(engine):
+    block = [_plant("A", 40.0, 50.0, "solar"), _plant("W", 20.0, 50.0, "wind")]
+    result = pooling_module.compute_pooling_benefit_by_block([block, block], engine, 450.0, 50.0)
+    assert result["tolerance_band_used"] == pytest.approx((engine.solar_band + engine.wind_band) / 2)

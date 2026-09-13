@@ -34,12 +34,15 @@ export default function Risk() {
 
   // Persist the last non-null DSM so the heatmap never flashes "No deviation
   // penalty" during the brief re-fetch triggered when the optimised schedule
-  // arrives or when the rule year changes.
+  // arrives or when the rule year changes -- but only for the same plant. The
+  // held value used to survive a plant switch, so the previous plant's heatmap
+  // was shown under the new plant's name until the new request finished.
   const stableDsm = useRef<DSMResponse | null>(null);
   useEffect(() => {
     if (dsm) stableDsm.current = dsm;
   }, [dsm]);
-  const displayDsm = dsm ?? stableDsm.current;
+  const displayDsm =
+    dsm ?? (stableDsm.current?.plant_id === plantId ? stableDsm.current : null);
 
   if (loading && !data) {
     return (

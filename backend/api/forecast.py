@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime
 
 from backend.db.session import get_db
+from backend.core.dates import query_date_or_422
 from backend.core.plants import find_plant
 from backend.modules.factory import get_forecast_engine
 from backend.schemas.forecast import ForecastResponse, BlockForecast
@@ -40,6 +41,10 @@ def get_forecast(
         )
 
     num_blocks = hours * BLOCKS_PER_HOUR
+    if date is not None:
+        # A malformed date previously reached the weather fetch, found no data,
+        # and surfaced as an unhandled 500 rather than a client error.
+        query_date_or_422(date)
     target_date_str = date or datetime.utcnow().strftime("%Y-%m-%d")
     forecast_engine = get_forecast_engine()
     
