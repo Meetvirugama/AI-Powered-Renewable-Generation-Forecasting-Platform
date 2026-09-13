@@ -1,210 +1,186 @@
-# Runbook — demo day, failure modes, and what to do about them
+# Runbook
 
-**Owner:** Member 4. Read this before judging, not during it.
+Pre-flight checks, known failure modes, and what to do about each. Written for the live Azure
+deployment. Read it before a demo, not during one.
 
-> **See also:** `docs/deployment.md` — provisioning, CI/CD, and cost teardown.
-
-## Quick Reference (5 commands to know cold)
-
-```bash
-# 1. Check backend health
-curl -fsS https://<cloudfront>/api/health | jq
-
-# 2. Check RAG readiness (chunks must be non-zero, no warning key)
-curl -fsS https://<cloudfront>/api/rag/health | jq '.chunks, .warning, .llm.usable'
-
-# 3. Get on the box (no SSH key, no port 22)
-aws ssm start-session --target <instance-id>
-
-# 4. Tail backend logs
-docker compose -f docker-compose.prod.yml logs --tail 100 backend
-
-# 5. Emergency rollback
-IMAGE_TAG=<previous-sha> docker compose -f docker-compose.prod.yml up -d --no-deps backend
-```
-
-**Five failover scenarios to rehearse the day before:** Rogue Groq key · both keys revoked · backend stopped · corpus truncated · wifi dead. See [Failover drill](#failover-drill--break-it-on-purpose-the-day-before).
+For how the deployment is built, see [deployment_azure.md](deployment_azure.md). The AWS
+equivalents of these commands are in [deployment.md](deployment.md).
 
 ---
 
-
-## Pre-flight (run 30 minutes before judging)
+## Quick reference
 
 ```bash
-BACKEND=https://<cloudfront-domain>
+API=https://57.159.24.68.nip.io
 
-curl -fsS $BACKEND/api/health | jq
-curl -fsS $BACKEND/api/rag/health | jq
+curl -s $API/health     | jq '.engines, .serving_synthetic_data, .forecast_models.status'
+curl -s $API/rag/health | jq '.chunks, .bm25_loaded, .llm.usable, .warning'
+
+ssh -i Hackout_key.pem azureuser@57.159.24.68
+sudo journalctl -u renewable-api -n 100 --no-pager
+sudo systemctl restart renewable-api
+
+gh workflow run deploy.yml                      # redeploy main
 ```
 
-| Check | Expected | If wrong |
+---
+
+## Pre-flight, 30 minutes before
+
+| Check | Expected | If not |
 |---|---|---|
-| `/health` | `{"status": "healthy"}` | Container is down or still loading. `docker compose logs backend`. |
-| `rag/health.chunks` | non-zero | Corpus never loaded. Run `scripts/build_index.py`. |
-| `rag/health.warning` | **absent** | Index/query embedding models disagree — see below. This is the dangerous one. |
-| `rag/health.llm.usable` | at least one model | No API key reached the container. Re-run `fetch_secrets.sh`. |
-| `rag/health.bm25_loaded` | `true` | Sparse retrieval is off; hybrid is running on dense alone. |
+| `/health` → `status` | `healthy` | Service down or still starting. Check the journal. |
+| `/health` → `serving_synthetic_data` | `[]` | An engine is in mock mode. Check `.env` on the VM. |
+| `/health` → `forecast_models.status` | `ok`, 9 models loaded | Model files missing or rejected by the physics gate. |
+| `/rag/health` → `chunks` | 179 or more | Corpus not loaded. Run `scripts/build_index.py --truncate`. |
+| `/rag/health` → `llm.usable` | both models listed | A provider has no working key. |
+| `/rag/health` → `warning` | absent | Corpus and query embedding models disagree. See failure mode 1. |
+| Dashboard on Vercel | panels load, no console errors | See failure mode 4. |
 
-And have **rung 1 running on a laptop** with a seeded database, with the tab open. Know which
-URL to switch to within fifteen seconds.
+Then open the dashboard once and ask the copilot one question. That warms the weather cache and
+the response cache, so the first judge does not pay for either.
+
+Keep the laptop fallback ready: `docker compose up` with `.env` in mock mode, and the local
+frontend with `VITE_USE_MOCKS=true`. Venue wifi fails. Know which tab to switch to.
 
 ---
 
-## End-to-end rehearsal
+## Rehearsal
 
-Run this three times, timed. It is the demo script.
+Run it end to end at least twice, timed.
 
 | # | Action | Expected |
 |---|---|---|
-| 1 | Open the CloudFront URL in a fresh incognito window | dashboard loads < 3 s |
-| 2 | Select `GJ_SOLAR_A` | fan chart renders |
-| 3 | Drag the regulation slider 2026 → 2031 | heatmap re-colours |
-| 4 | Toggle pooling on | savings % appears |
-| 5 | Ask *"Why was block 52 penalised?"* | cited answer < 4 s |
-| 6 | Click a citation badge | opens the real CERC URL |
-| 7 | Ask *"What will my penalty be next Tuesday?"* | **refuses to invent a ₹ figure** |
-| 8 | `POST /pipeline/run` manually | 202 + run_id, and a `job_runs` row |
+| 1 | Open the dashboard in a private window | Overview loads in a few seconds |
+| 2 | Pick a plant on the map | Every panel re-fetches for that plant |
+| 3 | Forecast page, switch 24 → 72 h | Fan chart redraws with wider bands |
+| 4 | Change the rule year 2026 → 2031 | Heatmap re-colours, penalty rises |
+| 5 | Actions page, move the battery slider | `battery_saving_inr` appears separately from the schedule saving |
+| 6 | Toggle pooling | Individual vs pooled totals and allocation |
+| 7 | Copilot: "Why is block 52 risky?" | Cited answer, citation badges open real CERC links |
+| 8 | Copilot: "What will my penalty be next Tuesday?" | No rupee figure invented; guardrail status visible |
 
-Step 7 is the one that separates this from every other RAG demo in the room. A naive chatbot
-confabulates a number there. Show the refusal, then show `meta.guardrail` explaining why.
+Step 8 is the demonstration that matters most. A general chatbot makes up a number there.
 
 ---
 
-## Failover drill — break it on purpose, the day before
+## Failover drill
 
-| Break | Expected behaviour | If it does not |
+Break each of these on purpose before the demo, on the real deployment.
+
+| Break | Expected | If not |
 |---|---|---|
-| Revoke the Groq key | answers continue via Gemini; `meta.llm_model` shows gemini | check fallback order in `llm.py` |
-| Revoke both keys | 200 with `guardrail: fallback_template`; engine ₹ figures still shown | `guardrail.deterministic_fallback()` |
-| Stop the backend container | frontend shows an error state, not a white screen | Member 3's error boundary |
-| `TRUNCATE regulation_chunks` | `/rag/health` reports 0 chunks; copilot degrades, does not crash | empty-retrieval path in `copilot.n_retrieve` |
-| Kill wifi | switch to the laptop stack | rung 1 must already be running |
+| Remove the Groq keys | Answers continue from Gemini; `meta.llm_model` shows it | Fallback order in `backend/modules/rag/llm.py` |
+| Remove every LLM key | `200` with `guardrail: fallback_template`, engine figures still correct | `guardrail.deterministic_fallback` |
+| Stop `renewable-api` | Frontend shows error states, not a blank page | Frontend error handling |
+| Block Open-Meteo | Forecast routes return a clear error, not invented weather | `weather_provider` returns empty on failure by design |
 
-All five are covered by automated tests (`tests/test_rag_copilot.py`), but run them against
-the deployed stack anyway — the tests prove the code degrades, not that the deployment does.
-
----
-
-## Failure modes, ranked by how much damage they do
-
-### 1. Embedding model mismatch — silent and total
-
-**Symptom:** answers look fine, citations look fine, and they are unrelated to the question.
-Nothing errors.
-
-**Cause:** the corpus was embedded with one model and queries use another. Nearest neighbours
-in two different embedding spaces are noise.
-
-**Detect:**
-```bash
-curl -s $BACKEND/api/rag/health | jq '.embed_models, .live_embed_model, .warning'
-```
-
-**Fix:** make `RAG_EMBED_MODEL` on the server match what built the index, or rebuild the index.
-In production the server refuses to start on a mismatch (`verify_corpus_model`), which is
-deliberate: failing to boot is much better than serving confident nonsense.
-
-### 2. Groq rate limit during judging
-
-**Symptom:** first few questions are fast, then latency spikes or answers fall back.
-
-**Cause:** Groq's free tier is roughly 30 requests/minute per org. Four teammates testing while
-a judge types will hit it.
-
-**Mitigations, already in place:** the response cache (identical question + rule year + engine
-values is free), pre-generated briefings from the nightly pipeline, and the Gemini fallback.
-
-**On the day:** warm the cache by running the rehearsal script once, and ask teammates to stop
-hitting the copilot during judging.
-
-### 3. Container restart loop after deploy
-
-**Symptom:** deploy reports success; the site 502s; the container keeps restarting.
-
-**Cause:** the healthcheck `start-period` is shorter than the bge-m3 load (~90 s), so Docker
-marks a still-loading container unhealthy and kills it, forever.
-
-**Fix:** `start-period` is 90 s in both the Dockerfile and `docker-compose.prod.yml`, and the
-ALB target group tolerates 5 × 30 s. If this recurs, the model is loading slower than that —
-check memory pressure before raising the timeout.
-
-### 4. Every dashboard panel spins forever
-
-**Cause:** CORS. The CloudFront domain is not in `CORS_ORIGINS`.
-
-```bash
-aws ssm put-parameter --name /renewable/cors_origins --type SecureString \
-    --value "https://<cloudfront-domain>" --overwrite
-# then redeploy, or on the box: bash infra/docker/fetch_secrets.sh && docker compose -f docker-compose.prod.yml up -d
-```
-
-### 5. Refresh on a deep link returns AccessDenied
-
-**Cause:** SPA routing. CloudFront must map 403 and 404 → `/index.html` with status 200.
-`02_cloudfront.sh` sets this; check it survived a distribution edit.
-
-### 6. Out of memory
-
-**Symptom:** the container dies with no stack trace.
-
-**Cause:** bge-m3 (~2.2 GB) + reranker + two uvicorn workers on 8 GB.
-
-**Fast mitigation:** `RAG_ENABLE_RERANKER=false` frees ~300 MB and about a second per query.
-RRF alone is decent. Then restart.
+The first two are also covered by `tests/test_rag_copilot.py` and `tests/test_llm_key_rotation.py`.
+Tests prove the code degrades; the drill proves the deployment does.
 
 ---
 
-## Getting onto the box
+## Failure modes
 
-There is no SSH key and no port 22.
+Ranked by how much damage they do before anyone notices.
+
+### 1. Embedding model mismatch
+
+**Symptom.** Answers and citations look well-formed and are unrelated to the question. Nothing
+errors.
+
+**Cause.** The corpus was embedded with one model and queries use another.
+
+**Detect.** `curl -s $API/rag/health | jq '.embed_models, .live_embed_model, .warning'`
+
+**Fix.** Rebuild the index with the model the server uses. In production the service refuses to
+start on a mismatch, which is intended. Production currently runs BM25-only with no stored
+embeddings, so this cannot occur until dense embeddings are loaded.
+
+### 2. An engine silently in mock mode
+
+**Symptom.** Everything works, and `serving_synthetic_data` is not empty.
+
+**Cause.** Usually the `.env` on the VM. systemd's `EnvironmentFile=` does not strip inline
+comments, so `FORECAST_ENGINE_TYPE=production  # note` once arrived as a value that matched
+nothing. The factory now strips comments, but a typo still reads as `mock`.
+
+**Fix.** Correct `.env`, `sudo systemctl restart renewable-api`, re-check `/health`.
+
+### 3. Rate limits during the demo
+
+**Symptom.** The first few copilot answers are quick, then slow down or fall back.
+
+**Mitigation already in place.** Several keys per provider with rotation on quota errors, Gemini
+as fallback, a one-hour response cache, and the deterministic template as a last resort.
+
+**On the day.** Ask teammates not to use the copilot while judges are.
+
+### 4. Dashboard panels stay empty
+
+**Causes, in order of likelihood.**
+
+1. `VITE_API_BASE_URL` on Vercel is wrong or still `http://`. An HTTPS page cannot call an HTTP
+   API; the browser blocks it as mixed content.
+2. The API is down. Check `/health`.
+3. CORS. The server runs `CORS_ORIGINS=*`; if that has been tightened, the Vercel domain must be
+   in the list.
+
+### 5. Forecast requests fail
+
+**Cause.** Open-Meteo unreachable from the VM. The production forecast engine refuses to
+forecast without weather rather than predicting from the clock alone.
+
+**Fast rollback.** Set `FORECAST_ENGINE_TYPE=mock` and restart. `/health` will then list
+`forecast` under `serving_synthetic_data`, and it should be said out loud in the demo.
+
+### 6. A dependency install dies halfway
+
+**Cause.** A long `pip install` over SSH is killed when the session drops, leaving a broken venv.
+
+**Fix.** Detach it:
 
 ```bash
-aws ssm start-session --target <instance-id>
-
-sudo -i
-cd /opt/renewable
-docker compose -f docker-compose.prod.yml logs --tail 100 backend
-docker compose -f docker-compose.prod.yml ps
+nohup bash -c 'venv/bin/python -m pip install -r requirements.txt > /tmp/pip.log 2>&1; \
+  echo $? > /tmp/pip.done' >/dev/null 2>&1 &
+cat /tmp/pip.done 2>/dev/null && tail -5 /tmp/pip.log
 ```
 
-Every session is recorded in CloudTrail, which is the point.
+### 7. A deploy leaves the API down
 
----
-
-## Rollback
+The deploy workflow already rolls back automatically when `/health` does not come up within two
+minutes, and prints the failed release's logs in the Actions run. If it happens anyway:
 
 ```bash
-# Redeploy a known-good image tag
-gh workflow run deploy.yml
-
-# Or by hand on the box
-cd /opt/renewable
-IMAGE_TAG=<previous-sha> docker compose -f docker-compose.prod.yml up -d --no-deps backend
+cd ~/AI-Powered-Renewable-Generation-Forecasting-Platform
+git reset --hard <last-good-sha>
+sudo systemctl restart renewable-api
 curl -fsS localhost:8000/health
 ```
 
-ECR keeps the last 10 images (lifecycle policy), so there is always something to roll back to.
-
 ---
 
-## Alarms and what each one means
+## Running the pipeline by hand
 
-| Alarm | Means | Do |
-|---|---|---|
-| `renewable-llm-all-failed` | both providers failing | answers are fallback templates; check keys and quotas |
-| `renewable-backend-5xx` | backend erroring | logs first, then roll back |
-| `renewable-pipeline-failed` | nightly run failed | tomorrow's dashboard will be empty; re-run by hand |
-| `renewable-ec2-memory-high` | >85% for 10 min | disable the reranker, restart |
-
----
-
-## After judging
+There is no scheduler on the Azure deployment.
 
 ```bash
-aws ec2 stop-instances --instance-ids <id>
-aws rds create-db-snapshot --db-instance-identifier renewable-db \
-    --db-snapshot-identifier renewable-final
-aws rds delete-db-instance --db-instance-identifier renewable-db --skip-final-snapshot
+curl -s -X POST $API/pipeline/run -H "X-API-Key: $PIPELINE_API_KEY" \
+  -H 'content-type: application/json' -d '{}'
+# -> 202 {"run_id": "..."}
+
+curl -s $API/pipeline/status/<run_id> | jq
 ```
 
-Leave CloudFront and S3 up — under Rs 10/day, and it is the portfolio link.
+---
+
+## After the demo
+
+Deallocate the VM. Shutting it down from inside the OS leaves it allocated and billing for
+compute; deallocating releases it. Disks bill either way.
+
+```bash
+az vm deallocate --resource-group <rg> --name Hackout
+```
+
+Leave the Vercel frontend up; it costs nothing and is the link people will click later.

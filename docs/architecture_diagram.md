@@ -1,246 +1,170 @@
-# GridMind — System Architecture Diagram
+# GridMind — Architecture at a Glance
 
-> ASCII component diagram — four major zones, all connections labelled.
-> Read top → bottom: data flows from live feeds through the core engine to the UI.
+A one-page visual map. Each diagram is explained in
+[system_architecture.md](system_architecture.md).
 
 ---
 
-```
-╔══════════════════════════════════════════════════════════════════════════════════════╗
-║                           🌐  EXTERNAL DATA SOURCES                                 ║
-║                                                                                      ║
-║   ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────────────────┐    ║
-║   │  Open-Meteo API │    │  NASA POWER API │    │  CERC / IEGC Regulation PDFs │    ║
-║   │  72h Weather    │    │  Solar Irrad.   │    │  2024 · 2026 · 2031 gazettes │    ║
-║   └────────┬────────┘    └────────┬────────┘    └──────────────┬───────────────┘    ║
-╚════════════╪════════════════════════╪════════════════════════════╪════════════════════╝
-             │ httpx async            │ httpx async                │ PDF ingest
-             ▼                        ▼                            ▼
-╔════════════════════════════════════════════╗   ╔════════════════════════════════════╗
-║           🤖  AI / ML ENGINE               ║   ║        🧠  RAG COPILOT             ║
-║  ┌─────────────────────────────────────┐  ║   ║  ┌──────────────────────────────┐  ║
-║  │  Data Ingestion Pipeline            │  ║   ║  │  bge-m3 Embedder             │  ║
-║  │  • Quality Validator                │  ║   ║  │  (1024-dim dense vectors)    │  ║
-║  │  • 15-min Grid Resampler (IST)      │  ║   ║  ├──────────────────────────────┤  ║
-║  │  • AvC clipping · GHI zeroing       │  ║   ║  │  BM25 Sparse Index           │  ║
-║  └──────────────┬──────────────────────┘  ║   ║  (rank-bm25 over 2k chunks)   │  ║
-║                 │                          ║   ║  ├──────────────────────────────┤  ║
-║  ┌──────────────▼──────────────────────┐  ║   ║  │  RRF Hybrid Retriever        │  ║
-║  │  Feature Builder (61 features)      │  ║   ║  │  (dense + sparse fusion)     │  ║
-║  │  • Cyclical time · Solar angles     │  ║   ║  ├──────────────────────────────┤  ║
-║  │  • Weather lags · Wind shear        │  ║   ║  │  Financial Guardrail         │  ║
-║  └──────────────┬──────────────────────┘  ║   ║  │  (strips LLM rupee output)   │  ║
-║                 │                          ║   ║  ├──────────────────────────────┤  ║
-║  ┌──────────────▼──────────────────────┐  ║   ║  │  LiteLLM Gateway             │  ║
-║  │  LightGBM Quantile Boosters          │  ║   ║  │  Groq Llama 3.3 70B /        │  ║
-║  │  12 models: 24h / 48h / 72h         │  ║   ║  │  Gemini 1.5 Flash            │  ║
-║  │  P10 · P50 · P90 per horizon        │  ║   ║  └──────────────┬───────────────┘  ║
-║  └──────────────┬──────────────────────┘  ║   ╚═════════════════╪══════════════════╝
-║                 │ P05–P95 fan             ║                     │
-║  ┌──────────────▼──────────────────────┐  ║                     │ answer + citations
-╚══╡  → /forecast blocks[96]             ╞══╝                     │
-   └──────────────┬──────────────────────┘                        │
-                  │                                                │
-                  ▼                                                ▼
-╔══════════════════════════════════════════════════════════════════════════════════════╗
-║                         ⚡  BACKEND  (FastAPI · port 8000)                           ║
-║                                                                                      ║
-║  ┌──────────────────────────────────────────────────────────────────────────────┐   ║
-║  │  REST API Routers                                                            │   ║
-║  │                                                                              │   ║
-║  │  GET  /plants          GET  /plants/{id}      GET  /forecast?plant_id&date  │   ║
-║  │  POST /dsm             POST /optimize          POST /pooling                 │   ║
-║  │  GET  /dashboard/{id}  POST /rag/query         POST /pipeline/run            │   ║
-║  │  GET  /health          GET  /rag/health                                      │   ║
-║  └──────────┬───────────────────────┬──────────────────────┬────────────────────┘   ║
-║             │                       │                      │                         ║
-║  ┌──────────▼──────────┐ ┌──────────▼──────────┐ ┌────────▼────────────────────┐   ║
-║  │  DSM Engine          │ │  Optimiser           │ │  Portfolio Pooling          │   ║
-║  │  CERC X-Trajectory   │ │  Grid Search         │ │  Multi-plant netting        │   ║
-║  │  Frequency tiers     │ │  (min expected ₹)    │ │  Pro-rata allocation        │   ║
-║  │  NCD + seller rules  │ │  + Battery LP        │ │  ~27% reduction measured   │   ║
-║  │  2024/2026/2031 YAML │ │  (PuLP/CBC 96-block) │ │  Correlation: 0.70         │   ║
-║  └──────────┬──────────┘ └──────────┬──────────┘ └────────┬────────────────────┘   ║
-║             │                       │                      │                         ║
-║             └───────────────────────┴──────────────────────┘                         ║
-║                                     │                                                ║
-║                      Deterministic ₹ penalty figures                                 ║
-╚═════════════════════════════════════╪════════════════════════════════════════════════╝
-                                      │
-                    ┌─────────────────┼──────────────────┐
-                    │ reads/writes    │                  │ reads/writes
-                    ▼                 ▼                  ▼
-╔═══════════════════════════════════════════════════════════════════════════════════════╗
-║                              🗄️  STORAGE                                             ║
-║                                                                                       ║
-║  ┌──────────────────────────────────┐   ┌────────────────────────────────────────┐  ║
-║  │  PostgreSQL 15 (relational)      │   │  pgvector (HNSW cosine, 1024-dim)      │  ║
-║  │                                  │   │                                        │  ║
-║  │  • plants                        │   │  • regulation_chunks                   │  ║
-║  │  • weather_forecasts             │   │    (CERC/IEGC PDFs split into          │  ║
-║  │  • forecasts                     │   │     chunks, embedded by bge-m3)        │  ║
-║  │  • schedules                     │   │                                        │  ║
-║  │  • dsm_results                   │   │  BM25 Index (in-memory at boot)        │  ║
-║  │  • actions                       │   │  • built from same regulation_chunks   │  ║
-║  │  • pooling_results               │   │  • ~1s build, 2k chunks                │  ║
-║  │  • job_runs                      │   │                                        │  ║
-║  └──────────────────────────────────┘   └────────────────────────────────────────┘  ║
-║                                                                                       ║
-║  ┌──────────────────────────────────┐   ┌────────────────────────────────────────┐  ║
-║  │  config/ (YAML, static)          │   │  prediction_bundle/ (file system)      │  ║
-║  │  • dsm_rules_2024.yaml           │   │  • 12 LightGBM .pkl boosters           │  ║
-║  │  • dsm_rules_2026.yaml           │   │    24h / 48h / 72h × P10/P50/P90      │  ║
-║  │  • dsm_rules_2031.yaml           │   │    (currently rejected by physics      │  ║
-║  │  • plants.yaml (seed data)       │   │     gate — mock engine active)         │  ║
-║  └──────────────────────────────────┘   └────────────────────────────────────────┘  ║
-╚═══════════════════════════════════════════════════════════════════════════════════════╝
-                                      ▲
-                    JSON over HTTP (axios · AbortController)
-                                      │
-╔═══════════════════════════════════════════════════════════════════════════════════════╗
-║                         🖥️  FRONTEND  (React 19 · Vite 6 · port 5173)               ║
-║                                                                                       ║
-║  ┌────────────────────────────────────────────────────────────────────────────────┐  ║
-║  │  App Shell                                                                     │  ║
-║  │  AppLayout ─── AppSidebar (Overview · Forecast · Risk · Actions · DSM Copilot) │  ║
-║  │             └── AppHeader (mobile hamburger)                                   │  ║
-║  │                                                                                │  ║
-║  │  DashboardShell ── PlantSelector (GJ_SOLAR_A/B, GJ_WIND_C, GJ_SOLAR_D)       │  ║
-║  │                 └── RuleYearControl (2024 / 2026 / 2031)                      │  ║
-║  └──────────────────────────────┬─────────────────────────────────────────────────┘  ║
-║                                 │  DashboardContext (plantId + ruleYear)             ║
-║       ┌─────────────────────────┼──────────────────────────┐                        ║
-║       ▼                         ▼                          ▼                        ║
-║  ┌────────────┐       ┌─────────────────────┐       ┌──────────────────────────┐   ║
-║  │  Overview  │       │  Forecast page       │       │  Risk page               │   ║
-║  │            │       │                     │       │                          │   ║
-║  │ StatTile×4 │       │  ForecastFanChart   │       │  RiskHeatmap             │   ║
-║  │ BriefingCard│       │  P05–P95 bands      │       │  96 blocks · pen ramp    │   ║
-║  │ PlantMap   │       │  P50 median line     │       │                          │   ║
-║  └────────────┘       │  Optimised schedule  │       │  ScheduleComparison      │   ║
-║                       │  (dashed stepline)   │       │  Naive vs optimised bars │   ║
-║                       └─────────────────────┘       └──────────────────────────┘   ║
-║                                                                                       ║
-║  ┌─────────────────────────────┐          ┌──────────────────────────────────────┐  ║
-║  │  Actions page               │          │  Copilot page                        │  ║
-║  │                             │          │                                      │  ║
-║  │  ActionCards                │          │  RAGCopilot                          │  ║
-║  │  • curtailment              │          │  • Chat input                        │  ║
-║  │  • reserve_flag             │          │  • Answer panel                      │  ║
-║  │  (type · block · MW · ₹)   │          │  • Citation badges (clause/doc/page) │  ║
-║  │                             │          │  • Guardrail status display          │  ║
-║  │  PoolingToggle              │          │                                      │  ║
-║  │  Individual ↔ Pooled totals │          │  POST /rag/query                     │  ║
-║  │  Per-plant allocation table │          │  context = live DSM engine values    │  ║
-║  └─────────────────────────────┘          └──────────────────────────────────────┘  ║
-║                                                                                       ║
-║  ─────────────────────────  API Layer  ──────────────────────────────────────────── ║
-║                                                                                       ║
-║  api/client.ts → api/endpoints.ts → hooks/use*.ts → pages & components              ║
-║                                                                                       ║
-║  useDashboard   usePlants    useForecast   useDSM      useOptimize                   ║
-║  usePooling     useRAG       useHealth     useSidebar  useModal  useGoBack           ║
-║                                                                                       ║
-║  VITE_USE_MOCKS=true → mocks/ (dashboard.json · optimize.json · plants.json · rag)  ║
-╚═══════════════════════════════════════════════════════════════════════════════════════╝
+## The whole system
+
+```mermaid
+flowchart TB
+    subgraph sources [External sources]
+        OM["Open-Meteo<br/>72 h weather"]
+        INV["OpenStreetMap · GPPD<br/>plant inventory"]
+        PDF["CERC DSM regulations"]
+        LLMS["Groq · Gemini"]
+    end
+
+    subgraph backend [FastAPI backend]
+        direction TB
+        subgraph predict [Predict]
+            WX["Weather provider<br/>cached 15 min"]
+            SOLAR["LightGBM<br/>P10 · P50 · P90<br/>24 / 48 / 72 h"]
+            WINDE["Wind power curve"]
+        end
+        subgraph decide [Price and decide]
+            DSM["DSM engine<br/>2024 · 2026 · 2031 rules"]
+            OPT["Optimiser<br/>201 candidates per block"]
+            BAT["Battery recourse"]
+            POOL["Pooling"]
+            ACT["Action cards"]
+        end
+        subgraph explain [Explain]
+            RET["Retriever<br/>BM25 + pgvector"]
+            GRD["Guardrail"]
+        end
+        PIPE["Daily pipeline"]
+    end
+
+    subgraph store [Storage]
+        PG[("PostgreSQL<br/>10 tables + pgvector")]
+        CFG["config/*.yaml"]
+        MOD["prediction_bundle/models_v2"]
+    end
+
+    UI["React dashboard<br/>Overview · Forecast · Risk · Actions · Copilot"]
+
+    OM --> WX
+    WX --> SOLAR & WINDE
+    MOD --> SOLAR
+    SOLAR & WINDE -->|"P05–P95"| OPT & POOL
+    CFG --> DSM
+    DSM --> OPT & POOL
+    OPT --> BAT
+    OPT --> ACT
+    INV --> PG
+    PDF -->|"offline build"| PG
+    PG --> RET --> GRD
+    GRD <--> LLMS
+    PIPE --> PG
+    UI <-->|"REST / JSON"| backend
 ```
 
 ---
 
-## Connection index
+## Value chain
 
-| Arrow | From | To | Protocol / data |
-|---|---|---|---|
-| Weather fetch | Open-Meteo + NASA POWER | ML Ingestion Pipeline | `httpx` async HTTP |
-| PDF ingest | CERC regulation PDFs | bge-m3 Embedder + BM25 | file read → chunk → embed |
-| Forecast output | LightGBM boosters | Backend `/forecast` | Python function call |
-| DSM pricing | Backend DSM Engine | `/dsm`, `/dashboard` | Pydantic response |
-| Optimiser output | Grid search + Battery LP | `/optimize`, `/dashboard` | Pydantic response |
-| Pooling savings | Portfolio Pooling Engine | `/pooling`, `/dashboard` | Pydantic response |
-| RAG answer | LiteLLM → Guardrail | `/rag/query` response | JSON + citations array |
-| DB reads/writes | All backend engines | PostgreSQL 15 | SQLAlchemy 2.0 ORM |
-| Vector search | RAG Retriever | pgvector (HNSW) | cosine similarity |
-| Sparse search | RAG Retriever | BM25 in-memory index | term frequency |
-| Config load | DSM Engine | `config/*.yaml` | YAML file read at startup |
-| Model load | Forecast Engine | `prediction_bundle/*.pkl` | joblib deserialise |
-| Frontend → API | React hooks (axios) | FastAPI routers | JSON over HTTP, AbortController |
-| Plant select | `PlantMap` / `PlantSelector` | `DashboardContext` | React state |
-| Rule year change | `RuleYearControl` | `useDSM` re-fetch | POST /dsm with new `rule_year` |
-| Copilot context | Live DSM engine values | `POST /rag/query .context` | JSON object |
+```mermaid
+flowchart LR
+    A["Weather"] --> B["Probabilistic<br/>forecast"]
+    B --> C["₹ penalty<br/>per quantile"]
+    C --> D["Minimum<br/>expected ₹ schedule"]
+    D --> E["Actions and<br/>pooling"]
+    E --> F["Cited<br/>explanation"]
+
+    classDef compute fill:#1B2321,stroke:#CFF245,color:#E9EFEC
+    classDef explain fill:#131917,stroke:#6EA8FF,color:#E9EFEC
+    class A,B,C,D,E compute
+    class F explain
+```
+
+Everything in the lime-bordered steps is deterministic code. The blue step is the only place a
+language model is involved, and it receives the figures rather than producing them.
 
 ---
 
-## Seed data — Gujarat portfolio
+## Where each rupee figure comes from
 
-```
-GJ_SOLAR_A  50 MW  solar  lat 23.0  lon 72.5  pool GJ_POOL_1
-GJ_SOLAR_B  75 MW  solar  lat 23.5  lon 71.5  pool GJ_POOL_1
-GJ_WIND_C   40 MW  wind   lat 22.8  lon 70.2  pool GJ_POOL_1
-GJ_SOLAR_D  30 MW  solar  lat 23.8  lon 72.0  pool GJ_POOL_2
-```
-
-Map centre: `23.2°N, 71.0°E`
-
----
-
-## Engine status flags (from `GET /health`)
-
-```
-{
-  "forecast":  "mock"       ← LightGBM models trained but rejected by physics gate
-  "optimizer": "production" ← real 23–28% measured reduction
-  "pooling":   "production" ← real ~27% measured reduction
-  "rag":       "mock"       ← production bge-m3 ready; corpus empty until PDFs land
-}
-```
-
-`serving_synthetic_data: ["forecast"]` is published in every `/health` response so the
-UI can render the honesty badge. Sprint 10 wires this to the header.
-
----
-
-## One-day data flow (96 blocks = 15-minute IST intervals)
-
-```
-00:00 IST  ──▶  Weather forecast arrives (Open-Meteo 72h pull, async)
-               │
-               ▼
-           Validator + Resampler → 96 blocks aligned to IST Block 1..96
-               │
-               ▼
-           Feature Builder (61 features per block)
-               │
-               ▼
-           LightGBM × 12 boosters → P10/P50/P90 per horizon
-               │
-               ▼
-           Quantile sorter → P05 P10 P25 P50 P75 P90 P95 (monotone)
-               │
-               ▼ stored in DB (forecasts table)
-               │
-           DSM Engine reads forecast + schedule
-               │  applies X-trajectory (2026 rule: X=0.72)
-               │  applies frequency tier (50Hz nominal → band ±0.15Hz)
-               ▼
-           Expected penalty ₹ per block (BlockDSMResult × 96)
-               │
-               ├──▶ Grid Search Optimiser → min-expected-₹ schedule
-               │         └──▶ Battery LP (PuLP/CBC) → BESS charge/discharge
-               │
-               ├──▶ Portfolio Pooling → netting across GJ_POOL_1
-               │
-               ├──▶ Action Cards (curtailment / reserve_flag) emitted
-               │
-               └──▶ Dashboard assembled → GET /dashboard/{plant_id}
-                           │
-                           ▼
-                    React frontend renders:
-                    ForecastFanChart  RiskHeatmap  ScheduleComparison
-                    StatTile×4        BriefingCard  ActionCards  PlantMap
-                    (RAGCopilot queries independently on user question)
+```mermaid
+flowchart LR
+    FC["Forecast fan"] --> DSM["DSMEngine"]
+    RULES["rule YAML"] --> DSM
+    DSM --> OPTR["/optimize totals"]
+    DSM --> DSMR["/dsm per block"]
+    DSM --> POOLR["/pooling totals"]
+    OPTR & DSMR --> UI["Dashboard tiles,<br/>heatmap, action cards"]
+    DSMR -->|"context"| RAG["/rag/query"]
+    RAG -->|"engine_values echoed"| UI
+    RAG -.->|"answer prose,<br/>numbers guardrailed"| UI
 ```
 
 ---
 
-*Owners: Meet Virugama (ML) · Gaurav Rathod (Backend) · Shane Christian (Frontend) · Madhav Thesiya (Infra/RAG)*  
-*Built for Hackout 2026.*
+## Forecast engine routing
+
+```mermaid
+flowchart TD
+    REQ["generate_forecast(plant)"] --> T{"plant type"}
+    T -- wind --> W["WindPhysicsEngine<br/>always"]
+    T -- solar --> M{"FORECAST_ENGINE_TYPE"}
+    M -- mock --> MK["MockForecastEngine"]
+    M -- production --> LG["LGBMForecastEngine"]
+    LG --> GATE{"physics gate<br/>and completeness"}
+    GATE -- pass --> OUT["96 blocks, MW"]
+    GATE -- fail --> ERR["refuse"]
+    W --> OUT
+    MK --> OUT
+```
+
+---
+
+## Production deployment
+
+```mermaid
+flowchart LR
+    USER["Operator browser"] --> VER["Vercel<br/>static React build"]
+    USER -->|"HTTPS"| CADDY
+
+    subgraph vm [Azure VM]
+        CADDY["Caddy<br/>Let's Encrypt"] --> API["uvicorn<br/>systemd"]
+    end
+
+    API --> SUPA[("Supabase<br/>PostgreSQL")]
+    API --> OMX["Open-Meteo"]
+    API --> LLMX["Groq · Gemini"]
+
+    GH["GitHub Actions<br/>ci → deploy"] -->|"SSH, health gate,<br/>auto rollback"| API
+```
+
+An alternative AWS path (CloudFront, S3, ALB, EC2, RDS, EventBridge, CloudWatch) is kept in
+`infra/aws/` and `infra/terraform/`.
+
+---
+
+## Seed portfolio
+
+The four plants in `config/plants.yaml`, used by tests and offline demos. Production serves 101
+imported Gujarat plants.
+
+| Plant | Type | Capacity | Location | Pool |
+|---|---|---|---|---|
+| GJ_SOLAR_A | solar | 50 MW | near Gandhinagar (23.22, 72.64) | GJ_POOL_1 |
+| GJ_SOLAR_B | solar | 75 MW | near Rajkot (22.30, 70.80) | GJ_POOL_1 |
+| GJ_WIND_C | wind | 40 MW, 120 m hub | near Kutch (23.61, 68.98) | GJ_POOL_1 |
+| GJ_SOLAR_D | solar | 30 MW, bifacial | near Palanpur (24.19, 72.43) | GJ_POOL_2 |
+
+---
+
+## One day in blocks
+
+A day is 96 fifteen-minute blocks. Block 1 is 00:00–00:15 IST. Block numbers are derived from
+the IST wall clock, not UTC, so block 1 is always local midnight.
+
+| Blocks | IST | Typical solar exposure |
+|---|---|---|
+| 1–24 | 00:00–06:00 | none |
+| 25–40 | 06:00–10:00 | ramp-up, high relative error |
+| 41–64 | 10:00–16:00 | peak output, largest absolute ₹ exposure |
+| 65–76 | 16:00–19:00 | ramp-down |
+| 77–96 | 19:00–24:00 | none |

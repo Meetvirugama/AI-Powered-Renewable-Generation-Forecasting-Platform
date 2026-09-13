@@ -1,9 +1,10 @@
 # Demo script — 3 minutes
 
 Plant on screen: **Gujarat Solar A** (50 MW), date 2026-06-15, CERC rule year 2026,
-X-trajectory value 0.85. All figures below are the real mock values shipped in
-`frontend/src/mocks/dashboard.json`, `optimize.json` and `rag.json` — quote these, do
-not round or invent.
+X-trajectory value 0.85. All figures below are the values in the
+`frontend/src/mocks/` fixtures, which is what the dashboard shows with `VITE_USE_MOCKS=true`.
+**Against the live API the numbers differ and change with each day's weather.** When presenting
+live, read today's figures off the screen and quote those instead. Never round or invent.
 
 ---
 
@@ -118,21 +119,22 @@ High Court, which is why the product supports both the 2024 and 2026 rule sets r
 than assuming the newer one survives unchanged.
 
 **"What's mocked versus real?"**
-The API contract, the DSM math shapes, and the UI are all real. The forecast numbers
-currently come from a mock forecast engine behind the same interface the real ML models
-will use — see Known gaps below.
+Nothing in the live chain. `GET /health` returns `serving_synthetic_data: []`: solar is
+forecast by LightGBM, wind by a turbine power curve, pricing and optimisation are the real
+engines, and the copilot retrieves from CERC documents. The only mock path is the frontend's
+offline mode, which the dashboard labels on screen. See Known limits below.
 
-## Known gaps — say these before a judge finds them
+## Known limits — say these before a judge finds them
 
-- The real ML models (LightGBM quantile regression, Chronos-2) live in
-  `prediction_bundle/`, but the forecast and optimisation endpoints are still served by
-  a mock engine behind the same API contract. Swapping in the real models is a backend
-  config change, not a frontend one.
-- The mock forecast engine has a known keying bug (`plant_id`/`asset_type` vs the
-  `id`/`type` fields callers actually pass), so every plant is seeded identically right
-  now and the wind plant renders the same solar-shaped bell curve as the solar plants.
-  This is a backend fixture issue, already flagged to that owner, not a frontend defect.
-- Only the main Dashboard route is fully wired end to end today. The plant map and the
-  RAG copilot panel exist as built components but aren't dropped into the live dashboard
-  yet, and the planned PlantDetail and Backtest pages are still stubs. Scoped, known, and
-  next in line — not a surprise if a judge clicks around outside the happy path.
+- **The solar model is trained on one plant over 29.9 days.** Other plants are forecast by
+  scaling its capacity factor to their size. It is a transfer from a reference site, not a
+  per-plant model.
+- **Imported plants have no measured output.** OpenStreetMap and GPPD give location and capacity,
+  so forecasts for those plants cannot be checked against actuals.
+- **Wind is physics, not ML.** A turbine power curve applied to forecast hub-height wind. There is
+  no wind generation data to train or validate against.
+- **Grid frequency defaults to 50 Hz.** All five frequency tiers are implemented, but no live
+  frequency feed is connected.
+- **The copilot corpus is thin.** Three CERC documents, most chunks from the Statement of Reasons,
+  and the Grid Code is not yet indexed. Retrieval in production is keyword-based.
+- **Savings move with the weather.** Optimisation and pooling percentages are measured per day.
