@@ -1,6 +1,6 @@
 # Project Understanding
 
-The problem GridMind addresses, who it is for, and why the design looks the way it does. For
+The problem VidyutVaani addresses, who it is for, and why the design looks the way it does. For
 how it is built, see [system_architecture.md](system_architecture.md).
 
 ---
@@ -39,7 +39,7 @@ forecast only answers the first.
 | How much reserve should I hold? | Nothing about the downside. |
 | Is storage worth dispatching? | Nothing. A battery's value comes from the spread, not the mean. |
 
-GridMind forecasts a distribution (P05 to P95), prices every point of that distribution under
+VidyutVaani forecasts a distribution (P05 to P95), prices every point of that distribution under
 the CERC rules, and chooses the schedule with the lowest *expected* cost. The optimal schedule is
 frequently not the median forecast, and the gap between them is money.
 
@@ -78,7 +78,7 @@ tolerance bands and normal rate of charges. A 2026 amendment introduces an X-tra
 moves the deviation denominator from available capacity toward the declared schedule between
 2026 and 2031, and narrows the bands as it goes.
 
-The 2026 order is under challenge in the Delhi High Court. GridMind keeps 2024, 2026 and 2031
+The 2026 order is under challenge in the Delhi High Court. VidyutVaani keeps 2024, 2026 and 2031
 rule sets side by side for that reason, and because comparing them shows a plant what the
 tightening will cost before it arrives.
 

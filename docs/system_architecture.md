@@ -1,6 +1,6 @@
 # System Architecture
 
-How GridMind is put together, why it is shaped the way it is, and where each decision lives in
+How VidyutVaani is put together, why it is shaped the way it is, and where each decision lives in
 the code. For a one-page visual map, see [architecture_diagram.md](architecture_diagram.md).
 
 Last verified against `main` and the production API on 13 September 2026.

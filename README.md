@@ -1,4 +1,4 @@
-# GridMind
+# VidyutVaani
 
 **Renewable generation forecasting and penalty optimisation for Indian power plants.**
 
@@ -14,7 +14,7 @@ Solar and wind plants in India must submit a day-ahead schedule of how much powe
 produce in every 15-minute block. If actual output misses the schedule, the plant pays a penalty
 under CERC's Deviation Settlement Mechanism (DSM).
 
-GridMind forecasts output, calculates the penalty in rupees, and recommends the schedule that
+VidyutVaani forecasts output, calculates the penalty in rupees, and recommends the schedule that
 keeps that penalty as low as possible.
 
 ## Features

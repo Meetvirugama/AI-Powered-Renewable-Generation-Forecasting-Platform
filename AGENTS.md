@@ -7,8 +7,8 @@ Antigravity reads this natively; `CLAUDE.md` imports it. **Edit this file, not t
 
 ## Project
 
-AI-Powered Renewable Generation Forecasting Platform — DSM-aware decision & scheduling
-platform for Indian grid operators. Hackout 2026.
+**VidyutVaani** — AI-powered renewable generation forecasting and DSM-aware decision &
+scheduling platform for Indian grid operators. Hackout 2026.
 
 Chain: forecast P05–P95 → price ₹ CERC DSM penalty → optimise day-ahead schedule →
 emit grid action cards → explain with cited CERC clauses.

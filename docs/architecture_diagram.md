@@ -1,4 +1,4 @@
-# GridMind — Architecture at a Glance
+# VidyutVaani — Architecture at a Glance
 
 A one-page visual map. Each diagram is explained in
 [system_architecture.md](system_architecture.md).

@@ -71,9 +71,9 @@ const AppHeader: React.FC = () => {
         <Link
           to="/"
           className="flex shrink-0 items-center gap-1 text-[17px] font-bold tracking-tight mr-5"
-          aria-label="GridMind dashboard"
+          aria-label="VidyutVaani dashboard"
         >
-          Grid<span className="text-accent">Mind</span>
+          Vidyut<span className="text-accent">Vaani</span>
         </Link>
 
         {/* Divider */}
