@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
+import { usePlants } from "../hooks/usePlants";
 
 // ---------------------------------------------------------------------------
 // Animated counter hook
@@ -35,6 +36,11 @@ function OscilloBackground() {
     if (!ctx) return;
     let raf: number;
     let t = 0;
+    // Draw a single still frame for people who have asked their OS for reduced
+    // motion, instead of animating indefinitely.
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -75,7 +81,8 @@ function OscilloBackground() {
           const freq = (2 * Math.PI) / (W * 0.45);
           const y = H * 0.5 + Math.sin(px * freq + phase) * amp
             + Math.sin(px * freq * 2.3 + phase * 1.4) * amp * 0.3;
-          px === 0 ? ctx.moveTo(px, y) : ctx.lineTo(px, y);
+          if (px === 0) ctx.moveTo(px, y);
+          else ctx.lineTo(px, y);
         }
         ctx.stroke();
       });
@@ -90,7 +97,7 @@ function OscilloBackground() {
       }
 
       t++;
-      raf = requestAnimationFrame(draw);
+      if (!reduceMotion) raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
@@ -118,7 +125,6 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description, tag, delay }: FeatureCardProps) {
   const [visible, setVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), delay);
     return () => clearTimeout(timer);
@@ -126,7 +132,6 @@ function FeatureCard({ icon, title, description, tag, delay }: FeatureCardProps)
 
   return (
     <div
-      ref={ref}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(24px)",
@@ -163,12 +168,14 @@ function FeatureCard({ icon, title, description, tag, delay }: FeatureCardProps)
 // ---------------------------------------------------------------------------
 // Stat tile
 // ---------------------------------------------------------------------------
-function StatTile({ value, suffix, label, started }: { value: number; suffix: string; label: string; started: boolean }) {
-  const n = useCountUp(value, 1600, started);
+function StatTile({ value, suffix, label, started }: { value: number | null; suffix: string; label: string; started: boolean }) {
+  const n = useCountUp(value ?? 0, 1600, started);
   return (
     <div className="flex flex-col items-center gap-1 px-8 py-4 border-r border-border last:border-r-0">
       <span className="font-mono text-[26px] font-bold tracking-tight text-accent" style={{ fontVariantNumeric: "tabular-nums" }}>
-        {n.toLocaleString("en-IN")}{suffix}
+        {/* null means the figure is not known yet (or the API is unreachable);
+            show a dash rather than count up to a misleading 0. */}
+        {value === null ? "—" : `${n.toLocaleString("en-IN")}${suffix}`}
       </span>
       <span className="text-[11px] uppercase tracking-wider text-text-muted">{label}</span>
     </div>
@@ -195,7 +202,7 @@ const FEATURES = [
     tag: "CERC DSM",
     title: "Regulatory DSM Optimiser",
     description:
-      "Scipy LP solver couples all 96 blocks via SOC continuity. Computes deviation charges under 2024, 2026, and 2031 CERC rules. Tells you the exact schedule to file to minimise penalty risk.",
+      "Searches every declarable schedule, block by block, for the lowest probability-weighted DSM penalty under the 2024, 2026 and 2031 CERC rules. Tells you what to file and what it saves against simply declaring the forecast.",
     icon: (
       <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden>
         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2z" />
@@ -207,7 +214,7 @@ const FEATURES = [
     tag: "RAG · LLM",
     title: "DSM Copilot",
     description:
-      "Ask any question about CERC regulations, deviation bands, or scheduling strategy. Citations link to the exact paragraph in the source document. ₹ figures come only from the DSM engine, never the LLM.",
+      "Ask any question about CERC regulations, deviation bands, or scheduling strategy. Every answer cites the regulation clause and page it came from. ₹ figures come only from the DSM engine, never the LLM.",
     icon: (
       <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden>
         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
@@ -228,10 +235,10 @@ const FEATURES = [
     delay: 1050,
   },
   {
-    tag: "Battery LP",
+    tag: "Battery",
     title: "Storage Dispatch",
     description:
-      "Configure battery capacity and let the LP solver compute block-by-block charge/discharge across all 96 blocks. SOC continuity enforced — no fictitious energy created.",
+      "Size a battery in hours of plant capacity. It absorbs over-injection and covers shortfall to hold deviation inside the tolerance band, with state of charge tracked block by block — a day that runs below forecast drains it.",
     icon: (
       <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden>
         <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4zm-1.67 8h-2v3h-2v-3H8l4-6 4 6z" />
@@ -253,17 +260,23 @@ const FEATURES = [
   },
 ] as const;
 
-const STATS = [
+// Fixed facts about the platform. The plant count is not one of them: it was
+// hardcoded as 105 while the live API listed 101, so it is read from /plants.
+const FIXED_STATS = [
   { value: 96, suffix: "", label: "blocks / day" },
   { value: 7, suffix: " quantiles", label: "P05 → P95" },
   { value: 3, suffix: " rule sets", label: "CERC 2024–2031" },
-  { value: 105, suffix: " plants", label: "Gujarat portfolio" },
 ];
 
 export default function Home() {
   // Trigger hero text + stats animation after mount
   const [heroVisible, setHeroVisible] = useState(false);
   const [statsStarted, setStatsStarted] = useState(false);
+  const { data: plantsData } = usePlants();
+  const stats = [
+    ...FIXED_STATS,
+    { value: plantsData ? plantsData.plants.length : null, suffix: " plants", label: "Gujarat portfolio" },
+  ];
   useEffect(() => {
     const t1 = setTimeout(() => setHeroVisible(true), 80);
     const t2 = setTimeout(() => setStatsStarted(true), 900);
@@ -385,7 +398,7 @@ export default function Home() {
         }}
         className="relative z-10 mx-6 mb-14 flex flex-wrap justify-center rounded-[2px] border border-border bg-surface divide-x divide-border overflow-hidden"
       >
-        {STATS.map((s) => (
+        {stats.map((s) => (
           <StatTile key={s.label} {...s} started={statsStarted} />
         ))}
       </div>
