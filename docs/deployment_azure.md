@@ -142,34 +142,62 @@ cat /tmp/pip.done 2>/dev/null && tail -5 /tmp/pip.log
 ## Current configuration
 
 ```bash
-FORECAST_ENGINE_TYPE=mock          # models rejected by the physics gate
-OPTIMIZER_TYPE=production          # real grid-search optimiser
-RAG_COPILOT_TYPE=mock              # no corpus loaded yet
+FORECAST_ENGINE_TYPE=production
+OPTIMIZER_TYPE=production
+RAG_COPILOT_TYPE=production
 CORS_ORIGINS=*
 ```
 
-Verified live on this deployment:
+Keep the real `.env` free of inline comments; see the trap above.
 
-- Schedule optimisation: **₹5,025.71 saved, 25.0%** vs declaring P50
-- Portfolio pooling: **₹86,427 → ₹62,515, 27.67%**
-- 13 endpoints serving, 202 MB resident of 16 GB
+| Engine | Serves |
+|---|---|
+| Forecast | LightGBM from `prediction_bundle/models_v2` for solar (24, 48 and 72 h); power curve for wind |
+| Optimiser | Per-block expected-penalty search, optional battery recourse |
+| Copilot | BM25 retrieval over the CERC corpus, Groq with Gemini fallback, guardrail |
 
-### To switch the copilot on
+Verified live on 13 September 2026:
 
-1. Put the CERC/IEGC PDFs in `regulations/` and fill in `sources.json`
-2. Add `GROQ_API_KEY` to `.env` (free at console.groq.com)
-3. `venv/bin/python scripts/build_index.py --truncate`
-4. Set `RAG_COPILOT_TYPE=production` and restart
+- `/health`: `serving_synthetic_data: []`, 9 forecast models loaded
+- `/rag/health`: 179 chunks, BM25 loaded, no stored embeddings, Groq and Gemini both usable
+- `/plants`: 101 plants (80 solar, 21 wind)
+- Schedule optimisation, GJ_SOLAR_A: ₹12,650 → ₹10,685, 15.5% lower than declaring P50
+- Portfolio pooling, GJ_POOL_1: ₹53,543 → ₹39,849, 25.6% lower
 
-The 2.2 GB embedding model is optional — BM25-only retrieval works without it, at the cost of
-missing questions that do not share vocabulary with the regulation text.
+Optimisation and pooling figures depend on the day's weather and change from day to day.
+They were measured before PR #37 deployed; its quantile-weighting fix lowers expected-penalty
+figures across the site, so re-measure afterwards.
+
+### Rebuilding the copilot corpus
+
+1. Add or replace PDFs in `regulations/` and update `sources.json`
+2. `venv/bin/python scripts/build_index.py --truncate`
+3. `venv/bin/python scripts/eval_retrieval.py --verbose` — recall@5 should stay at or above 0.70
+4. `sudo systemctl restart renewable-api` — the BM25 index is built at startup
+
+Production runs BM25-only. The 2.2 GB bge-m3 model is optional: it helps with questions that
+share no vocabulary with the regulation text, and it cannot help with documents missing from the
+corpus, which is where the current retrieval misses are.
+
+### Running the daily pipeline
+
+This VM has no scheduler. Trigger a run by hand:
+
+```bash
+curl -X POST https://57.159.24.68.nip.io/pipeline/run   -H "X-API-Key: $PIPELINE_API_KEY" -H 'content-type: application/json' -d '{}'
+```
+
+A systemd timer calling that endpoint at 02:30 UTC (08:00 IST) is the simplest way to schedule
+it. On the AWS path the same call is made by EventBridge through a Lambda; see
+`infra/aws/03_observability.sh`.
 
 ---
 
 ## Cost
 
-Roughly ₹200–250/day for the `D4as_v4`. **Deallocate it after judging** — a stopped VM still bills
-for its disk, a deallocated one does not:
+Roughly ₹200–250/day for the `D4as_v4`. **Deallocate it after judging** — shutting it down from
+inside the OS leaves it allocated and billing for compute; deallocating releases it (disks bill
+either way):
 
 ```bash
 az vm deallocate --resource-group <rg> --name Hackout

@@ -7,6 +7,7 @@ from datetime import datetime
 
 from backend.db.session import get_db
 from backend.core.config import get_settings
+from backend.core.dates import query_date_or_422
 from backend.core.plants import find_plant, plants_in_pool
 from backend.modules.factory import get_forecast_engine, get_schedule_optimizer
 from backend.modules.dsm.engine import DSMEngine
@@ -30,7 +31,7 @@ def get_dashboard_data(
     db: Session = Depends(get_db)
 ):
     target_date_str = date or datetime.utcnow().strftime("%Y-%m-%d")
-    target_date = datetime.strptime(target_date_str, "%Y-%m-%d").date()
+    target_date = query_date_or_422(target_date_str)
     forecast_engine = get_forecast_engine()
     optimizer = get_schedule_optimizer()
     
@@ -162,9 +163,11 @@ def get_dashboard_data(
             pres = compute_pooling_benefit_by_block(pool_blocks, dsm_engine, 450.0, 50.0)
             ind_penalties = {p["plant_id"]: p["individual_inr"] for p in pres.get("per_plant", [])}
             allocs = allocate_pool_savings(ind_penalties, pres["pooled_total_inr"])
+            names = {p["id"]: p.get("name") for p in pool_plants}
             alloc_models = [
                 PlantPoolAllocation(
                     plant_id=pid,
+                    plant_name=names.get(pid),
                     individual_penalty_inr=round(ind_penalties[pid], 2),
                     allocated_penalty_inr=round(acost, 2),
                     savings_inr=round(ind_penalties[pid] - acost, 2),
@@ -179,6 +182,7 @@ def get_dashboard_data(
                 savings_inr=round(pres["savings_inr"], 2),
                 savings_pct=round(pres["savings_pct"], 2),
                 allocations=alloc_models,
+                pool_size=len(pool_plants),
             )
     except Exception as exc:
         # Pooling is supplementary to the dashboard, so a failure here must not

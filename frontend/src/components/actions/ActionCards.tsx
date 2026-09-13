@@ -43,6 +43,14 @@ function cardMeta(type: ActionCardType["type"]): CardMeta {
         borderColor: "#ef4444",
         icon: "⚠",
       };
+    case "storage_dispatch":
+      return {
+        label: "Storage Dispatch",
+        chipBg: "bg-accent/15",
+        chipText: "text-accent",
+        borderColor: "var(--color-accent)",
+        icon: "⚡",
+      };
     default:
       return {
         label: String(type),
@@ -120,9 +128,14 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
   const scheduling = actions.filter(
     (c) => c.type === "curtailment" || c.type === "reserve_flag"
   );
+  const storage = actions.filter((c) => c.type === "storage_dispatch");
   const residual = actions.filter((c) => c.type === "high_risk_block");
   const other = actions.filter(
-    (c) => c.type !== "curtailment" && c.type !== "reserve_flag" && c.type !== "high_risk_block"
+    (c) =>
+      c.type !== "curtailment" &&
+      c.type !== "reserve_flag" &&
+      c.type !== "high_risk_block" &&
+      c.type !== "storage_dispatch"
   );
 
   return (
@@ -133,6 +146,20 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
           <div className="grid grid-cols-1 gap-[var(--gap-grid)] md:grid-cols-2">
             {scheduling.map((card, idx) => (
               <Card key={`sched-${idx}`} card={card} idx={idx} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── storage dispatch ── */}
+      {storage.length > 0 && (
+        <section>
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.06em] text-text-muted">
+            Storage dispatch — battery response
+          </p>
+          <div className="grid grid-cols-1 gap-[var(--gap-grid)] md:grid-cols-2">
+            {storage.map((card, idx) => (
+              <Card key={`storage-${idx}`} card={card} idx={idx} />
             ))}
           </div>
         </section>

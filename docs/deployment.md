@@ -2,6 +2,11 @@
 
 **Owner:** Member 4. Everything here is reproducible from a clean AWS account.
 
+> **This is not the live deployment.** Production runs on an Azure VM with the frontend on
+> Vercel; see [deployment_azure.md](deployment_azure.md). This document describes the AWS path,
+> which was the original target and is kept, with its scripts in `infra/aws/` and Terraform in
+> `infra/terraform/`, as a complete alternative.
+
 > **See also:** `docs/runbook.md` — demo-day failover, failure modes, and alarm handling.
 
 ## Table of Contents
@@ -193,10 +198,14 @@ The role needs: ECR push, `ssm:SendCommand` on the instance, and
 
 ### What runs when
 
-| Trigger | Workflow | Does |
+The workflows in `.github/workflows/` now deploy to Azure. The AWS variant of `deploy.yml`
+(OIDC, ECR push, SSM RunCommand, CloudFront invalidation) was replaced in commit `dfcfc49`;
+restore it from history to use this path.
+
+| Trigger | Workflow | On the AWS variant |
 |---|---|---|
-| push to any branch | `ci` → `test` | ruff + pytest, ~2 min |
-| push to main / PR to main | `ci` → `image` | docker build + trivy, push to ECR on main |
+| push to any branch | `ci` → `test` | ruff + pytest |
+| push to main | `ci` → `image` | docker build + trivy, push to ECR |
 | `ci` succeeds on main | `deploy` | SSM roll + health check + CloudFront invalidation |
 | manual | `deploy` (`workflow_dispatch`) | rollback / redeploy |
 

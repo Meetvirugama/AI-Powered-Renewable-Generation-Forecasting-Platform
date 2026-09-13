@@ -18,9 +18,13 @@
 > | What remains to do | `docs/roadmap.md` |
 > | API contract (RAG) | `docs/api_rag_contract.md` |
 > | Frontend sprints | `docs/frontend_implementation_plan.md` |
-> | Deploy + ops | `docs/deployment.md` · `docs/runbook.md` |
+> | Deploy + ops | `docs/deployment_azure.md` · `docs/runbook.md` (AWS path: `docs/deployment.md`) |
 >
 > This file is kept because it contains original design rationale not captured elsewhere.
+>
+> Where the build departed from this plan (Chronos-2 not built, the battery LP replaced by a
+> recourse model, 19 quantiles reduced to 3 calibrated ones, AWS replaced by Azure), the reasons
+> are in `docs/project_understanding.md` under *How the build differed from the original plan*.
 
 
 ## Table of Contents

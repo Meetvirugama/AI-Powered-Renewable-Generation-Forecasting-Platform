@@ -80,4 +80,16 @@ def optimize_schedule(request: OptimizeRequest, db: Session = Depends(get_db)):
         naive_schedule=[round(s, 2) for s in opt_result["naive_schedule"]],
         battery_dispatch=battery_blocks,
         action_cards=action_cards,
+        # .get: the mock optimiser does not model a battery and omits these.
+        battery_modelled=bool(opt_result.get("battery_modelled", False)),
+        optimised_without_battery_inr=(
+            round(opt_result["optimised_without_battery_inr"], 2)
+            if opt_result.get("optimised_without_battery_inr") is not None
+            else None
+        ),
+        battery_saving_inr=(
+            round(opt_result["battery_saving_inr"], 2)
+            if opt_result.get("battery_saving_inr") is not None
+            else None
+        ),
     )

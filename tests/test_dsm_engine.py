@@ -68,3 +68,34 @@ def test_expected_penalty_across_quantiles():
         asset_type='solar'
     )
     assert exp_penalty >= 0.0
+
+
+# ----------------------------------------------------- probability weighting
+def test_expected_penalty_is_probability_weighted_not_a_plain_average():
+    """Equal weighting gave P05 the same influence as P50. The optimiser weighted by
+    probability and every other caller did not, so the Actions page showed one
+    plant's penalty as ₹1,53,452 in one panel and ₹2,86,619 in the next."""
+    engine = DSMEngine('config/dsm_rules_2026.yaml', date(2026, 4, 1))
+    # Only the P05 tail breaches the band; P50 and P95 sit on the schedule.
+    q = {0.05: 10.0, 0.50: 40.0, 0.95: 40.0}
+    tail_only = engine.compute_block_penalty(10.0, 40.0, 50.0, 50.0, 450.0, 'solar')
+    expected = engine.compute_expected_penalty(q, 40.0, 50.0, 50.0, 450.0, 'solar')
+    plain_average = tail_only / 3
+    assert 0 < expected < plain_average
+
+
+def test_engine_and_optimiser_weight_quantiles_identically():
+    from backend.modules.optimize.schedule_optimizer import QUANTILE_LEVELS, expected_penalty
+    engine = DSMEngine('config/dsm_rules_2026.yaml', date(2026, 4, 1))
+    q = {0.05: 12.0, 0.10: 20.0, 0.25: 30.0, 0.50: 38.0, 0.75: 44.0, 0.90: 49.0, 0.95: 50.0}
+    assert set(q) == set(QUANTILE_LEVELS)
+    assert engine.compute_expected_penalty(q, 30.0, 50.0, 50.0, 450.0, 'solar') == pytest.approx(
+        expected_penalty(engine, q, 30.0, 50.0, 50.0, 450.0, 'solar')
+    )
+
+
+def test_a_band_override_replaces_the_asset_type_band():
+    engine = DSMEngine('config/dsm_rules_2026.yaml', date(2026, 4, 1))
+    # 12% deviation: outside the 10% solar band, inside a 15% override.
+    assert engine.compute_block_penalty(46.0, 40.0, 50.0, 50.0, 450.0, 'solar') > 0
+    assert engine.compute_block_penalty(46.0, 40.0, 50.0, 50.0, 450.0, 'solar', band=0.15) == 0.0

@@ -3,6 +3,10 @@
 This directory describes infrastructure that **already exists**, created by the scripts in
 `infra/aws/`. It is imported, not applied from scratch.
 
+> The live deployment runs on Azure ([docs/deployment_azure.md](../../docs/deployment_azure.md)).
+> This Terraform captures the alternative AWS path described in
+> [docs/deployment.md](../../docs/deployment.md).
+
 That ordering is deliberate. Writing Terraform for infrastructure nobody has stood up yet
 means debugging your HCL and your architecture at the same time, and it reliably turns a
 two-hour task into a six-hour one. Standing it up with the CLI first and capturing it

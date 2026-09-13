@@ -1,7 +1,10 @@
 # Roadmap — what is left, and the order to do it in
 
-**Audited against `main` @ PR #25 merged**, and against the running production API at
-`https://57.159.24.68.nip.io`. 322 tests passing, `ruff` clean, 0 CRLF-corrupted models.
+**Re-audited 13 September 2026** against `main` @ PR #36 plus PR #37 (`fix/audit-round-two`), and the running production API at
+`https://57.159.24.68.nip.io`. 424 backend tests collected, `ruff` clean.
+
+Live figures below were measured on production, which does not yet include PR #37. Its
+quantile-weighting fix lowers expected-penalty figures site-wide, so re-measure after it deploys.
 
 Every claim below was verified against the tree or against the live system, not inferred from the
 plan. Percentages are scope-completion estimates, not confidence.
@@ -27,19 +30,19 @@ Against the six-step value chain in the README:
 | Step | State |
 |---|---|
 | 1. Ingest weather | ✅ real (Open-Meteo → validator → `weather_forecasts`) |
-| 2. Forecast P05–P95 | ✅ **real** — LightGBM, +21.5% skill vs persistence, 85.9% band coverage |
+| 2. Forecast P05–P95 | ✅ **real** — LightGBM for solar at 24 / 48 / 72 h (+21.5% / +26.9% / +32.5% skill vs persistence), power curve for wind |
 | 3. Price in ₹ (CERC DSM) | ✅ real |
-| 4. Optimise schedule | ✅ real — **30.2%** reduction, measured on the real forecast |
+| 4. Optimise schedule | ✅ real — saving varies with the day's weather; 15.5% for GJ_SOLAR_A on 13 Sept |
 | 5. Flag grid actions | ✅ real (derived from optimiser output) |
 | 6. Explain with citations | ✅ real — 179 chunks, 3 CERC documents, recall@5 = 0.73 |
-| — Portfolio pooling | ✅ real — **34.5%**, measured, correlation assumption declared |
+| — Portfolio pooling | ✅ real — 25.6% for GJ_POOL_1 on 13 Sept, correlation assumption declared |
 
-> Numbers moved when the forecast became real. The optimiser previously read 23–28% against a
-> mock forecast whose spread was chosen by hand; 30.2% is measured against a calibrated band.
+> Savings are measured per day against a calibrated band, so they move with the weather. Earlier
+> audits recorded 30.2% (optimiser) and 34.5% (pooling) on other days. Quote the figure on screen.
 
 ---
 
-## 🔴 Remaining blockers
+## Remaining blockers
 
 **None that stop a demo.** The two below limit answer quality, not availability.
 
@@ -138,14 +141,20 @@ splits, conformal calibration rebuilt on a held-out window.
 - 2,774 rows / **29.9 days** / **1 plant**. Not enough for rolling-origin CV.
 - Cross-plant use is a **capacity-factor transfer from a reference site**, not a per-plant model.
   Say so when presenting it.
-- **Only the 24h horizon** is retrained. 48h and 72h fall back to it — a worse forecast, where the
-  legacy boosters for those horizons would have been a dishonest one.
+- All three horizons are retrained and served: +21.5% (24 h), +26.9% (48 h) and +32.5% (72 h) skill
+  vs persistence. The 48 h and 72 h models drop generation lags that would not exist at issue time.
+  The Forecast page has a 24 / 48 / 72 h switch.
 - Forecasts depend on Open-Meteo being reachable. Verified 0.5 s from the VM; cached 15 min per
   plant and date. `FORECAST_ENGINE_TYPE=mock` is the one-line rollback.
 
-**Still missing** (none demo-critical): `physics.py`, `calibration.py`, `ensemble.py`,
-`battery_lp.py`, `test_physics.py`, all 10 notebooks — so there is no backtest harness or
-evaluation report beyond what `train_forecast.py` prints and the manifest records.
+**Since the last audit:** wind is served by `physics.py` (turbine power curve), and the planned
+battery LP was replaced by `battery_recourse.py`, because a fixed day-ahead battery plan cannot
+lower a DSM penalty.
+
+**Still missing** (none demo-critical): `calibration.py` and `ensemble.py` as separate modules
+(calibration is applied inside `lgbm_model.py`), a persistence baseline module, and the evaluation
+notebooks, so there is no backtest harness beyond what `train_forecast.py` prints and the manifest
+records.
 
 ---
 
@@ -173,15 +182,14 @@ regulation PDFs, Groq key, block numbering, deploy.
 
 ### Phase 2 — Completes the plan (1–2 weeks)
 
-`physics.py`, `calibration.py`, `ensemble.py`, `battery_lp.py`, the notebooks,
-`test_physics.py`, `generate_briefing()` wired into the pipeline, `/dashboard/{plant_id}` adopted
+`calibration.py` and `ensemble.py` as modules, a persistence baseline, the evaluation notebooks,
+a scheduler on the Azure VM, `generate_briefing()` wired into the pipeline, `/dashboard/{plant_id}` adopted
 by the UI, dense embeddings **if** R1 is closed first.
 
 ### Explicitly descoped
 
-Chronos-2 (`chronos_model.py`, notebooks 06/07) — in the README tech stack, absent from the repo,
-not needed for any demo claim. **Either build it or remove it from the README** before a judge
-greps for it.
+Chronos-2 (`chronos_model.py`, notebooks 06/07) — not built, not needed for any demo claim, and now
+removed from the README.
 
 ---
 
@@ -190,8 +198,8 @@ greps for it.
 ✅ A forecast that is **real and measured** — +21.5% skill over persistence, 85.9% band coverage,
    conformally calibrated, with its limits written into the model manifest
 ✅ CERC 2026 seller-side DSM pricing with X-trajectory — real, tested
-✅ Min-₹ schedule optimisation — **30.2%** reduction, measured against a calibrated band
-✅ Portfolio pooling — **34.5%**, measured, correlation assumption declared
+✅ Min-₹ schedule optimisation — measured against a calibrated band (15.5% on 13 Sept; varies by day)
+✅ Portfolio pooling — measured, correlation assumption declared (25.6% on 13 Sept)
 ✅ Live weather ingestion — Open-Meteo → validation → 15-min IST blocks → DB
 ✅ Action cards — each carrying a real rupee delta
 ✅ A copilot that **structurally cannot** invent a ₹ figure — guardrail enforced post-generation
@@ -199,7 +207,7 @@ greps for it.
 ✅ Engine transparency — `/health` reports `serving_synthetic_data`, and it is **empty**
 
 ⚠️ Trained on one plant over 29.9 days; applied to four via capacity-factor transfer
-⚠️ 24h horizon only; longer lead times fall back to it
+⚠️ Wind is physics-only, with no generation data to validate it against
 ⚠️ Citations currently skew to the 2024 commentary document (R1)
 
 ### The strongest honest framing

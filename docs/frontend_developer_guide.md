@@ -1,8 +1,7 @@
 # Frontend Developer Guide
 
-> **Status:** Sprints 0–9 complete. All 8 planned components and 5 pages are built and
-> wired to the live FastAPI backend. Sprint 10 (polish, responsive, demo hardening) is
-> the only remaining work.
+> **Status:** built and deployed on Vercel against the production API. Pages: Overview,
+> Forecast, Risk, Actions and Copilot, plus a `/home` landing page and a Not Found page. Remaining work is polish.
 >
 > This document is the single authoritative reference for anyone working on `frontend/`.
 
@@ -82,8 +81,8 @@ frontend/src/
     Backdrop.tsx     Mobile sidebar overlay
     DashboardShell.tsx  PlantSelector + RuleYearControl + <Outlet>
   components/
-    common/          PageMeta.tsx, ScrollToTop.tsx
-    layout/          PlantSelector.tsx, RuleYearControl.tsx
+    common/          PageMeta, Panel, ScrollToTop, States, StatusRail
+    layout/          PlantSelector, RuleYearControl, HorizonControl
     tiles/           StatTile.tsx, BriefingCard.tsx
     charts/          ForecastFanChart.tsx, RiskHeatmap.tsx, ScheduleComparison.tsx
     actions/         ActionCards.tsx
@@ -97,6 +96,7 @@ frontend/src/
     Risk.tsx         /risk
     Actions.tsx      /actions
     Copilot.tsx      /copilot
+    NotFound.tsx     *     unknown routes, rendered inside the app layout
 ```
 
 ---
@@ -113,6 +113,7 @@ All dashboard routes nest under `<AppLayout>` → `<DashboardShell>`.
 /risk         Risk          Heatmap + schedule comparison
 /actions      Actions       Action cards + pooling toggle
 /copilot      Copilot       RAG chat panel
+*             NotFound      Any unknown route
 ```
 
 ---
@@ -137,7 +138,8 @@ api/client.ts  →  api/endpoints.ts  →  hooks/use*.ts  →  pages / component
 | `useDSM(params)` | `POST /dsm` | Re-price on rule-year slider change |
 | `useOptimize(params)` | `POST /optimize` | Savings, optimised schedule, action cards |
 | `usePooling(params)` | `POST /pooling` | Pooling benefit |
-| `useRAG()` | `POST /rag/query` | Chat query in RAGCopilot |
+| `useDsmForPlant(...)` | `POST /dsm` | Per-plant pricing for the Risk page |
+| `useSelectedPlant()` | — | Resolves the selected plant from context and the plant list |
 | `useHealth()` | `GET /health`, `GET /rag/health` | Liveness + engine badge |
 | `useSidebar()` | — | Sidebar state |
 | `useModal()` | — | Modal open/close |
@@ -201,6 +203,10 @@ Tests: `npm run test` (Vitest, `lib/format.test.ts`).
 
 Copy `frontend/.env.example` → `frontend/.env`. Never commit `.env`.
 
+In production, `VITE_API_BASE_URL` is set in the Vercel project settings to the HTTPS API (see
+`docs/deployment_azure.md`). It must be `https://`: the browser blocks an HTTPS page from calling
+an HTTP API.
+
 ---
 
 ## 9. Local development
@@ -241,7 +247,7 @@ npx tsc -b           # type-check only
 
 ### ActionCards
 **Props:** `actions: ActionCard[]`
-- Types: `"curtailment"` | `"reserve_flag"` only — never invent a third
+- Types returned by the API: `curtailment`, `reserve_flag`, `high_risk_block`. Render only these.
 - Explicit empty state for `actions.length === 0`
 
 ### PlantMap
@@ -286,7 +292,6 @@ npx tsc -b           # type-check only
 | Loading / error state audit on all pages | 1 h |
 | `npx tsc -b` exits 0 | varies |
 | `npm run lint` exits 0 | varies |
-| `frontend/.env.production` with deployed API URL | 5 min |
 
 Sprint 10 is **polish only** — no new features, components, or endpoints.
 

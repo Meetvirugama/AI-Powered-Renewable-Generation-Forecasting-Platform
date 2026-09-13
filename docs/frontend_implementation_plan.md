@@ -3,7 +3,8 @@
 Workstream: **Shane Christian** (Member 3, frontend), executed by the Antigravity agent, reviewed by Claude Code.
 Chain of command and handoff format: `.agents/skills/dual-agent-protocol/SKILL.md`.
 
-> **Build status as of PR #11 merge:** Sprints 0–9 complete and demo-ready.
+> **Status (September 2026):** Sprints 0–9 complete; the dashboard is deployed on Vercel against
+> the production API. This file is the build plan as executed and is not updated feature by feature.
 > All 8 components, 5 pages, and 11 hooks are built and wired to the live API.
 > See `docs/roadmap.md` for the current project-wide completion picture.
 > See `docs/frontend_developer_guide.md` for the detailed as-built reference (stack,
