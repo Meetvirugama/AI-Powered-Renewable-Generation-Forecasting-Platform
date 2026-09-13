@@ -130,7 +130,13 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
       {/* ── scheduling actions ── */}
       {scheduling.length > 0 && (
         <section>
-          <div className="grid grid-cols-1 gap-[var(--gap-grid)] md:grid-cols-2">
+          <p className="mb-2.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.06em] text-text-muted">
+            Scheduling actions
+            <span className="rounded-[var(--radius-chip)] bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-text-muted">
+              {scheduling.length}
+            </span>
+          </p>
+          <div className="flex flex-col gap-[var(--gap-grid)]">
             {scheduling.map((card, idx) => (
               <Card key={`sched-${idx}`} card={card} idx={idx} />
             ))}
@@ -140,11 +146,17 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
 
       {/* ── residual risk (high_risk_block) ── */}
       {residual.length > 0 && (
-        <section>
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.06em] text-text-muted">
-            Residual risk — physical intervention needed
+        <section className={scheduling.length > 0 ? "border-t border-border pt-5" : ""}>
+          <p className="mb-2.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.06em] text-text-muted">
+            Residual risk
+            <span className="rounded-[var(--radius-chip)] bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-text-muted">
+              {residual.length}
+            </span>
+            <span className="normal-case font-normal tracking-normal text-[10px]">
+              — physical intervention needed
+            </span>
           </p>
-          <div className="grid grid-cols-1 gap-[var(--gap-grid)] md:grid-cols-2">
+          <div className="flex flex-col gap-[var(--gap-grid)]">
             {residual.map((card, idx) => (
               <Card key={`risk-${idx}`} card={card} idx={idx} />
             ))}
@@ -154,8 +166,8 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
 
       {/* ── catch-all for any future types ── */}
       {other.length > 0 && (
-        <section>
-          <div className="grid grid-cols-1 gap-[var(--gap-grid)] md:grid-cols-2">
+        <section className={scheduling.length > 0 || residual.length > 0 ? "border-t border-border pt-5" : ""}>
+          <div className="flex flex-col gap-[var(--gap-grid)]">
             {other.map((card, idx) => (
               <Card key={`other-${idx}`} card={card} idx={idx} />
             ))}
