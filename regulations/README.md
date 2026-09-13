@@ -8,15 +8,19 @@ index build has to be reproducible from a clean clone. They are a few MB in tota
 | File | Document | Source |
 |---|---|---|
 | `CERC_DSM_Regulations_2024.pdf` | CERC (Deviation Settlement Mechanism and related matters) Regulations, 2024 | cercind.gov.in → Regulations |
-| `CERC_DSM_Amendment_2026.pdf` | 2026 amendment — X-trajectory, narrowed tolerance bands | cercind.gov.in → Regulations → Amendments |
-| `IEGC_2023.pdf` | Indian Electricity Grid Code, 2023 | cercind.gov.in → Grid Code |
+| `CERC_DSM_Amendment_2025.pdf` | 2025 amendment to the DSM Regulations | cercind.gov.in → Regulations |
+| `CERC_DSM_StatementOfReasons_2024.pdf` | Statement of Reasons for the 2024 Regulations: the Commission's reasoning, not operative law | cercind.gov.in → Regulations |
 | `sources.json` | Per-file metadata: title, URL, effective date, sha256 | generated, see below |
 | `chunks.jsonl` | Chunker output, for inspection | generated, gitignored |
 
+The 2026 X-trajectory is not a separate document; it is written into the 2024 principal
+regulations. The Indian Electricity Grid Code (IEGC 2023) is not yet in the corpus, and adding it
+is the largest single improvement available to retrieval quality (see `docs/roadmap.md`, R1).
+
 The filename matters. The retriever reads the year out of it to honour the regulation-year
 slider: with `rule_year=2024`, any document whose name carries a later year is excluded from
-retrieval. Name a file `CERC_DSM_Amendment_2026.pdf` and that works; name it
-`amendment_final_v2.pdf` and the copilot will happily cite the 2026 amendment while the UI
+retrieval. Name a file `CERC_DSM_Amendment_2025.pdf` and that works; name it
+`amendment_final_v2.pdf` and the copilot will happily cite the 2025 amendment while the UI
 reads 2024.
 
 ## After adding or replacing a PDF

@@ -8,6 +8,7 @@ import Forecast from "./pages/Forecast";
 import Risk from "./pages/Risk";
 import Actions from "./pages/Actions";
 import Copilot from "./pages/Copilot";
+import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="risk" element={<Risk />} />
             <Route path="actions" element={<Actions />} />
             <Route path="copilot" element={<Copilot />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Route>
       </Routes>

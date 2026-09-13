@@ -65,23 +65,26 @@ const AppHeader: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 flex w-full flex-col bg-surface border-b border-border">
       {/* ── main nav bar ───────────────────────────────────────────────── */}
-      <div className="flex items-center gap-0 px-4 md:px-6 h-14">
+      <div className="flex h-14 items-center gap-0 px-4 md:px-6">
 
         {/* Logo */}
         <Link
           to="/"
           className="flex shrink-0 items-center gap-1 text-[17px] font-bold tracking-tight mr-5"
-          aria-label="GridMind dashboard"
+          aria-label="VidyutVaani dashboard"
         >
-          Grid<span className="text-accent">Mind</span>
+          Vidyut<span className="text-accent">Vaani</span>
         </Link>
 
         {/* Divider */}
-        <span className="h-5 w-px bg-border shrink-0 mr-4" aria-hidden />
+        <span className="mr-4 hidden h-5 w-px shrink-0 bg-border sm:block" aria-hidden />
 
         {/* Nav tabs */}
-        <nav aria-label="Main navigation" className="flex-1">
-          <ul className="flex items-center gap-0.5">
+        {/* The sidebar this replaced had a mobile menu; a single row of five tabs
+            does not fit a phone. Below md the labels collapse to icons, and the
+            row scrolls sideways rather than pushing the Home button off-screen. */}
+        <nav aria-label="Main navigation" className="min-w-0 flex-1 overflow-x-auto">
+          <ul className="flex items-center gap-0.5 whitespace-nowrap">
             {NAV_LINKS.map(({ path, label, icon }) => {
               const isActive = pathname === path;
               return (
@@ -89,6 +92,8 @@ const AppHeader: React.FC = () => {
                   <Link
                     to={path}
                     aria-current={isActive ? "page" : undefined}
+                    aria-label={label}
+                    title={label}
                     className={`
                       relative flex items-center gap-1.5
                       rounded-[var(--radius-control)] px-3 py-1.5
@@ -104,7 +109,7 @@ const AppHeader: React.FC = () => {
                     `}
                   >
                     {icon}
-                    <span>{label}</span>
+                    <span className="hidden md:inline">{label}</span>
                     {/* 2-px accent underline on active */}
                     {isActive && (
                       <span
@@ -120,7 +125,7 @@ const AppHeader: React.FC = () => {
         </nav>
 
         {/* ── Home button — right-anchored, visually distinct ─────────── */}
-        <div className="ml-4 shrink-0">
+        <div className="ml-2 shrink-0 sm:ml-4">
           <Link
             to="/home"
             aria-label="Go to home / landing page"
@@ -140,7 +145,7 @@ const AppHeader: React.FC = () => {
               className="h-1.5 w-1.5 rounded-full bg-border group-hover:bg-accent transition-colors duration-200"
               aria-hidden
             />
-            <span>Home</span>
+            <span className="hidden sm:inline">Home</span>
             <HomeArrowIcon />
           </Link>
         </div>

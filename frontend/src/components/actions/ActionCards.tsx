@@ -43,6 +43,14 @@ function cardMeta(type: ActionCardType["type"]): CardMeta {
         borderColor: "#ef4444",
         icon: "⚠",
       };
+    case "storage_dispatch":
+      return {
+        label: "Storage Dispatch",
+        chipBg: "bg-accent/15",
+        chipText: "text-accent",
+        borderColor: "var(--color-accent)",
+        icon: "⚡",
+      };
     default:
       return {
         label: String(type),
@@ -120,9 +128,14 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
   const scheduling = actions.filter(
     (c) => c.type === "curtailment" || c.type === "reserve_flag"
   );
+  const storage = actions.filter((c) => c.type === "storage_dispatch");
   const residual = actions.filter((c) => c.type === "high_risk_block");
   const other = actions.filter(
-    (c) => c.type !== "curtailment" && c.type !== "reserve_flag" && c.type !== "high_risk_block"
+    (c) =>
+      c.type !== "curtailment" &&
+      c.type !== "reserve_flag" &&
+      c.type !== "high_risk_block" &&
+      c.type !== "storage_dispatch"
   );
 
   return (
@@ -144,9 +157,29 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
         </section>
       )}
 
+      {/* ── storage dispatch ── */}
+      {storage.length > 0 && (
+        <section className={scheduling.length > 0 ? "border-t border-border pt-5" : ""}>
+          <p className="mb-2.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.06em] text-text-muted">
+            Storage dispatch
+            <span className="rounded-[var(--radius-chip)] bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-text-muted">
+              {storage.length}
+            </span>
+            <span className="normal-case font-normal tracking-normal text-[10px]">
+              — battery response
+            </span>
+          </p>
+          <div className="flex flex-col gap-[var(--gap-grid)]">
+            {storage.map((card, idx) => (
+              <Card key={`storage-${idx}`} card={card} idx={idx} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── residual risk (high_risk_block) ── */}
       {residual.length > 0 && (
-        <section className={scheduling.length > 0 ? "border-t border-border pt-5" : ""}>
+        <section className={scheduling.length > 0 || storage.length > 0 ? "border-t border-border pt-5" : ""}>
           <p className="mb-2.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.06em] text-text-muted">
             Residual risk
             <span className="rounded-[var(--radius-chip)] bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-text-muted">
@@ -166,7 +199,7 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actions }) => {
 
       {/* ── catch-all for any future types ── */}
       {other.length > 0 && (
-        <section className={scheduling.length > 0 || residual.length > 0 ? "border-t border-border pt-5" : ""}>
+        <section className={scheduling.length > 0 || storage.length > 0 || residual.length > 0 ? "border-t border-border pt-5" : ""}>
           <div className="flex flex-col gap-[var(--gap-grid)]">
             {other.map((card, idx) => (
               <Card key={`other-${idx}`} card={card} idx={idx} />

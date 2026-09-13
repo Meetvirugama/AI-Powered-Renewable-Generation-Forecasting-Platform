@@ -12,18 +12,25 @@ For what is **actually built and committed**, see `docs/roadmap.md`.
 | Architecture Overview | ✅ Implemented | Matches the shipped backend |
 | Data Ingestion | ✅ Implemented | Open-Meteo live ingestion is live |
 | Data Quality Layer | ✅ Implemented | Validator + resampler committed |
-| Feature Engineering | ⚠️ Partial | `feature_builder.py` exists; `features.py` not yet |
-| LightGBM Quantile Models | ⚠️ Trained but blocked | Models fail physics gate — retraining needed. See `docs/model_integration.md` |
+| Feature Engineering | ✅ Implemented | `feature_builder.py`; 44 features in the served models |
+| LightGBM Quantile Models | ✅ Serving | `models_v2`: 24 / 48 / 72 h, conformally calibrated. The legacy bundle is still rejected; see `docs/model_integration.md` |
 | Persistence Baseline | ❌ Not built | Planned in Phase 1 |
 | DSM Cost Engine | ✅ Implemented | Tested, YAML-driven, 2024/2026/2031 |
-| Schedule Optimizer | ✅ Implemented | `schedule_optimizer.py`, 23–28% savings measured |
-| Battery LP | ❌ Not built | `battery_lp.py` planned, not yet implemented |
-| Portfolio Pooling | ✅ Implemented | Fix for correlation bug pending (B1 in `roadmap.md`) |
+| Schedule Optimizer | ✅ Implemented | `schedule_optimizer.py`, probability-weighted per-block search; savings vary with weather |
+| Battery | ✅ Implemented as recourse | `battery_recourse.py` replaces the planned LP; see `docs/system_architecture.md` §7 |
+| Portfolio Pooling | ✅ Implemented | Variance-based netting with declared correlation |
 | SHAP Explainability | ❌ **Descoped** | Removed from demo scope |
 | Asset Anomaly Detection | ❌ **Descoped** | Removed from demo scope |
 | Chronos-2 | ❌ **Descoped** | Explicitly removed — see `roadmap.md` |
-| RAG Copilot Pipeline | ✅ Implemented | Corpus empty until PDFs loaded |
-| Production Daily Pipeline | ✅ Implemented | `/pipeline/run` async, EventBridge scheduled |
+| RAG Copilot Pipeline | ✅ Implemented | 179 chunks from 3 CERC documents, BM25 retrieval in production |
+| Production Daily Pipeline | ✅ Implemented | `/pipeline/run` async; a scheduler exists only on the AWS path |
+| Wind forecasting | ✅ Implemented | Turbine power-curve physics, `physics.py`; no ML |
+
+> **Read the later sections with this in mind.** Sections 7–9 and 11 describe the **legacy**
+> evidence bundle: 12 boosters, 61 features, MW-scale metrics. The models actually served are
+> `prediction_bundle/models_v2/`: 44 features, a capacity-factor target, and the metrics recorded
+> in its `MANIFEST.json`. Section 22 describes the AWS path; production runs on Azure
+> (`docs/deployment_azure.md`).
 
 ---
 

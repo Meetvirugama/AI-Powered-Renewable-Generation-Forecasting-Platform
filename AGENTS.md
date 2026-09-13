@@ -7,8 +7,8 @@ Antigravity reads this natively; `CLAUDE.md` imports it. **Edit this file, not t
 
 ## Project
 
-AI-Powered Renewable Generation Forecasting Platform — DSM-aware decision & scheduling
-platform for Indian grid operators. Hackout 2026.
+**VidyutVaani** — AI-powered renewable generation forecasting and DSM-aware decision &
+scheduling platform for Indian grid operators. Hackout 2026.
 
 Chain: forecast P05–P95 → price ₹ CERC DSM penalty → optimise day-ahead schedule →
 emit grid action cards → explain with cited CERC clauses.
@@ -18,13 +18,13 @@ Repo: `github.com/Meetvirugama/AI-Powered-Renewable-Generation-Forecasting-Platf
 ## Layout
 
 ```
-backend/      FastAPI app — DONE (mocked ML behind a swappable factory)
+backend/      FastAPI app — production engines live (LightGBM solar, wind physics, optimiser, RAG)
 config/       DSM rule YAMLs (2024/2026/2031), plants.yaml
 docs/         planning docs; docs/openapi.json is the API contract
               docs/frontend_developer_guide.md — as-built frontend reference
 tests/        pytest suite
-frontend/     React 19 dashboard — Sprints 0–9 COMPLETE, Sprint 10 (polish) remaining
-              All 8 components, 5 pages, 11 hooks wired to the live API.
+frontend/     React 19 dashboard — deployed on Vercel. Pages: Overview, Forecast, Risk,
+              Actions, Copilot, plus /home and a Not Found route. Remaining work is polish.
 ```
 
 ## Team ownership
@@ -73,12 +73,13 @@ Full schema: `docs/openapi.json`.
 |---|---|---|
 | GET | `/plants` | `{plants[], total}` — id, name, type, lat, lon, avc_mw, pool_id |
 | GET | `/plants/{id}` | single plant |
-| GET | `/forecast?plant_id&date` | `{plant_id, date, model_name, blocks[96]}` |
+| GET | `/forecast?plant_id&date&hours` | `{plant_id, date, model_name, blocks[]}` — `hours` is 24, 48 or 72 |
 | POST | `/dsm` | per-block ₹ penalty + `x_value`, `rule_version` |
 | POST | `/optimize` | naive vs optimised ₹, both schedules, battery, action cards |
 | POST | `/pooling` | individual vs pooled ₹ + per-plant allocations |
 | GET | `/dashboard/{plant_id}?date` | **all of the above in one response** |
 | POST | `/rag/query` | `{answer, citations[], engine_values, meta}` |
+| GET | `/rag/health` | corpus size, retrieval mode, usable LLM providers |
 | POST | `/pipeline/run` | needs `X-API-Key` header — not a frontend concern |
 | GET | `/health` | liveness |
 
@@ -89,7 +90,7 @@ dashboard. Use the granular endpoints only for slider/toggle re-fetches.
 
 `BlockForecast`: `block_no` (1–96), `valid_time`, `ist_time`, `p05 p10 p25 p50 p75 p90 p95`
 `BlockDSMResult`: `block_no`, `expected_penalty_inr`, `p50_penalty_inr`, `schedule_mw`, `deviation_pct_at_p50`
-`ActionCard`: `type` (`curtailment` | `reserve_flag`), `block_no`, `mw`, `reason`, `inr_impact`
+`ActionCard`: `type` (`curtailment` | `reserve_flag` | `high_risk_block`), `block_no`, `mw`, `reason`, `inr_impact`
 `Citation`: `clause`, `page`, `doc`, `url`, `section`, `snippet`
 `RAGMeta.guardrail`: `pass` | `numbers_stripped` | `fallback_template`
 
@@ -101,13 +102,16 @@ A day is **96 blocks of 15 minutes**. Block 1 = 00:00 IST.
 `GJ_SOLAR_D` 30 MW — pool `GJ_POOL_2`
 All in Gujarat. Map should centre roughly lat 23.2, lon 71.0.
 
+These four are the offline seed. Production serves 101 imported Gujarat plants with ids such as
+`OSM_*` and `GPPD_*`; never hardcode the seed ids in components.
+
 Regulation slider years: **2024 / 2026 / 2031** (`rule_year` param).
 X-trajectory runs 1.00 → 0.00 across 2026–2031.
 
 ## Running the backend
 
 ```bash
-pip install -r requirements.txt      # not yet installed on this machine
+pip install -r requirements-dev.txt
 uvicorn backend.main:app --reload    # → http://localhost:8000, docs at /docs
 ```
 
@@ -116,10 +120,6 @@ Mock/production selected by env: `FORECAST_ENGINE_TYPE`, `OPTIMIZER_TYPE`, `RAG_
 
 ## Known issues
 
-- `backend/modules/forecast/mock_engine.py` reads `plant['plant_id']` / `plant['asset_type']`
-  but callers pass `id` / `type`. Every plant therefore gets the same RNG seed and a solar
-  profile — the wind plant renders as a solar bell curve. Backend owner's fix; do not
-  patch it unilaterally. Design charts so this does not mislead a demo.
 - ₹ figures must always come from the DSM engine response. The RAG copilot explains
   numbers, it never produces them. Never render an LLM-generated rupee value.
 

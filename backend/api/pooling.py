@@ -78,16 +78,18 @@ def calculate_pooling(request: PoolingRequest, db: Session = Depends(get_db)):
     ind_penalties = {p["plant_id"]: p["individual_inr"] for p in pool_res.get("per_plant", [])}
     allocations_dict = allocate_pool_savings(ind_penalties, pool_res["pooled_total_inr"])
     
+    names = {p["id"]: p.get("name") for p in pool_plants}
     alloc_models = [
         PlantPoolAllocation(
             plant_id=pid,
+            plant_name=names.get(pid),
             individual_penalty_inr=round(ind_penalties[pid], 2),
             allocated_penalty_inr=round(alloc_cost, 2),
             savings_inr=round(ind_penalties[pid] - alloc_cost, 2),
         )
         for pid, alloc_cost in allocations_dict.items()
     ]
-    
+
     return PoolingResponse(
         pool_id=request.pool_id,
         date=request.date,
@@ -96,4 +98,5 @@ def calculate_pooling(request: PoolingRequest, db: Session = Depends(get_db)):
         savings_inr=round(pool_res["savings_inr"], 2),
         savings_pct=round(pool_res["savings_pct"], 2),
         allocations=alloc_models,
+        pool_size=len(pool_plants),
     )

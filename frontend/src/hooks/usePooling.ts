@@ -42,5 +42,14 @@ export const usePooling = (body: PoolingRequest, enabled: boolean = true) => {
 
   const refetch = () => fetchPooling();
 
-  return { data, loading, error, refetch };
+  // Only return the pool that was requested, so switching to a plant in another
+  // pool never shows the previous pool's saving while the new one loads.
+  const current =
+    data &&
+    (import.meta.env.VITE_USE_MOCKS === "true" ||
+      (data.pool_id === body.pool_id && (!body.date || data.date === body.date)))
+      ? data
+      : null;
+
+  return { data: current, loading, error, refetch };
 };
