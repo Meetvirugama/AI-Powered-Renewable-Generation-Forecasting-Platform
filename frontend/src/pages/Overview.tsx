@@ -55,9 +55,17 @@ export default function Overview() {
       </header>
 
       <div className="grid grid-cols-2 gap-[var(--gap-grid)] lg:grid-cols-4">
+        {/* Sourced from `opt`, not `dsm`, on purpose: `dsm` here is a second,
+            independent /dsm re-fetch (see useDsmForPlant) whose only job is
+            supplying the per-block breakdown for the tiles below and the
+            heatmap — it is not guaranteed to reconcile with `/optimize`'s own
+            total, and if that re-fetch ever fails, `dsm` silently falls back
+            to the dashboard's initial snapshot instead. Pairing "Expected
+            penalty" with "Saved by optimising" from that same `opt` response
+            guarantees naive - optimised = savings always holds on screen. */}
         <StatTile
           label="Expected penalty"
-          value={inr(dsm?.total_expected_penalty_inr ?? 0)}
+          value={opt ? inr(opt.optimised_total_inr) : "—"}
           sub={opt ? `Naive submission: ${inrCompact(opt.naive_total_inr)}` : undefined}
         />
         <StatTile
